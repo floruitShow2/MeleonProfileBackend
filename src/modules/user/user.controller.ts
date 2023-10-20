@@ -1,18 +1,19 @@
 import { Controller, Post, Get, Body, SetMetadata, ForbiddenException, Req } from '@nestjs/common'
 import { UserService } from './user.service'
 import { ApiTags, ApiOperation } from '@nestjs/swagger'
-import { UserSignUpDTO } from './DTO/user.dto'
+// import { UserSignUpDTO } from './DTO/user.dto'
+import { UserSignUp } from '@/interface/user.interface'
 
 @Controller('user')
 @ApiTags('User')
 export class UserController {
-  constructor(private userService: UserService) {}
+  constructor(private readonly userService: UserService) {}
 
   @Post('signup')
   @ApiOperation({
     summary: '用户注册接口'
   })
-  async signup(@Body() userDto: UserSignUpDTO) {
+  async signup(@Body() userDto: UserSignUp) {
     return await this.userService.signup(userDto)
   }
 
@@ -20,7 +21,7 @@ export class UserController {
   @ApiOperation({
     summary: '用户登录接口'
   })
-  async login(@Body() userDto: UserSignUpDTO) {
+  async login(@Body() userDto: UserSignUp) {
     return await this.userService.login(userDto)
   }
 

@@ -1,5 +1,5 @@
 import { Test } from '@nestjs/testing'
-import { MongooseModule } from '@nestjs/mongoose'
+import { Model } from 'mongoose'
 import { UserController } from './user.controller'
 import { UserService } from './user.service'
 import { ApiResponse } from '@/interface/response.interface'
@@ -11,18 +11,29 @@ import { JwtService } from '@nestjs/jwt'
 describe('UserController', () => {
   let userController: UserController
   let userService: UserService
-  let loggerService: LoggerService
+  // let loggerService: LoggerService
 
   beforeEach(async () => {
+    const mockService = <UserService>Object.getOwnPropertyNames(UserService.prototype)
+      .filter((name) => name !== 'constructor')
+      .reduce((obj, func) => {
+        obj[func] = () => void 0
+        return obj
+      }, {})
+
     const moduleRef = await Test.createTestingModule({
       controllers: [UserController],
-      providers: [UserService, LoggerService, JwtService],
-      imports: [MongooseModule.forFeature([{ name: User.name, schema: UserSchema }])]
+      providers: [
+        {
+          provide: UserService,
+          useValue: mockService
+        }
+      ]
     }).compile()
 
     userService = moduleRef.get<UserService>(UserService)
     userController = moduleRef.get<UserController>(UserController)
-    loggerService = moduleRef.get<LoggerService>(LoggerService)
+    // loggerService = moduleRef.get<LoggerService>(LoggerService)
   })
 
   describe('getUserInfo', () => {
@@ -39,9 +50,10 @@ describe('UserController', () => {
       const mockRequest = {
         user: {
           username: 'meleon',
-          password: '232000'
+          password: '12'
         }
       } as unknown as Request
+
       expect(await userController.getUserInfo(mockRequest)).toBe(result)
     })
   })

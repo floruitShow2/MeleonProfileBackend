@@ -1,5 +1,5 @@
 import { Prop, Schema } from '@nestjs/mongoose'
-import { ApiProperty } from '@nestjs/swagger'
+import { ApiProperty, PickType } from '@nestjs/swagger'
 import { Document } from 'mongoose'
 
 @Schema()
@@ -96,7 +96,7 @@ export class User extends Document {
 }
 
 @Schema()
-export class UserSignUp extends Document {
+export class UserSignUp extends PickType(User, ['username', 'password']) {
   @Prop()
   @ApiProperty({
     description: '用户名'

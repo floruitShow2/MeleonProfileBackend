@@ -15,7 +15,8 @@ import {
   LoggerModule,
   UserModule,
   AuthModule,
-  FileModule,
+  BlogModule,
+  TagModule,
   HelloModule
 } from './modules'
 
@@ -53,7 +54,8 @@ const envFilePath = isDev ? ['.env.development'] : ['.env.production']
     UserModule,
     AuthModule,
     EventsModule,
-    FileModule,
+    BlogModule,
+    TagModule,
     HelloModule
   ],
   controllers: [AppController],

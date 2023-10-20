@@ -5,7 +5,8 @@ import { JwtService } from '@nestjs/jwt'
 import { LoggerService } from '@/modules/logger/logger.service'
 import { User } from '@/interface/user.interface'
 import type { ApiResponse } from '@/interface/response.interface'
-import { UserSignUpDTO, DefaultUserEntity } from './DTO/user.dto'
+import { DefaultUserEntity } from './DTO/user.dto'
+import { UserSignUp } from '@/interface/user.interface'
 
 @Injectable()
 export class UserService {
@@ -30,7 +31,7 @@ export class UserService {
    * @param user
    * @returns
    */
-  async signup(user: UserSignUpDTO): Promise<ApiResponse> {
+  async signup(user: UserSignUp): Promise<ApiResponse> {
     const res = await this.findOneByName(user)
     if (res && res.length) {
       this.logger.error('userService -> signup', '用户已注册')
@@ -67,7 +68,7 @@ export class UserService {
     return this.response
   }
 
-  async login(user: UserSignUpDTO): Promise<ApiResponse> {
+  async login(user: UserSignUp): Promise<ApiResponse> {
     const res = await this.findOneByName(user)
     const findIdx = res.findIndex((user) => user.password === user.password)
     if (!res || !res.length || findIdx === -1) {
@@ -100,7 +101,7 @@ export class UserService {
     return this.response
   }
 
-  async getUserInfo(user: UserSignUpDTO) {
+  async getUserInfo(user: UserSignUp) {
     const res = await this.findOneByName(user)
     if (!res || !res.length) {
       this.response = {
