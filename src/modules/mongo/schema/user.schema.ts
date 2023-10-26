@@ -1,4 +1,4 @@
 import { SchemaFactory } from '@nestjs/mongoose'
-import { User } from '@/interface/user.interface'
+import { UserEntity } from '@/interface/user.interface'
 
-export const UserSchema = SchemaFactory.createForClass(User)
+export const UserSchema = SchemaFactory.createForClass(UserEntity)

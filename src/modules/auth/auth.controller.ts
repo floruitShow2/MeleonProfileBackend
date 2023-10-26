@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Request, UseGuards } from '@nestjs/common'
 import { AuthService } from './auth.service'
-import { User } from '@/interface/user.interface'
+import { UserEntity } from '@/interface/user.interface'
 import { ApiOperation, ApiTags } from '@nestjs/swagger'
 import { AuthGuard } from '@/guards/auth.guard'
 
@@ -13,7 +13,7 @@ export class AuthController {
   @ApiOperation({
     summary: '获取 jwttoken'
   })
-  async getAccessToken(@Body() user: User) {
+  async getAccessToken(@Body() user: UserEntity) {
     return await this.authService.validateUser(user)
   }
 

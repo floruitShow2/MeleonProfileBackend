@@ -1,4 +1,4 @@
-import { Blog } from '@/interface/blog.interface'
+import { BlogEntity } from '@/interface/blog.interface'
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
@@ -10,11 +10,11 @@ export class BlogService {
   private response: ApiResponse
 
   constructor(
-    @InjectModel(Blog.name) private blogModel: Model<Blog>,
+    @InjectModel(BlogEntity.name) private blogModel: Model<BlogEntity>,
     private readonly logger: LoggerService
   ) {}
 
-  async createBlogs(blogs: Blog[]) {
+  async createBlogs(blogs: BlogEntity[]) {
     try {
       const res = await this.blogModel.create(blogs)
       console.log(res)

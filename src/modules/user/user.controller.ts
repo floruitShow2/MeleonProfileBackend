@@ -1,8 +1,9 @@
 import { Controller, Post, Get, Body, SetMetadata, ForbiddenException, Req } from '@nestjs/common'
 import { UserService } from './user.service'
 import { ApiTags, ApiOperation } from '@nestjs/swagger'
-// import { UserSignUpDTO } from './DTO/user.dto'
 import { UserSignUp } from '@/interface/user.interface'
+import { Roles } from '@/decorator/Roles'
+import { Role } from '@/constants/auth'
 
 @Controller('user')
 @ApiTags('User')
@@ -35,8 +36,8 @@ export class UserController {
 
   // 该接口仅对权限为 admin 的用户开发，测试 Guards 能否拦截权限不符合的用户发来的请求
   @Get('hello')
-  @SetMetadata('roles', ['admin'])
+  @Roles(Role.Admin)
   getHello() {
-    throw new ForbiddenException()
+    return 'hello'
   }
 }

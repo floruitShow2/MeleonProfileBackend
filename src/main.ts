@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core'
 import { AppModule } from './app.module'
-import { WsAdapter } from '@nestjs/platform-ws'
+import { IoAdapter } from '@nestjs/platform-socket.io'
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'
 import { INestApplication } from '@nestjs/common'
 
@@ -26,8 +26,9 @@ async function bootstrap() {
 
   initSwagger(app)
   app.setGlobalPrefix('api')
-  app.useWebSocketAdapter(new WsAdapter(app))
+  app.useWebSocketAdapter(new IoAdapter(app))
   app.enableShutdownHooks()
+  app.enableCors()
 
   await app.listen(3000)
 }

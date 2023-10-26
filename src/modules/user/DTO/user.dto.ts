@@ -1,3 +1,5 @@
+import { Role } from '@/constants/auth'
+
 export interface UserEntityDTO {
   username: string
 
@@ -31,7 +33,7 @@ export interface UserEntityDTO {
 
   certification: number
 
-  role: 'admin' | 'user'
+  roles: Role[]
 }
 
 export const DefaultUserEntity: UserEntityDTO = {
@@ -67,5 +69,5 @@ export const DefaultUserEntity: UserEntityDTO = {
 
   certification: 0,
 
-  role: 'user'
+  roles: [Role.User]
 }

@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common'
 import { UserService } from '../user/user.service'
 import { JwtService } from '@nestjs/jwt'
-import { User } from '@/interface/user.interface'
+import { UserEntity } from '@/interface/user.interface'
 
 @Injectable()
 export class AuthService {
   private response: Service.ServiceResponse
   constructor(private readonly userService: UserService, private readonly jwtService: JwtService) {}
 
-  async validateUser(user: User) {
+  async validateUser(user: UserEntity) {
     const { username } = user
     const response = await this.userService.findOneByName({ username })
     if (response.length === 0) {

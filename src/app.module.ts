@@ -1,5 +1,5 @@
 import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common'
-import { APP_FILTER } from '@nestjs/core'
+import { APP_FILTER, APP_GUARD } from '@nestjs/core'
 import { ConfigModule } from '@nestjs/config'
 import { ServeStaticModule } from '@nestjs/serve-static'
 import { join } from 'path'
@@ -8,17 +8,20 @@ import { CryptoMiddleware } from '@/middlewares'
 import { EventsModule } from '@/gateway/events.module'
 import { HttpExceptionFilter } from '@/filters/exception/exception.filter'
 import GlobalConfig from '@/config/global.config'
-import { AppController } from './app.controller'
-import { AppService } from './app.service'
+// 模块
 import {
   MongoModule,
   LoggerModule,
   UserModule,
   AuthModule,
   BlogModule,
+  TaskModule,
   TagModule,
   HelloModule
 } from './modules'
+import { AppController } from './app.controller'
+import { AppService } from './app.service'
+import { RolesGuard } from './guards/roles.guard'
 
 const isDev = process.env.MODE === 'development'
 const envFilePath = isDev ? ['.env.development'] : ['.env.production']
@@ -51,7 +54,10 @@ const envFilePath = isDev ? ['.env.development'] : ['.env.production']
     MongoModule,
     // 日志服务
     LoggerModule,
+    // 用户模块
     UserModule,
+    // 任务管理模块
+    TaskModule,
     AuthModule,
     EventsModule,
     BlogModule,
@@ -64,6 +70,10 @@ const envFilePath = isDev ? ['.env.development'] : ['.env.production']
     {
       provide: APP_FILTER,
       useClass: HttpExceptionFilter
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard
     }
   ]
 })

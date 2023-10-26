@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose'
 import { Injectable } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { LoggerService } from '@/modules/logger/logger.service'
-import { User } from '@/interface/user.interface'
+import { UserEntity } from '@/interface/user.interface'
 import type { ApiResponse } from '@/interface/response.interface'
 import { DefaultUserEntity } from './DTO/user.dto'
 import { UserSignUp } from '@/interface/user.interface'
@@ -12,7 +12,7 @@ import { UserSignUp } from '@/interface/user.interface'
 export class UserService {
   private response: ApiResponse
   constructor(
-    @InjectModel(User.name) private userModel: Model<User>,
+    @InjectModel(UserEntity.name) private userModel: Model<UserEntity>,
     private readonly logger: LoggerService,
     private readonly jwtService: JwtService
   ) {}
@@ -22,7 +22,7 @@ export class UserService {
    * @param accountId 账户ID
    * @returns 查询结果
    */
-  async findOneByName(user: { username: string }): Promise<User[]> {
+  async findOneByName(user: { username: string }): Promise<UserEntity[]> {
     return await this.userModel.find({ username: user.username })
   }
 
@@ -89,6 +89,8 @@ export class UserService {
     }
     const token = this.jwtService.sign({
       ...user,
+      userId: res[0]._id,
+      roles: res[0].roles,
       timestamp: Date.now()
     })
     this.response = {

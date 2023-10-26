@@ -1,19 +1,25 @@
 import { Controller, Post, Get, Req, Res, Body, StreamableFile } from '@nestjs/common'
 import { createReadStream } from 'fs'
 import { join } from 'path'
-import { Blog } from '@/interface/blog.interface'
+import { BlogEntity } from '@/interface/blog.interface'
 import { formatToDateTime } from '@/utils/time'
 import { BlogService } from './blog.service'
 import type { Response } from 'express'
+import { ApiOperation, ApiTags, ApiBody } from '@nestjs/swagger'
 
 @Controller('blog')
+@ApiTags('BlogEntity')
 export class BlogController {
   constructor(private blogService: BlogService) {}
 
   @Post('uploadBlogs')
-  async uploadBlogs(@Req() req: Request, @Body() blogEntities: { blogs: Blog[] }) {
+  @ApiOperation({
+    summary: '上传博客接口'
+  })
+  @ApiBody({ type: [BlogEntity] })
+  async uploadBlogs(@Req() req: Request, @Body() blogEntities: { blogs: BlogEntity[] }) {
     const { username } = req['user']
-    const blogs: Blog[] = blogEntities.blogs.map((blog) => {
+    const blogs: BlogEntity[] = blogEntities.blogs.map((blog) => {
       blog.publisher = username
       blog.publishTime = formatToDateTime(new Date())
       return blog

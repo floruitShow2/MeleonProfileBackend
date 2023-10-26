@@ -1,9 +1,10 @@
+import { Role } from '@/constants/auth'
 import { Prop, Schema } from '@nestjs/mongoose'
 import { ApiProperty, PickType } from '@nestjs/swagger'
 import { Document } from 'mongoose'
 
 @Schema()
-export class User extends Document {
+export class UserEntity extends Document {
   @Prop()
   @ApiProperty({
     description: '用户名'
@@ -92,11 +93,11 @@ export class User extends Document {
   @ApiProperty({
     description: '用户角色'
   })
-  readonly role: 'admin' | 'user'
+  readonly roles: Role[]
 }
 
 @Schema()
-export class UserSignUp extends PickType(User, ['username', 'password']) {
+export class UserSignUp extends PickType(UserEntity, ['username', 'password']) {
   @Prop()
   @ApiProperty({
     description: '用户名'

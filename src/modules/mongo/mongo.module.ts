@@ -1,20 +1,20 @@
 import { Module } from '@nestjs/common'
 import { MongooseModule } from '@nestjs/mongoose'
 import { ConfigService } from '@nestjs/config'
-import { BlogSchema, UserSchema } from './schema'
+// import { BlogSchema, UserSchema } from './schema'
 
-const MONGO_MODELS = MongooseModule.forFeature([
-  {
-    name: 'USER_SCHEMA',
-    schema: UserSchema,
-    collection: 'users'
-  },
-  {
-    name: 'BLOG_SCHEMA',
-    schema: BlogSchema,
-    collection: 'blogs'
-  }
-])
+// export const MONGO_MODELS = MongooseModule.forFeature([
+//   {
+//     name: 'USER_SCHEMA',
+//     schema: UserSchema,
+//     collection: 'users'
+//   },
+//   {
+//     name: 'BLOG_SCHEMA',
+//     schema: BlogSchema,
+//     collection: 'blogs'
+//   }
+// ])
 
 @Module({
   imports: [
@@ -25,9 +25,7 @@ const MONGO_MODELS = MongooseModule.forFeature([
         }
       },
       inject: [ConfigService]
-    }),
-    MONGO_MODELS
-  ],
-  exports: [MONGO_MODELS]
+    })
+  ]
 })
 export class MongoModule {}
