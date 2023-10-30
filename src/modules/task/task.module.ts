@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common'
-import { TaskService } from './task.service'
-import { TaskController } from './task.controller'
-import TaskEntity from '@/dtos/task.dto'
+
 import { MongooseModule } from '@nestjs/mongoose'
 import { TaskSchema, UserSchema } from '../mongo/schema'
-import { LoggerService } from '../logger/logger.service'
-import { UserEntity } from '@/interface/user.interface'
+import { LoggerService } from '@/modules/logger/logger.service'
+import { UserEntity } from '@/modules/user/dto/user.dto'
+import TaskEntity from './dto/task.dto'
+import { TaskService } from './task.service'
+import { TaskController } from './task.controller'
 
 @Module({
   imports: [

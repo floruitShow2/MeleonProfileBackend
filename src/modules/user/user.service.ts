@@ -3,10 +3,9 @@ import { InjectModel } from '@nestjs/mongoose'
 import { Injectable } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { LoggerService } from '@/modules/logger/logger.service'
-import { UserEntity } from '@/interface/user.interface'
 import type { ApiResponse } from '@/interface/response.interface'
 import { DefaultUserEntity } from './DTO/user.dto'
-import { UserSignUp } from '@/interface/user.interface'
+import { UserSignUp, UserEntity } from '@/modules/user/dto/user.dto'
 
 @Injectable()
 export class UserService {

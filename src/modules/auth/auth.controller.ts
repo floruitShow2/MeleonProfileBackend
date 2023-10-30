@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Request, UseGuards } from '@nestjs/common'
 import { AuthService } from './auth.service'
-import { UserEntity } from '@/interface/user.interface'
+import { UserEntity } from '@/modules/user/dto/user.dto'
 import { ApiOperation, ApiTags } from '@nestjs/swagger'
 import { AuthGuard } from '@/guards/auth.guard'
 

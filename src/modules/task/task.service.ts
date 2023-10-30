@@ -1,10 +1,11 @@
-import TaskEntity from '@/dtos/task.dto'
-import { ApiResponse } from '@/interface/response.interface'
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
+import { readFileSync } from 'fs'
+import { UserEntity } from '@/modules/user/dto/user.dto'
+import { ApiResponse } from '@/interface/response.interface'
+import TaskEntity from './dto/task.dto'
 import { LoggerService } from '../logger/logger.service'
-import { UserEntity } from '@/interface/user.interface'
 
 @Injectable()
 export class TaskService {
@@ -46,28 +47,33 @@ export class TaskService {
   // 获取所有任务
   async getAllTasks(userId: string, username: string) {
     try {
-      console.log(userId, username)
       const res = await this.taskModel
         .find(
           {
             relatives: { $in: [userId] },
             creator: username
           },
-          { _id: 0, __v: 0 }
+          { __v: 0 }
         )
-        .populate('relatives', 'username avatar')
+        .populate({ path: 'relatives', select: 'username avatar -_id' })
         .exec()
 
       const map = new Map<string, TaskEntity[]>()
 
       res.forEach((task) => {
+        task = task.toObject()
         const { group } = task
+        // 处理任务ID
+        task.taskId = task._id
+        delete task._id
         // 处理附件内容
+        task.coverImage =
+          task.coverImage &&
+          `data:image/png;base64,${readFileSync(task.coverImage).toString('base64')}`
         task.attachments = task.attachments.map((filePath) => {
           return filePath.split('\\').at(-1)
         })
         // 处理用户信息
-
         if (map.has(group)) {
           map.set(group, [...map.get(group), task])
         } else {

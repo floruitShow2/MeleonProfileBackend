@@ -2,7 +2,7 @@ import { Prop, Schema } from '@nestjs/mongoose'
 import { ApiProperty } from '@nestjs/swagger'
 import { Document, Types } from 'mongoose'
 import type { TagType } from '@/interface/tag.interface'
-import { UserEntity } from '@/interface/user.interface'
+import { UserEntity } from '@/modules/user/dto/user.dto'
 
 enum TaskGroups {
   Todo = 'todo',
@@ -13,6 +13,9 @@ enum TaskGroups {
 
 @Schema()
 class TaskEntity extends Document {
+  @Prop()
+  taskId?: string
+
   @Prop()
   @ApiProperty({
     description: '任务分组',

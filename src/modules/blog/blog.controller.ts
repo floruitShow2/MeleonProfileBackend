@@ -1,7 +1,7 @@
 import { Controller, Post, Get, Req, Res, Body, StreamableFile } from '@nestjs/common'
 import { createReadStream } from 'fs'
 import { join } from 'path'
-import { BlogEntity } from '@/interface/blog.interface'
+import { BlogEntity } from './dto/blog.dto'
 import { formatToDateTime } from '@/utils/time'
 import { BlogService } from './blog.service'
 import type { Response } from 'express'
@@ -29,7 +29,6 @@ export class BlogController {
 
   @Get('getStreamFile')
   getFile(@Res({ passthrough: true }) res: Response): StreamableFile {
-    console.log(process.cwd())
     const file = createReadStream(join(process.cwd(), '/public/avatar/avatar_1.png'))
     res.set({
       'Content-Type': 'image/png',

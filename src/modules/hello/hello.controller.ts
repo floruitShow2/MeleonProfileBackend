@@ -6,7 +6,7 @@ import { ValidationPipe } from '@/pipe/validation.pipe'
 export class HelloController {
   constructor(private readonly hellowService: HelloService) {}
 
-  @Get()
+  @Get('/getHello')
   getHello(
     @Query('ids', new ValidationPipe())
     ids: number[]

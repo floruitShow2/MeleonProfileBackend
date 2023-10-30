@@ -5,6 +5,7 @@ import { JwtService } from '@nestjs/jwt'
 @Injectable()
 export class CryptoMiddleware implements NestMiddleware {
   constructor(private readonly jwtService: JwtService) {}
+
   use(req: Request, res: Response, next: NextFunction) {
     const token = (req.headers as any).user_token
     const payload = this.jwtService.decode(token)

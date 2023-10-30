@@ -16,6 +16,7 @@ import {
   AuthModule,
   BlogModule,
   TaskModule,
+  CommentModule,
   TagModule,
   HelloModule
 } from './modules'
@@ -58,6 +59,8 @@ const envFilePath = isDev ? ['.env.development'] : ['.env.production']
     UserModule,
     // 任务管理模块
     TaskModule,
+    // 评论模块
+    CommentModule,
     AuthModule,
     EventsModule,
     BlogModule,

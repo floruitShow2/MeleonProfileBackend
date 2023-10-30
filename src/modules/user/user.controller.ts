@@ -1,7 +1,7 @@
-import { Controller, Post, Get, Body, SetMetadata, ForbiddenException, Req } from '@nestjs/common'
+import { Controller, Post, Get, Body, Req } from '@nestjs/common'
 import { UserService } from './user.service'
 import { ApiTags, ApiOperation } from '@nestjs/swagger'
-import { UserSignUp } from '@/interface/user.interface'
+import { UserSignUp } from '@/modules/user/dto/user.dto'
 import { Roles } from '@/decorator/Roles'
 import { Role } from '@/constants/auth'
 

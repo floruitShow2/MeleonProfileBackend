@@ -1,9 +1,9 @@
-import { BlogEntity } from '@/interface/blog.interface'
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
-import { LoggerService } from '../logger/logger.service'
+import { LoggerService } from '@/modules/logger/logger.service'
 import { ApiResponse } from '@/interface/response.interface'
+import { BlogEntity } from './dto/blog.dto'
 
 @Injectable()
 export class BlogService {
@@ -17,7 +17,6 @@ export class BlogService {
   async createBlogs(blogs: BlogEntity[]) {
     try {
       const res = await this.blogModel.create(blogs)
-      console.log(res)
       this.logger.info(null, '上传博客文件成功')
       this.response = {
         Code: 1,
