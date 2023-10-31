@@ -6,6 +6,7 @@ import { UserEntity } from '@/modules/user/dto/user.dto'
 import { ApiResponse } from '@/interface/response.interface'
 import TaskEntity from './dto/task.dto'
 import { LoggerService } from '../logger/logger.service'
+import { CommentEntity } from '../comment/dto/comment.dto'
 
 @Injectable()
 export class TaskService {
@@ -48,24 +49,84 @@ export class TaskService {
   async getAllTasks(userId: string, username: string) {
     try {
       const res = await this.taskModel
-        .find(
+        .aggregate([
           {
-            relatives: { $in: [userId] },
-            creator: username
+            $match: {
+              $or: [{ relatives: { $in: [userId] } }, { creator: username }]
+            }
           },
-          { __v: 0 }
-        )
-        .populate({ path: 'relatives', select: 'username avatar -_id' })
+          {
+            $addFields: {
+              taskId: '$_id'
+            }
+          },
+          {
+            $lookup: {
+              from: 'users',
+              foreignField: '_id',
+              localField: 'relatives',
+              as: 'userDetails'
+            }
+          },
+          {
+            $addFields: {
+              _idStr: { $toString: '$_id' }
+            }
+          },
+          {
+            $lookup: {
+              from: 'comments',
+              foreignField: 'targetId',
+              localField: '_idStr',
+              as: 'commentsList'
+            }
+          },
+          {
+            $addFields: {
+              comments: { $size: '$commentsList' }
+            }
+          },
+          {
+            $project: {
+              taskId: 1,
+              group: 1,
+              title: 1,
+              desc: 1,
+              coverImage: 1,
+              startTime: 1,
+              endTime: 1,
+              tags: 1,
+              creator: 1,
+              createTime: 1,
+              lastUpdateTime: 1,
+              relatives: {
+                $map: {
+                  input: '$userDetails',
+                  as: 'user',
+                  in: {
+                    username: '$$user.username',
+                    avatar: '$$user.avatar'
+                  }
+                }
+              },
+              comments: 1,
+              attachments: 1
+            }
+          },
+          {
+            $project: {
+              _id: 0
+            }
+          }
+        ])
         .exec()
+
+      console.log(res)
 
       const map = new Map<string, TaskEntity[]>()
 
       res.forEach((task) => {
-        task = task.toObject()
         const { group } = task
-        // 处理任务ID
-        task.taskId = task._id
-        delete task._id
         // 处理附件内容
         task.coverImage =
           task.coverImage &&
@@ -80,7 +141,6 @@ export class TaskService {
           map.set(group, [task])
         }
       })
-
       this.logger.info(null, `${username}查询所有他的相关任务`)
 
       this.response = {
@@ -94,6 +154,7 @@ export class TaskService {
         })
       }
     } catch (error) {
+      console.log(error)
       this.logger.error(null, '查询任务行为失败')
 
       this.response = {

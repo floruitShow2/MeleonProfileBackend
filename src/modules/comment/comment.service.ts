@@ -6,6 +6,7 @@ import { CommentEntity } from './dto/comment.dto'
 import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
 import { InjectModel } from '@nestjs/mongoose'
 import { formatToDateTime } from '@/utils/time'
+import { FlattenArray } from '@/utils/format'
 
 @Injectable()
 export class CommentService {
@@ -29,17 +30,21 @@ export class CommentService {
     return this.response
   }
 
+  async getCommentsCount(targetId: string) {
+    return await this.commentModel.find({ targetId }).count()
+  }
+
   async getCommentsById(userId: string, targetId: string) {
     try {
       const res = await this.commentModel
         .find({ targetId }, { __v: 0 })
         .populate('publisher', 'avatar username -_id')
         .exec()
-      const result: any[] = []
+      let result: any[] = []
       const map = {}
       for (const item of res) {
         const itemObj = item.toObject()
-        itemObj.commentId = itemObj._id
+        itemObj.commentId = itemObj._id.toString()
         delete itemObj._id
 
         const likes = itemObj.likes.length
@@ -49,23 +54,30 @@ export class CommentService {
         const alreadyLike = findIdx !== -1
         delete itemObj.likes
 
-        map[itemObj.commentId] = itemObj.replyId
-          ? { ...itemObj, likes, alreadyLike }
-          : { ...itemObj, likes, alreadyLike, replies: [] }
+        map[itemObj.commentId] = { ...itemObj, likes, alreadyLike, replies: [] }
       }
 
       for (const item of res) {
         if (item.replyId) {
-          map[item.replyId].push(map[item._id])
+          map[item.replyId].replies.push({
+            ...map[item._id],
+            replyUser: map[item.replyId].publisher.username
+          })
         } else {
           result.push(map[item._id])
         }
       }
 
+      result = result.map((item) => {
+        item.replies = FlattenArray(item.replies, 'replies')
+        return item
+      })
+
       this.logger.info(null, `用户查询id为${targetId}的评论时成功`)
       this.response = getSuccessResponse('评论列表获取成功', result)
     } catch (error) {
-      this.logger.error(null, `用户查询id为${targetId}的评论时失败`)
+      console.log(error)
+      this.logger.error(null, `用户查询id为${targetId}的评论时失败，失败原因：${error}`)
       this.response = getFailResponse('评论列表获取失败', null)
     }
 

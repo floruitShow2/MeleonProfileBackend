@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common'
-
 import { MongooseModule } from '@nestjs/mongoose'
 import { TaskSchema, UserSchema } from '../mongo/schema'
 import { LoggerService } from '@/modules/logger/logger.service'
