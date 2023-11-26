@@ -4,8 +4,7 @@ import { Injectable } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { LoggerService } from '@/modules/logger/logger.service'
 import type { ApiResponse } from '@/interface/response.interface'
-import { DefaultUserEntity } from './DTO/user.dto'
-import { UserSignUp, UserEntity } from '@/modules/user/dto/user.dto'
+import { DefaultUserEntity, UserSignUp, UserEntity } from './DTO/user.dto'
 
 @Injectable()
 export class UserService {
@@ -33,7 +32,7 @@ export class UserService {
   async signup(user: UserSignUp): Promise<ApiResponse> {
     const res = await this.findOneByName(user)
     if (res && res.length) {
-      this.logger.error('userService -> signup', '用户已注册')
+      this.logger.error('UserService', '用户已注册')
       this.response = {
         Code: -1,
         Message: '用户已注册',
@@ -67,10 +66,16 @@ export class UserService {
     return this.response
   }
 
+  /**
+   * @description 用户登录接口
+   * @param user 用户的部分信息
+   * @returns
+   */
   async login(user: UserSignUp): Promise<ApiResponse> {
     const res = await this.findOneByName(user)
     const findIdx = res.findIndex((user) => user.password === user.password)
     if (!res || !res.length || findIdx === -1) {
+      this.logger.error(null, `${user.username}登录失败，未找到该用户`)
       this.response = {
         Code: -1,
         Message: '用户未注册，登录失败',
@@ -79,6 +84,7 @@ export class UserService {
       return this.response
     }
     if (res[findIdx].password !== user.password) {
+      this.logger.error(null, `${user.username}登录失败，密码不匹配`)
       this.response = {
         Code: -1,
         Message: '密码错误，登录失败',
@@ -92,6 +98,7 @@ export class UserService {
       roles: res[0].roles,
       timestamp: Date.now()
     })
+    this.logger.info(null, `${user.username}登录成功`)
     this.response = {
       Code: 1,
       Message: '登录成功',
@@ -102,9 +109,15 @@ export class UserService {
     return this.response
   }
 
+  /**
+   * @description 获取用户的详细信息
+   * @param user 用户的部分信息
+   * @returns
+   */
   async getUserInfo(user: UserSignUp) {
     const res = await this.findOneByName(user)
     if (!res || !res.length) {
+      this.logger.error(null, `查询${user.username}的用户信息失败`)
       this.response = {
         Code: -1,
         Message: '未找到用户',
@@ -112,6 +125,7 @@ export class UserService {
       }
       return this.response
     }
+    this.logger.info(null, `查询${user.username}的用户信息成功`)
     this.response = {
       Code: 1,
       Message: '成功',

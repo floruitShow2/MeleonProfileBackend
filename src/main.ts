@@ -19,8 +19,7 @@ function initSwagger(app: INestApplication) {
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
-    // 启用特定级别的日志服务
-    logger: ['warn', 'error'],
+    logger: false,
     cors: true
   })
 

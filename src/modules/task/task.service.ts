@@ -6,7 +6,6 @@ import { UserEntity } from '@/modules/user/dto/user.dto'
 import { ApiResponse } from '@/interface/response.interface'
 import TaskEntity from './dto/task.dto'
 import { LoggerService } from '../logger/logger.service'
-import { CommentEntity } from '../comment/dto/comment.dto'
 
 @Injectable()
 export class TaskService {
@@ -82,11 +81,6 @@ export class TaskService {
             }
           },
           {
-            $addFields: {
-              comments: { $size: '$commentsList' }
-            }
-          },
-          {
             $project: {
               taskId: 1,
               group: 1,
@@ -109,7 +103,7 @@ export class TaskService {
                   }
                 }
               },
-              comments: 1,
+              comments: { $size: '$commentsList' },
               attachments: 1
             }
           },

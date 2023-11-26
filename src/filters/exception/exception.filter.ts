@@ -1,7 +1,7 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException } from '@nestjs/common'
 import { LoggerService } from '@/modules/logger/logger.service'
 
-@Catch()
+@Catch(HttpException)
 export class HttpExceptionFilter implements ExceptionFilter {
   constructor(private readonly logger: LoggerService) {}
   catch(exception: HttpException, host: ArgumentsHost) {
@@ -21,9 +21,12 @@ export class HttpExceptionFilter implements ExceptionFilter {
     )
 
     response.status(status).json({
-      statusCode: status,
-      timestamp: new Date().toISOString(),
-      path: request.url
+      Code: status,
+      Message: exception.getResponse(),
+      ReturnData: {
+        timestamp: new Date().toISOString(),
+        path: request.url
+      }
     })
   }
 }

@@ -4,6 +4,7 @@
 
 # files storage
 /filesStorage
+/public
 
 # Logs
 logs

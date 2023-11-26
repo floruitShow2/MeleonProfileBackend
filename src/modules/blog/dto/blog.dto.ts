@@ -8,7 +8,13 @@ export class BlogEntity extends Document {
   @ApiProperty({
     description: '文章名称'
   })
-  readonly filename: string
+  readonly title: string
+
+  @Prop()
+  @ApiProperty({
+    description: '文章简介'
+  })
+  readonly description: string
 
   @Prop()
   @ApiProperty({
@@ -19,19 +25,41 @@ export class BlogEntity extends Document {
 
   @Prop()
   @ApiProperty({
-    description: '分类标签'
-  })
-  readonly tags: string[]
-
-  @Prop()
-  @ApiProperty({
     description: '发布人，无需传递，后端自行解析token'
   })
-  publisher: string
+  uploader: string
 
   @Prop()
   @ApiProperty({
     description: '发布时间，无需传递，以服务器端时间为准'
   })
-  publishTime: string
+  uploadTime: string
+
+  @Prop()
+  @ApiProperty({
+    description: '阅读数'
+  })
+  views: number
+
+  @Prop()
+  @ApiProperty({
+    description: '点赞数'
+  })
+  likes: number
+
+  @Prop()
+  @ApiProperty({
+    description: '分类标签列表'
+  })
+  readonly tags: string[]
+
+  @Prop()
+  @ApiProperty({
+    description: '封面'
+  })
+  readonly cover: string
+
+  @Prop()
+  @ApiProperty()
+  status: 'total' | 'notPassed' | 'inReview' | 'published'
 }

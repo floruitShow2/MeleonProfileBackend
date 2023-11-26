@@ -72,7 +72,7 @@ export class LoggerService {
   error(ctx: any, message: string, meta?: Record<string, any>): Logger {
     return this.logger.error({
       message,
-      contextNmae: this.context,
+      contextName: this.context,
       ctx,
       ...meta
     })
@@ -81,7 +81,7 @@ export class LoggerService {
   warn(ctx: any, message: string, meta?: Record<string, any>): Logger {
     return this.logger.warn({
       message,
-      contextNmae: this.context,
+      contextName: this.context,
       ctx,
       ...meta
     })
@@ -90,7 +90,7 @@ export class LoggerService {
   debug(ctx: any, message: string, meta?: Record<string, any>): Logger {
     return this.logger.debug({
       message,
-      contextNmae: this.context,
+      contextName: this.context,
       ctx,
       ...meta
     })
@@ -99,7 +99,7 @@ export class LoggerService {
   info(ctx: any, message: string, meta?: Record<string, any>): Logger {
     return this.logger.info({
       message,
-      contextNmae: this.context,
+      contextName: this.context,
       ctx,
       ...meta
     })

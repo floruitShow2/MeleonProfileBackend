@@ -1,12 +1,7 @@
 import { Test } from '@nestjs/testing'
-import { Model } from 'mongoose'
 import { UserController } from './user.controller'
 import { UserService } from './user.service'
 import { ApiResponse } from '@/interface/response.interface'
-import { UserSchema } from '@/modules/mongo/schema/user.schema'
-import { User } from '@/interface/user.interface'
-import { LoggerService } from '../logger/logger.service'
-import { JwtService } from '@nestjs/jwt'
 
 describe('UserController', () => {
   let userController: UserController
