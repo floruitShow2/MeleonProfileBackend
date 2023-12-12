@@ -45,7 +45,7 @@ export class BlogEntity extends Document {
   @ApiProperty({
     description: '点赞数'
   })
-  likes: number
+  likes: string[]
 
   @Prop()
   @ApiProperty({

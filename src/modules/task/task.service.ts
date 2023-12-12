@@ -115,8 +115,6 @@ export class TaskService {
         ])
         .exec()
 
-      console.log(res)
-
       const map = new Map<string, TaskEntity[]>()
 
       res.forEach((task) => {

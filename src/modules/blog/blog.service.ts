@@ -4,7 +4,8 @@ import { Model } from 'mongoose'
 import { LoggerService } from '@/modules/logger/logger.service'
 import { ApiResponse } from '@/interface/response.interface'
 import { BlogEntity } from './dto/blog.dto'
-import { UserEntity } from '../user/dto/user.dto'
+import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
+import { formatToDateTime } from '@/utils/time'
 
 @Injectable()
 export class BlogService {
@@ -17,8 +18,7 @@ export class BlogService {
 
   async createBlogs(blogs: BlogEntity[]) {
     try {
-      const res = await this.blogModel.create(blogs)
-      console.log(res)
+      await this.blogModel.create(blogs)
       this.logger.info(null, '上传博客文件成功')
       this.response = {
         Code: 1,
@@ -37,7 +37,7 @@ export class BlogService {
     return this.response
   }
 
-  async findBlogs(user: UserEntity, query: string) {
+  async findBlogs(user: { username: string; userId: string }, query: string) {
     const pattern = new RegExp(query, 'gi')
 
     try {
@@ -48,7 +48,7 @@ export class BlogService {
               title: {
                 $regex: pattern
               },
-              uploader: user.username
+              uploader: user.userId
             }
           },
           {
@@ -85,31 +85,133 @@ export class BlogService {
     return this.response
   }
 
-  async findBlogById(user: UserEntity, blogId: string) {
+  async findBlogById(user: { username: string; userId: string }, blogId: string) {
+    const { username, userId } = user
     try {
-      const res = await this.blogModel.findOne(
-        {
-          uploader: user.username,
-          _id: blogId
-        },
-        { _id: 0, __v: 0 }
-      )
+      const res = await this.blogModel
+        .aggregate([
+          {
+            $match: {
+              $or: [{ uploader: userId }, { _id: blogId }]
+            }
+          },
+          {
+            $addFields: {
+              uid: { $toObjectId: '$uploader' },
+              id: { $toString: '$_id' },
+              liked: {
+                $cond: {
+                  if: {
+                    $ne: [
+                      {
+                        $size: {
+                          $filter: {
+                            input: '$likes',
+                            as: 'item',
+                            cond: {
+                              $eq: ['$$item.userId', userId]
+                            }
+                          }
+                        }
+                      },
+                      0
+                    ]
+                  },
+                  then: true,
+                  else: false
+                }
+              }
+            }
+          },
+          {
+            $lookup: {
+              from: 'users',
+              foreignField: '_id',
+              localField: 'uid',
+              as: 'uploaders'
+            }
+          },
+          {
+            $lookup: {
+              from: 'comments',
+              foreignField: 'targetId',
+              localField: 'id',
+              as: 'comments'
+            }
+          },
+          {
+            $project: {
+              'uploaders._id': 0,
+              'uploaders.__v': 0,
+              'uploaders.password': 0,
+              'uploaders.roles': 0
+            }
+          },
+          {
+            $project: {
+              id: 1,
+              uploader: {
+                $arrayElemAt: ['$uploaders', 0]
+              },
+              content: 1,
+              liked: 1,
+              title: 1,
+              uploadTime: 1,
+              views: 1,
+              tags: 1,
+              likes: {
+                $size: '$likes'
+              },
+              comments: {
+                $size: '$comments'
+              }
+            }
+          },
+          {
+            $project: {
+              uploaders: 0,
+              _id: 0
+            }
+          }
+        ])
+        .exec()
 
-      console.log(res)
-      this.logger.info('BlogService', `${user.username}查询《${res.title || ''}》成功`)
+      this.logger.info('BlogService', `${username}查询《${res[0].title || ''}》成功`)
       this.response = {
         Code: 1,
         Message: '博客内容查询成功',
-        ReturnData: res
+        ReturnData: res[0]
       }
     } catch (err) {
-      console.log(err)
-      this.logger.info('BlogService', `${user.username}查询博客内容失败`)
+      this.logger.info('BlogService', `${username}查询博客内容失败`)
       this.response = {
         Code: -1,
         Message: '博客内容查询失败',
         ReturnData: null
       }
+    }
+
+    return this.response
+  }
+
+  async handleBlogLike(userId: string, blogId: string) {
+    let isLiked = false
+    try {
+      // 判断是否已经点赞
+      const res = await this.blogModel.findOne({ _id: blogId, 'likes.userId': userId })
+      isLiked = res ? true : false
+      // 添加或删除点赞记录
+      await this.blogModel.updateOne(
+        { _id: blogId },
+        isLiked
+          ? { $pull: { likes: { userId } } }
+          : { $push: { likes: { userId, timeStamp: formatToDateTime(new Date()) } } }
+      )
+      this.logger.info('BlogService', isLiked ? '取消点赞成功' : '评论点赞数 +1')
+      this.response = getSuccessResponse(isLiked ? '取消点赞成功' : '评论点赞数 +1', 'BlogService')
+    } catch (err) {
+      this.logger.error('BlogService', isLiked ? '取消点赞失败' : '点赞评论失败')
+      this.response = getFailResponse(isLiked ? '取消点赞失败' : '点赞评论失败', 'BlogService')
     }
 
     return this.response

@@ -85,7 +85,6 @@ export class CommentService {
   }
 
   async addCommentLikes(userId: string, commentId: string, type: 'add' | 'sub') {
-    console.log(type)
     try {
       await this.commentModel.updateOne(
         { _id: commentId },
