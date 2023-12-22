@@ -146,7 +146,6 @@ export class TaskService {
         })
       }
     } catch (error) {
-      console.log(error)
       this.logger.error(null, '查询任务行为失败')
 
       this.response = {

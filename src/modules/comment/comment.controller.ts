@@ -16,6 +16,13 @@ export class CommentController {
     return this.commentService.createComment(comment)
   }
 
+  @Post('/removeComment')
+  removeComment(@Req() req: Request, @Body('commentId') commentId: string) {
+    const user = req['user']
+    if (!user) return new UnauthorizedException()
+    return this.commentService.removeCommentById(user, commentId)
+  }
+
   @Get('/getCommentsById')
   getCommentsById(@Query('targetId') targetId: string, @Req() req: Request) {
     const user = req['user']

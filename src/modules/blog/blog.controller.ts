@@ -45,7 +45,6 @@ export class BlogController {
     summary: '获取不同状态的博客文章列表'
   })
   async getBlogsList(@Req() req: Request, @Query('searchQuery') searchQuery: string) {
-    console.log(searchQuery)
     return this.blogService.findBlogs(req['user'], searchQuery)
   }
 

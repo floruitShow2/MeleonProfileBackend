@@ -30,6 +30,23 @@ export class CommentService {
     return this.response
   }
 
+  async removeCommentById(user: { userId: string }, commentId: string) {
+    try {
+      // this.commentModel.find({ _id: commentId, publisher: user.userId })
+      await this.commentModel.deleteMany({
+        publisher: user.userId,
+        $or: [{ _id: commentId }, { replyId: commentId }]
+      })
+      this.logger.info('Comments', `删除 id 及 replyId 为${commentId}的评论成功`)
+      this.response = getSuccessResponse('删除成功', commentId)
+    } catch (error) {
+      this.logger.info(error, `删除 id 及 replyId 为${commentId}的评论失败`)
+      this.response = getFailResponse('删除失败', null)
+    }
+
+    return this.response
+  }
+
   async getCommentsCount(targetId: string) {
     return await this.commentModel.find({ targetId }).count()
   }

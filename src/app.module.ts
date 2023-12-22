@@ -17,6 +17,7 @@ import {
   TaskModule,
   CommentModule,
   TagModule,
+  RedisModule,
   HelloModule
 } from './modules'
 import { AppController } from './app.controller'
@@ -63,7 +64,8 @@ const envFilePath = isDev ? ['.env.development'] : ['.env.production']
     EventsModule,
     BlogModule,
     TagModule,
-    HelloModule
+    HelloModule,
+    RedisModule
   ],
   controllers: [AppController],
   providers: [
