@@ -4,7 +4,7 @@ import { Model } from 'mongoose'
 import { readFileSync } from 'fs'
 import { UserEntity } from '@/modules/user/dto/user.dto'
 import { ApiResponse } from '@/interface/response.interface'
-import TaskEntity from './dto/task.dto'
+import TaskEntity, { TaskSearchOptions } from './dto/task.dto'
 import { LoggerService } from '../logger/logger.service'
 
 @Injectable()
@@ -45,13 +45,28 @@ export class TaskService {
   }
 
   // 获取所有任务
-  async getAllTasks(userId: string, username: string) {
+  async getAllTasks(user: { userId: string; username: string }, options: TaskSearchOptions) {
+    const { userId, username } = user
+
+    const { startDate, endDate } = options
+    const dateOptions: Record<string, any> = {}
+    if (startDate) dateOptions.startTime = { $gte: options.startDate }
+    if (endDate) dateOptions.endTime = { $lte: options.endDate }
+    console.log(dateOptions)
+
     try {
       const res = await this.taskModel
         .aggregate([
+          // 查询与接口调用用户相关联的任务
           {
             $match: {
               $or: [{ relatives: { $in: [userId] } }, { creator: username }]
+            }
+          },
+          {
+            $match: {
+              title: { $regex: options.title, $options: 'i' },
+              ...dateOptions
             }
           },
           {

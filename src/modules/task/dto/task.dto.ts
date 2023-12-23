@@ -91,3 +91,10 @@ class TaskEntity extends Document {
 }
 
 export default TaskEntity
+
+export interface TaskSearchOptions {
+  title: string
+  tags: string[]
+  startDate: string
+  endDate: string
+}

@@ -1,11 +1,20 @@
-import { Body, Controller, Get, Post, Req, UploadedFiles, UseInterceptors } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Req,
+  UploadedFiles,
+  UseInterceptors,
+  Query
+} from '@nestjs/common'
 import { FileFieldsInterceptor } from '@nestjs/platform-express'
 import { TaskService } from './task.service'
 import { diskStorage } from 'multer'
 import { join } from 'path'
 import { existsSync, mkdirSync } from 'fs'
 import { formatToDateTime } from '@/utils/time'
-import TaskEntity from './dto/task.dto'
+import TaskEntity, { TaskSearchOptions } from './dto/task.dto'
 
 @Controller('task')
 export class TaskController {
@@ -65,8 +74,8 @@ export class TaskController {
   }
 
   @Get('/getAllTasks')
-  getAllTasks(@Req() req: Request) {
+  getAllTasks(@Req() req: Request, @Query() options: TaskSearchOptions) {
     const user = req['user']
-    return this.taskService.getAllTasks(user.userId, user.username)
+    return this.taskService.getAllTasks(user, options)
   }
 }
