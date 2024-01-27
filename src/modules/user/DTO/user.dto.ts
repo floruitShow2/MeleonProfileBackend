@@ -8,7 +8,8 @@ import { Document } from 'mongoose'
 export class UserEntity extends Document {
   @Prop()
   @ApiProperty({
-    description: '用户名'
+    description: '用户名',
+    example: 'meleon'
   })
   readonly username: string
 
@@ -42,12 +43,6 @@ export class UserEntity extends Document {
     description: '邮箱'
   })
   readonly email: string
-
-  @Prop()
-  @ApiProperty({
-    description: '账户ID'
-  })
-  readonly accountId: string
 
   @Prop()
   @ApiProperty({
@@ -115,24 +110,25 @@ export class UserEntity extends Document {
 export class UserSignUp extends PickType(UserEntity, ['username', 'password']) {
   @Prop()
   @ApiProperty({
-    description: '用户名'
+    description: '用户名',
+    example: 'meleon'
   })
-  // @IsNotEmpty({
-  //   message: '用户名不能为空'
-  // })
+  @IsNotEmpty({
+    message: '用户名不能为空'
+  })
   readonly username: string
 
   @Prop()
   @ApiProperty({
     description: '用户密码',
-    example: '123456'
+    example: '232000'
   })
-  // @IsNotEmpty({
-  //   message: '密码不能为空'
-  // })
-  // @MinLength(6, {
-  //   message: '密码长度最少为 6 位'
-  // })
+  @IsNotEmpty({
+    message: '密码不能为空'
+  })
+  @MinLength(6, {
+    message: '密码长度最少为 6 位'
+  })
   readonly password: string
 }
 
@@ -164,8 +160,6 @@ export interface UserEntityDTO {
   phone: string
 
   registrationDate: string
-
-  accountId: string
 
   certification: number
 
@@ -200,8 +194,6 @@ export const DefaultUserEntity: UserEntityDTO = {
   phone: '',
 
   registrationDate: '',
-
-  accountId: '',
 
   certification: 0,
 

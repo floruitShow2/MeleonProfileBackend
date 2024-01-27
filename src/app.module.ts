@@ -18,7 +18,7 @@ import {
   CommentModule,
   TagModule,
   RedisModule,
-  HelloModule
+  FileModule
 } from './modules'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
@@ -61,11 +61,13 @@ const envFilePath = isDev ? ['.env.development'] : ['.env.production']
     TaskModule,
     // 评论模块
     CommentModule,
-    EventsModule,
+    // 博客模块
     BlogModule,
+    EventsModule,
     TagModule,
-    HelloModule,
-    RedisModule
+    RedisModule,
+    // 文件模块
+    FileModule
   ],
   controllers: [AppController],
   providers: [

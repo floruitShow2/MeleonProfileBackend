@@ -27,7 +27,7 @@ export class LoggerService {
         // 保存到文件
         new transports.DailyRotateFile({
           // 日志文件文件夹，建议使用path.join()方式来处理，或者process.cwd()来设置，此处仅作示范
-          dirname: 'src/logs',
+          dirname: 'src/logs/info',
           // 日志文件名 %DATE% 会自动设置为当前日期
           filename: 'application-%DATE%.info.log',
           // 日期格式
@@ -50,7 +50,7 @@ export class LoggerService {
         }),
         // 同上述方法，区分error日志和info日志，保存在不同文件，方便问题排查
         new transports.DailyRotateFile({
-          dirname: 'src/logs',
+          dirname: 'src/logs/error',
           filename: 'application-%DATE%.error.log',
           datePattern: 'YYYY-MM-DD',
           zippedArchive: true,
@@ -63,11 +63,36 @@ export class LoggerService {
             format.json()
           ),
           level: 'error'
+        }),
+        // 仅作记录用，记录接口、调用者、执行耗时等信息
+        new transports.DailyRotateFile({
+          dirname: 'src/logs/debug',
+          filename: 'application-%DATE%.debug.log',
+          datePattern: 'YYYY-MM-DD',
+          zippedArchive: true,
+          maxSize: '20m',
+          maxFiles: '14d',
+          format: format.combine(
+            format.timestamp({
+              format: 'YYYY-MM-DD HH:mm:ss'
+            }),
+            format.json()
+          ),
+          level: 'debug'
         })
       ]
     })
   }
 
+  // 基本日志记录
+  info(ctx: any, message: string, meta?: Record<string, any>): Logger {
+    return this.logger.info({
+      message,
+      contextName: this.context,
+      ctx,
+      ...meta
+    })
+  }
   // 错误日志记录
   error(ctx: any, message: string, meta?: Record<string, any>): Logger {
     return this.logger.error({
@@ -89,15 +114,6 @@ export class LoggerService {
   // debug日志记录
   debug(ctx: any, message: string, meta?: Record<string, any>): Logger {
     return this.logger.debug({
-      message,
-      contextName: this.context,
-      ctx,
-      ...meta
-    })
-  }
-  // 基本日志记录
-  info(ctx: any, message: string, meta?: Record<string, any>): Logger {
-    return this.logger.info({
       message,
       contextName: this.context,
       ctx,

@@ -4,7 +4,8 @@ import { Injectable } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { LoggerService } from '@/modules/logger/logger.service'
 import type { ApiResponse } from '@/interface/response.interface'
-import { DefaultUserEntity, UserSignUp, UserEntity } from './DTO/user.dto'
+import { DefaultUserEntity, UserSignUp, UserEntity, UserEntityDTO } from './DTO/user.dto'
+import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
 
 @Injectable()
 export class UserService {
@@ -21,7 +22,23 @@ export class UserService {
    * @returns 查询结果
    */
   async findOneByName(user: { username: string }): Promise<UserEntity[]> {
-    return await this.userModel.find({ username: user.username })
+    return await this.userModel.aggregate([
+      {
+        $match: { username: user.username }
+      },
+      {
+        $addFields: {
+          userId: '$_id'
+        }
+      },
+      {
+        $project: {
+          password: 0,
+          _id: 0,
+          __v: 0
+        }
+      }
+    ])
   }
 
   /**
@@ -99,13 +116,11 @@ export class UserService {
       timestamp: Date.now()
     })
     this.logger.info(null, `${user.username}登录成功`)
-    this.response = {
-      Code: 1,
-      Message: '登录成功',
-      ReturnData: {
-        accessToken: token
-      }
-    }
+    
+    this.response = getSuccessResponse('登录成功', {
+      accessToken: token
+    })
+
     return this.response
   }
 
@@ -131,6 +146,69 @@ export class UserService {
       Message: '成功',
       ReturnData: res[0]
     }
+    return this.response
+  }
+
+  /**
+   * @description 更新用户个人信息
+   * @param user 
+   * @param userInfo 
+   * @returns 
+   */
+  async updateUserInfo(user: { userId: string; username: string }, userInfo: Partial<UserEntityDTO>): Promise<ApiResponse> {
+    try {
+      const res = await this.userModel.updateOne({
+        _id: user.userId
+      }, {
+        $set: userInfo
+      })
+
+      const { matchedCount, modifiedCount } = res
+      if (matchedCount >= 1 && modifiedCount === 1) {
+        const res = await this.findOneByName({ username: userInfo.username || user.username })
+
+        const token = this.jwtService.sign({
+          ...user,
+          userId: res[0]._id,
+          roles: res[0].roles,
+          timestamp: Date.now()
+        })
+
+        this.logger.info('/user/updateUserInfo', `${user.username} 更新个人信息成功`)
+        this.response = getSuccessResponse('个人信息更新成功', { accessToken: token })
+      }
+    } catch (err) {
+      this.logger.error('/user/updateUserInfo', `${user.username} 更新个人信息失败，${err}`)
+      this.response = getFailResponse('个人信息更新失败', null)
+    }
+
+    return this.response
+  }
+
+  async updateUserAvatar(user: { userId: string; username: string }, file: Express.Multer.File) {
+
+    const { userId, username } = user
+    const { fieldname, filename } = file
+    const storagePath = `http://localhost:3000/static/avatar/${username}/${fieldname}/${filename}`
+
+    try {
+      const res = await this.userModel.updateOne({
+        _id: userId
+      }, {
+        $set: { avatar: storagePath }
+      })
+
+      const { matchedCount, modifiedCount } = res
+      if (matchedCount >= 1 && modifiedCount === 1) {
+        const res = await this.findOneByName({ username: username })
+        this.logger.info('/user/updateUserAvatar', `${username} 更换头像成功`)
+        this.response = getSuccessResponse('头像更换成功', res.length ? res[0] : null)
+      }
+    } catch (err) {
+      this.logger.error('/user/updateUserAvatar', `${username} 更新头像失败，${err}`)
+      this.response = getFailResponse('头像更换成功', null)
+    }
+
     return this.response
   }
 }

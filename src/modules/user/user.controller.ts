@@ -1,9 +1,13 @@
-import { Controller, Post, Get, Body, Req } from '@nestjs/common'
+import { Controller, Post, Get, Body, Req, UseInterceptors, UploadedFile } from '@nestjs/common'
 import { UserService } from './user.service'
 import { ApiTags, ApiOperation } from '@nestjs/swagger'
-import { UserSignUp } from '@/modules/user/dto/user.dto'
+import { UserEntityDTO, UserSignUp } from '@/modules/user/dto/user.dto'
 import { Roles } from '@/decorator/Roles'
 import { Role } from '@/constants/auth'
+import { FileInterceptor } from '@nestjs/platform-express'
+import { diskStorage } from 'multer'
+import { join } from 'path'
+import { existsSync, mkdirSync } from 'fs'
 
 @Controller('user')
 @ApiTags('User')
@@ -32,6 +36,32 @@ export class UserController {
   })
   async getUserInfo(@Req() request: Request) {
     return this.userService.getUserInfo(request['user'])
+  }
+
+  @Post('updateUserAvatar')
+  @UseInterceptors(FileInterceptor('avatar', { storage: diskStorage({
+    destination: function(req, res, cb) {
+      const storagePath = join(__dirname, `../../../public/avatar/${req['user'].username}/${res.fieldname}`)
+      if (!existsSync(storagePath)) mkdirSync(storagePath, { recursive: true })
+      cb(null, storagePath)
+    },
+    filename: function (req, res, cb) {
+      cb(null, res.originalname)
+    }
+  }) }))
+  @ApiOperation({
+    summary: '更新用户头像'
+  })
+  async updateAvatar(@Req() request: Request, @UploadedFile() file: Express.Multer.File) {
+    return this.userService.updateUserAvatar(request['user'], file)
+  }
+
+  @Post('updateUserInfo')
+  @ApiOperation({
+    summary: '更新用户信息'
+  })
+  async updateUserInfo(@Req() request: Request, @Body() userInfo: Partial<UserEntityDTO>) {
+    return this.userService.updateUserInfo(request['user'], userInfo)
   }
 
   // 该接口仅对权限为 admin 的用户开发，测试 Guards 能否拦截权限不符合的用户发来的请求
