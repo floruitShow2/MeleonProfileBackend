@@ -6,6 +6,13 @@ import { Document } from 'mongoose'
 
 @Schema()
 export class UserEntity extends Document {
+
+  @Prop()
+  @ApiProperty({
+    description: '用户ID'
+  })
+  readonly userId: string
+
   @Prop()
   @ApiProperty({
     description: '用户名',
@@ -28,21 +35,45 @@ export class UserEntity extends Document {
 
   @Prop()
   @ApiProperty({
-    description: '角色'
+    description: '简介'
   })
-  readonly roles: Role[]
-
-  @Prop()
-  @ApiProperty({
-    description: '手机号'
-  })
-  readonly phone: string
+  readonly introduction: string
 
   @Prop()
   @ApiProperty({
     description: '邮箱'
   })
   readonly email: string
+
+  @Prop()
+  @ApiProperty({
+    description: '籍贯/居住地'
+  })
+  readonly location: string
+
+  @Prop()
+  @ApiProperty({
+    description: '角色'
+  })
+  readonly roles: Role[]
+
+  @Prop()
+  @ApiProperty({
+    description: '社交账号链接，github、掘金等'
+  })
+  readonly socialAccounts: string[]
+
+  @Prop()
+  @ApiProperty({
+    description: '密码加密盐值'
+  })
+  salt: string
+
+  @Prop()
+  @ApiProperty({
+    description: '手机号'
+  })
+  readonly phone: string
 
   @Prop()
   @ApiProperty({
@@ -53,57 +84,21 @@ export class UserEntity extends Document {
 
   @Prop()
   @ApiProperty({
-    description: '职业ID'
+    description: '职业'
   })
   readonly job: string
 
   @Prop()
   @ApiProperty({
-    description: '职业名'
-  })
-  readonly jobName: string
-
-  @Prop()
-  @ApiProperty({
-    description: '所属组织ID'
+    description: '所属企业/组织'
   })
   readonly organization: string
 
   @Prop()
   @ApiProperty({
-    description: '所属组织名'
+    description: '身份证号'
   })
-  readonly organizationName: string
-
-  @Prop()
-  @ApiProperty({
-    description: '地址ID'
-  })
-  readonly location: string
-
-  @Prop()
-  @ApiProperty({
-    description: '地址'
-  })
-  readonly locationName: string
-
-  @Prop()
-  @ApiProperty({
-    description: '简介'
-  })
-  readonly introduction: string
-
-  @Prop()
-  @ApiProperty({
-    description: '个人网站'
-  })
-  readonly personalWebsite: string
-
-  @Prop()
-  @ApiProperty({
-    description: '授权'
-  })
-  readonly certification: number
+  readonly certification: string
 }
 
 @Schema()
@@ -129,7 +124,7 @@ export class UserSignUp extends PickType(UserEntity, ['username', 'password']) {
   @MinLength(6, {
     message: '密码长度最少为 6 位'
   })
-  readonly password: string
+  password: string
 }
 
 export interface UserEntityDTO {
@@ -139,32 +134,30 @@ export interface UserEntityDTO {
 
   avatar: string
 
-  email: string
-
-  job: string
-
-  jobName: string
-
-  organization: string
-
-  organizationName: string
-
-  location: string
-
-  locationName: string
-
   introduction: string
 
-  personalWebsite: string
+  email: string
 
   phone: string
 
-  registrationDate: string
-
-  certification: number
+  location: string
 
   roles: Role[]
+
+  socialAccounts: string[]
+
+  job: string
+
+  organization: string
+
+  registrationDate: string
+
+  certification: string
+
+  userId?: string
 }
+
+export class UserTokenEntity extends PickType(UserEntity, ['username', 'userId', 'roles', 'password']) {}
 
 export const DefaultUserEntity: UserEntityDTO = {
   username: '',
@@ -177,25 +170,19 @@ export const DefaultUserEntity: UserEntityDTO = {
 
   job: '',
 
-  jobName: '',
-
   organization: '',
-
-  organizationName: '',
 
   location: '',
 
-  locationName: '',
-
   introduction: '',
-
-  personalWebsite: '',
 
   phone: '',
 
   registrationDate: '',
 
-  certification: 0,
+  certification: '',
 
-  roles: [Role.User]
+  roles: [Role.User],
+
+  socialAccounts: []
 }
