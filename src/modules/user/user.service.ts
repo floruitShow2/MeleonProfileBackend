@@ -4,7 +4,7 @@ import { Injectable } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { LoggerService } from '@/modules/logger/logger.service'
 import type { ApiResponse } from '@/interface/response.interface'
-import { DefaultUserEntity, UserSignUp, UserEntity, UserEntityDTO, UserTokenEntity } from './DTO/user.dto'
+import { DefaultUserEntity, UserSignUp, UserEntity, UserEntityDTO, UserTokenEntity, PasswordsType } from './DTO/user.dto'
 import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
 import { generateSalt, encrypt, compare } from '@/utils/encrypt'
 
@@ -29,7 +29,7 @@ export class UserService {
       },
       {
         $addFields: {
-          userId: '$_id'
+          userId: { $toString: '$_id' }
         }
       },
       needAll
@@ -57,12 +57,8 @@ export class UserService {
   async signup(user: UserSignUp): Promise<ApiResponse> {
     const res = await this.findOneByName(user)
     if (res && res.length) {
-      this.logger.error('UserService', '用户已注册')
-      this.response = {
-        Code: -1,
-        Message: '用户已注册',
-        ReturnData: null
-      }
+      this.response = getFailResponse('该用户名已被注册', null)
+      this.logger.error('/user/signup', `用户${user.username}已注册`)
       return this.response
     }
     try {
@@ -78,19 +74,11 @@ export class UserService {
         }.png`
       })
       await createUser.save()
-      this.logger.info(null, '新增用户成功')
-      this.response = {
-        Code: 1,
-        Message: '新增成功',
-        ReturnData: user.username
-      }
+      this.response = getSuccessResponse('注册成功', user.username)
+      this.logger.info('/user/signup', '新增用户成功')
     } catch (err) {
-      this.logger.error(null, err)
-      this.response = {
-        Code: -1,
-        Message: '用户新增失败，请联系负责人核对',
-        ReturnData: err
-      }
+      this.response = getFailResponse('服务器异常，用户注册失败', null)
+      this.logger.error('/user/signup', err)
     }
     return this.response
   }
@@ -104,21 +92,13 @@ export class UserService {
     const res = await this.findOneByName(user, true)
     const findIdx = res.findIndex((user) => user.password === user.password)
     if (!res || !res.length || findIdx === -1) {
-      this.logger.error(null, `${user.username}登录失败，未找到该用户`)
-      this.response = {
-        Code: -1,
-        Message: '用户未注册，登录失败',
-        ReturnData: null
-      }
+      this.response = getFailResponse('用户未注册，登录失败', null)
+      this.logger.error('/user/login', `${user.username}登录失败，未找到该用户`)
       return this.response
     }
     if (!compare(user.password, res[findIdx].password, res[findIdx].salt)) {
-      this.logger.error(null, `${user.username}登录失败，密码不匹配`)
-      this.response = {
-        Code: -1,
-        Message: '密码错误，登录失败',
-        ReturnData: null
-      }
+      this.response = getFailResponse('密码错误，登录失败', null)
+      this.logger.error('/user/login', `${user.username}登录失败，密码不匹配`)
       return this.response
     }
     const token = this.jwtService.sign({
@@ -127,11 +107,10 @@ export class UserService {
       roles: res[0].roles,
       timestamp: Date.now()
     })
-    this.logger.info(null, `${user.username}登录成功`)
-    
     this.response = getSuccessResponse('登录成功', {
       accessToken: token
     })
+    this.logger.info('/user/login', `${user.username}登录成功`)
 
     return this.response
   }
@@ -142,15 +121,20 @@ export class UserService {
    * @returns
    */
   async getUserInfo(user: UserTokenEntity) {
-    const res = await this.findOneByName(user)
-    if (!res || !res.length) {
-      this.logger.error(null, `查询${user.username}的用户信息失败`)
-      this.response = getFailResponse('未找到用户', null)
-      return this.response
+    try {
+      const res = await this.findOneByName(user)
+      if (!res || !res.length) {
+        this.logger.error('/user/getUserInfo', `查询${user.username}的用户信息失败`)
+        this.response = getFailResponse('未找到用户', null)
+        return this.response
+      }
+      this.logger.info('/user/getUserInfo', `查询${user.username}的用户信息成功`)
+      const { password, ...rest } = res[0]
+      this.response = getSuccessResponse('获取用户信息成功', rest)
+    } catch (err) {
+      this.logger.error('/user/getUserInfo', `查询${user.username}的用户信息失败`)
+      this.response = getFailResponse('服务器异常，用户信息查询失败', null)
     }
-    this.logger.info(null, `查询${user.username}的用户信息成功`)
-    const { password, ...rest } = res[0]
-    this.response = getSuccessResponse('获取用户信息成功', rest)
     return this.response
   }
 
@@ -192,6 +176,12 @@ export class UserService {
     return this.response
   }
 
+  /**
+   * @description 更新用户头像
+   * @param user 从 token 中解析出来的用户信息
+   * @param file 头像文件
+   * @returns 
+   */
   async updateUserAvatar(user: UserTokenEntity, file: Express.Multer.File) {
     const { userId, username } = user
     const { fieldname, filename } = file
@@ -204,18 +194,56 @@ export class UserService {
       })
       const { matchedCount, modifiedCount } = res
       if (matchedCount >= 1 && modifiedCount === 1) {
-        const res = await this.findOneByName({ username: username })
-        this.logger.info('/user/updateUserAvatar', `${username} 更换头像成功`)
+        const res = await this.findOneByName({ username })
         if (res.length) {
           const { password, ...rest } = res[0]
           this.response = getSuccessResponse('头像更换成功', rest)
         } else {
           this.response = getSuccessResponse('头像更换成功', null)
         }
+        this.logger.info('/user/updateUserAvatar', `${username} 更换头像成功`)
       }
     } catch (err) {
-      this.logger.error('/user/updateUserAvatar', `${username} 更新头像失败，${err}`)
       this.response = getFailResponse('头像更换成功', null)
+      this.logger.error('/user/updateUserAvatar', `${username} 更新头像失败，${err}`)
+    }
+
+    return this.response
+  }
+
+  async updatePassword(user: UserTokenEntity, passwords: PasswordsType) {
+    const res = await this.findOneByName(user, true)
+    if (!res || !res.length) return
+    const { password, salt } = res[0]
+
+    const { oldPwd, newPwd, confirmPwd } = passwords
+    if (!compare(oldPwd, password, salt)) {
+      this.response = getFailResponse('原密码错误，请确认后重新提交', null)
+      this.logger.error('/user/updatePassword', `${user.username}提交的原密码有误`)
+      return this.response
+    }
+
+    if (newPwd !== confirmPwd) {
+      this.response = getFailResponse('新密码与确认密码不同，请确认后重新提交', null)
+      this.logger.error('/user/updatePassword', `${user.username}提交的新密码和确认密码不匹配`)
+      return this.response
+    }
+
+    try {
+      const res = await this.userModel.updateOne({
+        _id: user.userId
+      }, {
+        $set: { password: encrypt(newPwd, salt) }
+      })
+
+      const { matchedCount, modifiedCount } = res
+      if (matchedCount >= 1 && modifiedCount === 1) {
+        this.response = getSuccessResponse('用户密码更新成功', 'ok')
+        this.logger.info('/user/updatePassword', `${user.username} 更新登录密码成功`)
+      }
+    } catch(err) {
+      this.response = getFailResponse('服务器异常，密码更新失败', null)
+      this.logger.error('/user/updatePassword', `服务器异常，${user.username}更新密码失败`)
     }
 
     return this.response

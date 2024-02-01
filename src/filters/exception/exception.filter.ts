@@ -8,11 +8,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
     console.log('error', exception)
     const ctx = host.switchToHttp()
     const response = ctx.getResponse()
-    const request = ctx.getRequest()
+    const request = ctx.getRequest() as Request
     const status = exception.getStatus()
 
     this.logger.error(
-      null,
+      `ExceptionFilter: ${request.url}`,
       JSON.stringify({
         statusCode: status,
         timestamp: new Date().toISOString(),

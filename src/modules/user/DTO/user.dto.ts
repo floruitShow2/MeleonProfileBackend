@@ -157,7 +157,7 @@ export interface UserEntityDTO {
   userId?: string
 }
 
-export class UserTokenEntity extends PickType(UserEntity, ['username', 'userId', 'roles', 'password']) {}
+export class UserTokenEntity extends PickType(UserEntity, ['username', 'userId', 'roles']) {}
 
 export const DefaultUserEntity: UserEntityDTO = {
   username: '',
@@ -185,4 +185,10 @@ export const DefaultUserEntity: UserEntityDTO = {
   roles: [Role.User],
 
   socialAccounts: []
+}
+
+export interface PasswordsType {
+  oldPwd: string
+  newPwd: string
+  confirmPwd: string
 }

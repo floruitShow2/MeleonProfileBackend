@@ -55,7 +55,8 @@ export class TaskController {
     @Body('data') data: string,
     @Req() req: Request
   ) {
-    const creator = req['user'].username
+    const user = req['user']
+    const creator = user.username
     const createTime = formatToDateTime(new Date())
     const storagePath = join(__dirname, `../../../filesStorage/${creator}/task/`)
     const task: TaskEntity = JSON.parse(data)
@@ -70,7 +71,7 @@ export class TaskController {
       (file) => storagePath + 'attachments\\' + file.originalname
     )
 
-    return this.taskService.createTask(task)
+    return this.taskService.createTask(user, task)
   }
 
   @Get('/getAllTasks')

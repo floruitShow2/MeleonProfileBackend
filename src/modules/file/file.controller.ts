@@ -5,7 +5,6 @@ import type { VerifyOptions } from './dto/file.dto'
 export class FileController {
   @Post('/verify')
   handleVerify(@Req() req: Request, @Body() verifyOptions: VerifyOptions) {
-    console.log(req, verifyOptions)
     return 'verify'
   }
 }

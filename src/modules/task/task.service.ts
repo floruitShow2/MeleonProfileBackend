@@ -2,10 +2,11 @@ import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
 import { readFileSync } from 'fs'
-import { UserEntity } from '@/modules/user/dto/user.dto'
+import { UserEntity, UserTokenEntity } from '@/modules/user/dto/user.dto'
 import { ApiResponse } from '@/interface/response.interface'
 import TaskEntity, { TaskSearchOptions } from './dto/task.dto'
 import { LoggerService } from '../logger/logger.service'
+import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
 
 @Injectable()
 export class TaskService {
@@ -17,28 +18,19 @@ export class TaskService {
   ) {}
 
   // 创建新任务
-  async createTask(task: TaskEntity) {
+  async createTask(user: UserTokenEntity, task: TaskEntity) {
     try {
       // 将关联用户的用户名替换为对应模型的 objectId
-
       const users = await this.userModel.find({ username: { $in: task.relatives } })
 
       task.relatives = users.map((user) => user._id)
       const createdTask = await this.taskModel.create(task)
       await createdTask.save()
-      this.response = {
-        Code: 1,
-        Message: '任务创建成功',
-        ReturnData: createdTask
-      }
-      this.logger.info(null, `新建一条任务：${createdTask.id}`)
+      this.response = getSuccessResponse('任务创建成功', createdTask.title)
+      this.logger.info('/task/createTask', `${user.username}新建任务：${createdTask.title}`)
     } catch {
-      this.response = {
-        Code: -1,
-        Message: '任务创建失败',
-        ReturnData: null
-      }
-      this.logger.error(null, `任务创建失败`)
+      this.response = getFailResponse('任务创建失败', null)
+      this.logger.error('/task/createTask', `${user.username}创建任务 ${task.title} 失败`)
     }
 
     return this.response
@@ -52,7 +44,6 @@ export class TaskService {
     const dateOptions: Record<string, any> = {}
     if (startDate) dateOptions.startTime = { $gte: options.startDate }
     if (endDate) dateOptions.endTime = { $lte: options.endDate }
-    console.log(dateOptions)
 
     try {
       const res = await this.taskModel
@@ -148,26 +139,20 @@ export class TaskService {
           map.set(group, [task])
         }
       })
-      this.logger.info(null, `${username}查询所有他的相关任务`)
 
-      this.response = {
-        Code: 1,
-        Message: '查询成功',
-        ReturnData: Array.from(map.keys()).map((key) => {
+      this.response = getSuccessResponse(
+        '查询任务成功',
+        Array.from(map.keys()).map((key) => {
           return {
             group: key,
             list: map.get(key)
           }
         })
-      }
+      )
+      this.logger.info('/task/getAllTasks', `${username}查询所有他的相关任务`)
     } catch (error) {
-      this.logger.error(null, '查询任务行为失败')
-
-      this.response = {
-        Code: -1,
-        Message: '查询任务失败',
-        ReturnData: null
-      }
+      this.response = getFailResponse('查询任务失败', null)
+      this.logger.error('/task/getAllTasks', '查询任务行为失败')
     }
 
     return this.response

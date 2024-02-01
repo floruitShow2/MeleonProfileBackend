@@ -1,7 +1,7 @@
 import { Controller, Post, Get, Body, Req, UseInterceptors, UploadedFile } from '@nestjs/common'
 import { UserService } from './user.service'
 import { ApiTags, ApiOperation } from '@nestjs/swagger'
-import { UserEntityDTO, UserSignUp } from '@/modules/user/dto/user.dto'
+import { PasswordsType, UserEntityDTO, UserSignUp } from '@/modules/user/dto/user.dto'
 import { Roles } from '@/decorator/Roles'
 import { Role } from '@/constants/auth'
 import { FileInterceptor } from '@nestjs/platform-express'
@@ -62,6 +62,14 @@ export class UserController {
   })
   async updateUserInfo(@Req() request: Request, @Body() userInfo: Partial<UserEntityDTO>) {
     return this.userService.updateUserInfo(request['user'], userInfo)
+  }
+
+  @Post('updatePassword')
+  @ApiOperation({
+    summary: '更新用户密码'
+  })
+  async updatePassword(@Req() request: Request, @Body() pwds: PasswordsType) {
+    return this.userService.updatePassword(request['user'], pwds)
   }
 
   // 该接口仅对权限为 admin 的用户开发，测试 Guards 能否拦截权限不符合的用户发来的请求

@@ -20,7 +20,7 @@ export class CryptoMiddleware implements NestMiddleware {
       })
       return
     } else {
-      const { username, password, userId, roles, timestamp, exp } = payload
+      const { username, userId, roles, timestamp, exp } = payload
       if (Date.now() - timestamp > exp) {
         // 超时
         // token 不合法
@@ -32,7 +32,7 @@ export class CryptoMiddleware implements NestMiddleware {
         return
       } else {
         // 成功
-        req['user'] = { username, password, userId, roles }
+        req['user'] = { username, userId, roles }
         next()
       }
     }

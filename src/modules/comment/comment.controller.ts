@@ -26,13 +26,13 @@ export class CommentController {
   @Get('/getCommentsById')
   getCommentsById(@Query('targetId') targetId: string, @Req() req: Request) {
     const user = req['user']
-    return this.commentService.getCommentsById(user.userId, targetId)
+    return this.commentService.getCommentsById(user, targetId)
   }
 
   @Post('/addLikes')
   addLikes(@Body() target: { commentId: string; type: 'add' | 'sub' }, @Req() req: Request) {
     const user = req['user']
     if (!user) return new UnauthorizedException()
-    return this.commentService.addCommentLikes(user.userId, target.commentId, target.type)
+    return this.commentService.addCommentLikes(user, target.commentId, target.type)
   }
 }

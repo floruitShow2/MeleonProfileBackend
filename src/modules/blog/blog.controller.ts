@@ -10,12 +10,9 @@ import {
   Param,
   UnauthorizedException
 } from '@nestjs/common'
-import { createReadStream } from 'fs'
-import { join } from 'path'
 import { BlogEntity } from './dto/blog.dto'
 import { formatToDateTime } from '@/utils/time'
 import { BlogService } from './blog.service'
-import type { Response, query } from 'express'
 import { ApiOperation, ApiTags, ApiBody } from '@nestjs/swagger'
 
 @Controller('blog')
@@ -47,11 +44,11 @@ export class BlogController {
   async getBlogsList(@Req() req: Request, @Query('searchQuery') searchQuery: string) {
     return this.blogService.findBlogs(req['user'], searchQuery)
   }
-
+  
+  @Post('like')
   @ApiOperation({
     summary: '点赞博客'
   })
-  @Post('like')
   handleBlogLike(@Req() req: Request, @Body('blogId') blogId: string) {
     const user = req['user']
     if (!user) throw new UnauthorizedException()

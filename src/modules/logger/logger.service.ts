@@ -63,22 +63,6 @@ export class LoggerService {
             format.json()
           ),
           level: 'error'
-        }),
-        // 仅作记录用，记录接口、调用者、执行耗时等信息
-        new transports.DailyRotateFile({
-          dirname: 'src/logs/debug',
-          filename: 'application-%DATE%.debug.log',
-          datePattern: 'YYYY-MM-DD',
-          zippedArchive: true,
-          maxSize: '20m',
-          maxFiles: '14d',
-          format: format.combine(
-            format.timestamp({
-              format: 'YYYY-MM-DD HH:mm:ss'
-            }),
-            format.json()
-          ),
-          level: 'debug'
         })
       ]
     })
