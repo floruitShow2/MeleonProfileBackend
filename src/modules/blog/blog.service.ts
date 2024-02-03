@@ -6,6 +6,7 @@ import { ApiResponse } from '@/interface/response.interface'
 import { BlogEntity } from './dto/blog.dto'
 import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
 import { formatToDateTime } from '@/utils/time'
+import { UserEntity, UserTokenEntity } from '../user/dto/user.dto'
 
 @Injectable()
 export class BlogService {
@@ -16,28 +17,70 @@ export class BlogService {
     private readonly logger: LoggerService
   ) {}
 
+  // utils
+  /**
+   * @description 统计给定用户发布的所有文章的统计数据
+   * @param userId 
+   */
+  async getBlogsStatistics(userId: string) {
+    const res = await this.blogModel.aggregate([
+      {
+        $match: { uploader: userId }
+      },
+      {
+        $project: {
+          likes: { $size: '$likes' },
+          views: 1
+        }
+      }
+    ])
+
+    // 文章数、阅读数、点赞数
+    const statistic = {
+      blogCount: 0,
+      viewCount: 0,
+      likeCount: 0
+    }
+
+    res.forEach(item => {
+      statistic.blogCount += 1
+      statistic.viewCount += item.views
+      statistic.likeCount += item.likes
+    })
+
+    return statistic
+  }
+
+  // services
+  async getBlogsInfo(user: UserTokenEntity) {
+    this.blogModel.aggregate([
+      {
+        $match: { uploader: { $toObjectId: user.userId } }
+      }
+    ])
+  }
+
   async createBlogs(blogs: BlogEntity[]) {
     try {
-      await this.blogModel.create(blogs)
+      const result = await this.blogModel.create(blogs)
+      console.log(result)
+      this.response = getSuccessResponse('博客文件上传成功', null)
       this.logger.info('/blog/uploadBlogs', '上传博客文件成功')
-      this.response = {
-        Code: 1,
-        Message: '博客文件上传成功',
-        ReturnData: '博客文件上传成功'
-      }
     } catch {
+      this.response = getFailResponse('博客文件上传失败', null)
       this.logger.error('/blog/uploadBlogs', '上传博客文件失败')
-      this.response = {
-        Code: -1,
-        Message: '博客文件上传失败',
-        ReturnData: null
-      }
     }
 
     return this.response
   }
 
-  async findBlogs(user: { username: string; userId: string }, query: string) {
+  /**
+   * @description 获取博客列表
+   * @param user 从 userToken 中解析出来的用户信息
+   * @param query 查询条件
+   * @returns 博客列表，不包括 content 等无需直接展示的数据
+   */
+  async findBlogs(user: UserTokenEntity, query: string) {
     const pattern = new RegExp(query, 'gi')
 
     try {
@@ -53,39 +96,54 @@ export class BlogService {
           },
           {
             $addFields: {
-              id: { $toString: '$_id' }
+              blogId: { $toString: '$_id' }
+            }
+          },
+          {
+            $lookup: {
+              from: 'comments',
+              foreignField: 'targetId',
+              localField: 'blogId',
+              as: 'comments'
             }
           },
           {
             $project: {
-              tags: 0,
-              content: 0,
-              __v: 0,
+              blogId: 1,
+              title: 1,
+              description: 1,
+              status: 1,
+              uploadTime: 1,
+              views: 1,
+              likes: { $size: '$likes' },
+              comments: { $size: '$comments' }
+            }
+          },
+          {
+            $project: {
               _id: 0
             }
           }
         ])
         .exec()
 
+      this.response = getSuccessResponse('查询文章列表成功', res)
       this.logger.info('/blog/getBlogsList', `${user.username}查询文章列表操作成功`)
-      this.response = {
-        Code: 1,
-        Message: '查询文章列表成功',
-        ReturnData: res
-      }
     } catch (err) {
+      this.response = getFailResponse('查询文章列表失败', null)
       this.logger.error('/blog/getBlogsList', `${user.username}查询文章列表操作失败`)
-      this.response = {
-        Code: 1,
-        Message: '查询文章列表失败',
-        ReturnData: null
-      }
     }
 
     return this.response
   }
 
-  async findBlogById(user: { username: string; userId: string }, blogId: string) {
+  /**
+   * @description 根据博客ID查询单篇博客的文章详情
+   * @param user 从 userToken 中解析出来的用户信息
+   * @param blogId 博客ID
+   * @returns 单篇博客的详细信息，包括部分发布者信息
+   */
+  async findBlogById(user: UserTokenEntity, blogId: string) {
     const { username, userId } = user
     try {
       const res = await this.blogModel
@@ -97,8 +155,9 @@ export class BlogService {
           },
           {
             $addFields: {
-              uid: { $toObjectId: '$uploader' },
-              id: { $toString: '$_id' },
+              blogId: { $toString: '$_id' },
+              // uploader 是 stirng 类型， _id 是 ObjectId 类型，$lookup 无法匹配二者，需要提前进行转换
+              uploader: { $toObjectId: '$uploader' },
               liked: {
                 $cond: {
                   if: {
@@ -127,7 +186,7 @@ export class BlogService {
             $lookup: {
               from: 'users',
               foreignField: '_id',
-              localField: 'uid',
+              localField: 'uploader',
               as: 'uploaders'
             }
           },
@@ -135,8 +194,13 @@ export class BlogService {
             $lookup: {
               from: 'comments',
               foreignField: 'targetId',
-              localField: 'id',
+              localField: 'blogId',
               as: 'comments'
+            }
+          },
+          {
+            $addFields: {
+              'uploaders.userId': { $toString: '$_id' }
             }
           },
           {
@@ -144,12 +208,18 @@ export class BlogService {
               'uploaders._id': 0,
               'uploaders.__v': 0,
               'uploaders.password': 0,
-              'uploaders.roles': 0
+              'uploaders.roles': 0,
+              'uploaders.salt': 0,
+              'uploaders.phone': 0,
+              'uploaders.certification': 0,
+              'uploaders.socialAccounts': 0,
+              'uploaders.location': 0,
+              'uploaders.registrationDate': 0
             }
           },
           {
             $project: {
-              id: 1,
+              blogId: 1,
               uploader: {
                 $arrayElemAt: ['$uploaders', 0]
               },
@@ -159,6 +229,7 @@ export class BlogService {
               uploadTime: 1,
               views: 1,
               tags: 1,
+              status: 1,
               likes: {
                 $size: '$likes'
               },
@@ -169,32 +240,52 @@ export class BlogService {
           },
           {
             $project: {
-              uploaders: 0,
               _id: 0
             }
           }
         ])
         .exec()
+      
+      if (res && res.length) {
+        // 文章阅读数加一
+        const blogEntity = res[0] as BlogEntity
+        await this.blogModel.updateOne(
+          {
+            _id: blogEntity.blogId
+          },
+          { $set: { views: blogEntity.views + 1 }
+        })
 
-      this.logger.info('/blog/:id', `${username}查询《${res[0].title || ''}》成功`)
-      this.response = {
-        Code: 1,
-        Message: '博客内容查询成功',
-        ReturnData: res[0]
+        const { uploader, ...rest } = blogEntity
+        const statistics = await this.getBlogsStatistics(user.userId)
+
+        this.response = getSuccessResponse('博客内容查询成功', {
+          articleInfo: rest,
+          authorInfo: {
+            ...(uploader as unknown as UserEntity), ...statistics
+          }
+        })
+        this.logger.info('/blog/:id', `${username}查询《${res[0].title || ''}》成功`)
+      } else {
+        this.response = getFailResponse('未查询到该博客内容', null)
+        this.logger.info('/blog/:id', `${username}查询《${res[0].title || ''}》失败`)
       }
     } catch (err) {
+      this.response = getFailResponse('博客内容查询失败', null)
       this.logger.info('/blog/:id', `${username}查询博客内容失败`)
-      this.response = {
-        Code: -1,
-        Message: '博客内容查询失败',
-        ReturnData: null
-      }
     }
 
     return this.response
   }
 
-  async handleBlogLike(userId: string, blogId: string) {
+  /**
+   * @description 点赞博客
+   * @param user从 userToken 中解析出来的用户信息
+   * @param blogId 博客ID
+   * @returns 
+   */
+  async handleBlogLike(user: UserTokenEntity, blogId: string) {
+    const { userId } = user
     let isLiked = false
     try {
       // 判断是否已经点赞
@@ -207,11 +298,12 @@ export class BlogService {
           ? { $pull: { likes: { userId } } }
           : { $push: { likes: { userId, timeStamp: formatToDateTime(new Date()) } } }
       )
-      this.logger.info('/blog/like', isLiked ? '取消点赞成功' : '评论点赞数 +1')
+
       this.response = getSuccessResponse(isLiked ? '取消点赞成功' : '评论点赞数 +1', 'BlogService')
+      this.logger.info('/blog/like', isLiked ? '取消点赞成功' : '评论点赞数 +1')
     } catch (err) {
-      this.logger.error('/blog/like', isLiked ? '取消点赞失败' : '点赞评论失败')
       this.response = getFailResponse(isLiked ? '取消点赞失败' : '点赞评论失败', 'BlogService')
+      this.logger.error('/blog/like', isLiked ? '取消点赞失败' : '点赞评论失败')
     }
 
     return this.response

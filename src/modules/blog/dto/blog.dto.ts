@@ -4,6 +4,13 @@ import { ApiProperty } from '@nestjs/swagger'
 
 @Schema()
 export class BlogEntity extends Document {
+
+  @Prop()
+  @ApiProperty({
+    description: '文章ID'
+  })
+  readonly blogId: string
+
   @Prop()
   @ApiProperty({
     description: '文章名称'
@@ -41,11 +48,17 @@ export class BlogEntity extends Document {
   })
   views: number
 
+  @Prop({ type: [Array, Number] })
+  @ApiProperty({
+    description: '点赞数，存储在数据库中的是由点赞者ID构成的数组，返回给用户的则是数组长度'
+  })
+  likes: string[] | number
+
   @Prop()
   @ApiProperty({
-    description: '点赞数'
+    description: '评论数'
   })
-  likes: string[]
+  comments: number
 
   @Prop()
   @ApiProperty({

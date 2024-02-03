@@ -20,6 +20,12 @@ import { ApiOperation, ApiTags, ApiBody } from '@nestjs/swagger'
 export class BlogController {
   constructor(private blogService: BlogService) {}
 
+  @Get('getBlogsInfo')
+  @ApiOperation({
+    summary: '获取统计数据'
+  })
+  async getBlogsInfo(@Req() req: Request) {}
+
   @Post('uploadBlogs')
   @ApiOperation({
     summary: '上传博客接口'
@@ -50,9 +56,7 @@ export class BlogController {
     summary: '点赞博客'
   })
   handleBlogLike(@Req() req: Request, @Body('blogId') blogId: string) {
-    const user = req['user']
-    if (!user) throw new UnauthorizedException()
-    return this.blogService.handleBlogLike(user.userId, blogId)
+    return this.blogService.handleBlogLike(req['user'], blogId)
   }
 
   @Get('getDraftsList')

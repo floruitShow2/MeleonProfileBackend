@@ -2,8 +2,10 @@ import { Controller, Post, Get, Req, Body, UnauthorizedException, Query } from '
 import { CommentService } from './comment.service'
 import { CommentEntity } from './dto/comment.dto'
 import { formatToDateTime } from '@/utils/time'
+import { ApiTags } from '@nestjs/swagger'
 
 @Controller('comment')
+@ApiTags('Comments')
 export class CommentController {
   constructor(private readonly commentService: CommentService) {}
 

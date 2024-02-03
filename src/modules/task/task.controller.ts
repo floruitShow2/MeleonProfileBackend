@@ -9,14 +9,16 @@ import {
   Query
 } from '@nestjs/common'
 import { FileFieldsInterceptor } from '@nestjs/platform-express'
-import { TaskService } from './task.service'
-import { diskStorage } from 'multer'
+import { ApiTags } from '@nestjs/swagger'
 import { join } from 'path'
 import { existsSync, mkdirSync } from 'fs'
+import { diskStorage } from 'multer'
+import { TaskService } from './task.service'
 import { formatToDateTime } from '@/utils/time'
 import TaskEntity, { TaskSearchOptions } from './dto/task.dto'
 
 @Controller('task')
+@ApiTags('Blogs')
 export class TaskController {
   constructor(private taskService: TaskService) {}
 
