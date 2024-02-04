@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
-import { Model } from 'mongoose'
+import mongoose, { Model } from 'mongoose'
 import { LoggerService } from '@/modules/logger/logger.service'
 import { ApiResponse } from '@/interface/response.interface'
 import { BlogEntity } from './dto/blog.dto'
@@ -28,8 +28,22 @@ export class BlogService {
         $match: { uploader: userId }
       },
       {
+        $addFields: {
+          blogId: { $toString: '$_id' }
+        }
+      },
+      {
+        $lookup: {
+          from: 'comments',
+          foreignField: 'targetId',
+          localField: 'blogId',
+          as: 'comments'
+        }
+      },
+      {
         $project: {
           likes: { $size: '$likes' },
+          comments: { $size: '$comments' },
           views: 1
         }
       }
@@ -39,13 +53,15 @@ export class BlogService {
     const statistic = {
       blogCount: 0,
       viewCount: 0,
-      likeCount: 0
+      likeCount: 0,
+      commentCount: 0
     }
 
     res.forEach(item => {
       statistic.blogCount += 1
       statistic.viewCount += item.views
       statistic.likeCount += item.likes
+      statistic.commentCount += item.comments
     })
 
     return statistic
@@ -63,8 +79,7 @@ export class BlogService {
   async createBlogs(blogs: BlogEntity[]) {
     try {
       const result = await this.blogModel.create(blogs)
-      console.log(result)
-      this.response = getSuccessResponse('博客文件上传成功', null)
+      this.response = getSuccessResponse('博客文件上传成功', result.map(item => item.title))
       this.logger.info('/blog/uploadBlogs', '上传博客文件成功')
     } catch {
       this.response = getFailResponse('博客文件上传失败', null)
@@ -149,9 +164,7 @@ export class BlogService {
       const res = await this.blogModel
         .aggregate([
           {
-            $match: {
-              $or: [{ uploader: userId }, { _id: blogId }]
-            }
+            $match: { _id: new mongoose.Types.ObjectId(blogId) }
           },
           {
             $addFields: {
@@ -257,6 +270,8 @@ export class BlogService {
         })
 
         const { uploader, ...rest } = blogEntity
+        // 返回值中的 views 字段值 +1
+        rest.views++
         const statistics = await this.getBlogsStatistics(user.userId)
 
         this.response = getSuccessResponse('博客内容查询成功', {
