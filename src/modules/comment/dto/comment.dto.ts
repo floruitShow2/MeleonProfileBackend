@@ -1,4 +1,4 @@
-import TaskEntity from '@/modules/task/dto/task.dto'
+import { TaskEntity } from '@/modules/task/dto/task.dto'
 import { UserEntity } from '@/modules/user/dto/user.dto'
 import { Prop, Schema } from '@nestjs/mongoose'
 import { ApiProperty } from '@nestjs/swagger'

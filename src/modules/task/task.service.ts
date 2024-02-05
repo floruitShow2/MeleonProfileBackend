@@ -4,7 +4,7 @@ import { Model } from 'mongoose'
 import { readFileSync } from 'fs'
 import { UserEntity, UserTokenEntity } from '@/modules/user/dto/user.dto'
 import { ApiResponse } from '@/interface/response.interface'
-import TaskEntity, { TaskSearchOptions } from './dto/task.dto'
+import { TaskEntity, TaskSearchOptions } from './dto/task.dto'
 import { LoggerService } from '../logger/logger.service'
 import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
 
@@ -37,7 +37,7 @@ export class TaskService {
   }
 
   // 获取所有任务
-  async getAllTasks(user: { userId: string; username: string }, options: TaskSearchOptions) {
+  async getAllTasks(user: UserTokenEntity, options: TaskSearchOptions) {
     const { userId, username } = user
 
     const { startDate, endDate } = options

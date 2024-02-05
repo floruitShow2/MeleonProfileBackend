@@ -12,7 +12,7 @@ enum TaskGroups {
 }
 
 @Schema()
-class TaskEntity extends Document {
+export class TaskEntity extends Document {
   @Prop()
   taskId?: string
 
@@ -89,8 +89,6 @@ class TaskEntity extends Document {
   })
   attachments: string[]
 }
-
-export default TaskEntity
 
 export interface TaskSearchOptions {
   title: string

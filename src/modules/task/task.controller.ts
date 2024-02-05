@@ -15,7 +15,7 @@ import { existsSync, mkdirSync } from 'fs'
 import { diskStorage } from 'multer'
 import { TaskService } from './task.service'
 import { formatToDateTime } from '@/utils/time'
-import TaskEntity, { TaskSearchOptions } from './dto/task.dto'
+import { TaskEntity, TaskSearchOptions } from './dto/task.dto'
 
 @Controller('task')
 @ApiTags('Blogs')
