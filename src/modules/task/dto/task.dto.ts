@@ -67,6 +67,12 @@ export class TaskEntity extends Document {
 
   @Prop()
   @ApiProperty({
+    description: '所属团队'
+  })
+  readonly teamId: string
+
+  @Prop()
+  @ApiProperty({
     description: '任务创建时间'
   })
   createTime: string

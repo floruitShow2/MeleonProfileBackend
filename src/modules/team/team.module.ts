@@ -12,6 +12,7 @@ import { TeamEntity } from './dto/team.dto'
     ])
   ],
   controllers: [TeamController],
-  providers: [TeamService]
+  providers: [TeamService],
+  exports: [TeamService]
 })
 export class TeamModule {}

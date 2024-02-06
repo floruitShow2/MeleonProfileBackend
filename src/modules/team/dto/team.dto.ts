@@ -2,6 +2,17 @@ import { Prop, Schema } from "@nestjs/mongoose"
 import { ApiProperty } from "@nestjs/swagger"
 import { Document } from "mongoose"
 
+export interface MemberType {
+    userId: string
+    joinTime: string
+    role: 'admin' | 'viewer' | 'editor'
+}
+
+export interface TaskType {
+    taskId: string
+    createTime: string
+}
+
 @Schema()
 export class TeamEntity extends Document {
     @Prop()
@@ -24,6 +35,12 @@ export class TeamEntity extends Document {
 
     @Prop()
     @ApiProperty({
+        description: '团队简介'
+    })
+    introduction: string
+
+    @Prop()
+    @ApiProperty({
         description: '创建人'
     })
     creator: string
@@ -32,13 +49,13 @@ export class TeamEntity extends Document {
     @ApiProperty({
         description: '团队成员'
     })
-    readonly members: string[]
+    readonly members: MemberType[]
 
     @Prop()
     @ApiProperty({
         description: '团队项目'
     })
-    readonly tasks: string[]
+    readonly tasks: TaskType[]
 
     @Prop()
     @ApiProperty({

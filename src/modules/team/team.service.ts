@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common'
 import { Model } from 'mongoose'
 import { UserTokenEntity } from '../user/dto/user.dto'
-import { TeamEntity } from './dto/team.dto'
+import { TeamEntity, type TaskType } from './dto/team.dto'
 import { ApiResponse } from '@/interface/response.interface'
 import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
 import { LoggerService } from '../logger/logger.service'
 import { InjectModel } from '@nestjs/mongoose'
 import { formatToDateTime } from '@/utils/time'
+import { TaskEntity } from '../task/dto/task.dto'
 
 @Injectable()
 export class TeamService {
@@ -68,15 +69,13 @@ export class TeamService {
         // 创建时仅会传递 teamEntity 的部分参数，需要补全
         team.creator = userId
         team.createTime = formatToDateTime(new Date())
-        team.logo = team.logo || `http://localhost:3000/static/avatar/avatar_${
-            Math.floor(Math.random() * 5) + 1
-        }.png`
+        console.log(team)
 
         try {
             const res = await this.teamModel.create(team)
             res.save()
             this.response = getSuccessResponse('团队创建成功', res._id)
-            this.logger.error('/team/createTeam', `${username}创建团队【${team.teamName}】成功`)
+            this.logger.info('/team/createTeam', `${username}创建团队【${team.teamName}】成功`)
         } catch (err) {
             this.response = getFailResponse('团队创建失败', null)
             this.logger.error('/team/createTeam', `${username}创建团队失败，失败原因：${err}`)
@@ -85,7 +84,11 @@ export class TeamService {
         return this.response
     }
 
-    // 查询团队
+    /**
+     * @description 查询团队列表
+     * @param user 
+     * @returns 
+     */
     async findTeams(user: UserTokenEntity) {
         const { userId, username } = user
         try {
@@ -134,6 +137,7 @@ export class TeamService {
                         teamName: 1,
                         logo: 1,
                         createTime: 1,
+                        taskCount: { $size: '$tasks' },
                         'creator.username': 1,
                         'creator.avatar': 1
                     }
@@ -154,5 +158,23 @@ export class TeamService {
         }
 
         return this.response
+    }
+
+    async updateTeamTasks(user: UserTokenEntity, teamId: string, taskId: string) {
+        try {
+            const newRecord: TaskType = {
+                taskId,
+                createTime: formatToDateTime(new Date())
+            }
+            const res = await this.teamModel.updateOne(
+                { _id: teamId },
+                { $push: {
+                    tasks: newRecord
+                }
+            })
+            this.logger.info('/teamService/updateTeamTasks', `${user.username}在团队中创建新的任务记录，执行成功, 执行结果：${JSON.stringify(res)}`)
+        } catch (err) {
+            this.logger.error('/teamService/updateTeamTasks', `${user.username}在团队中创建新的任务记录，执行失败，失败原因：${err}`)
+        }
     }
 }

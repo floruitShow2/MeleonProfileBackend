@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
 import { readFileSync } from 'fs'
 import { UserEntity, UserTokenEntity } from '@/modules/user/dto/user.dto'
+import { TeamService } from '@/modules/team/team.service'
 import { ApiResponse } from '@/interface/response.interface'
 import { TaskEntity, TaskSearchOptions } from './dto/task.dto'
 import { LoggerService } from '../logger/logger.service'
@@ -14,6 +15,7 @@ export class TaskService {
   constructor(
     @InjectModel(TaskEntity.name) private readonly taskModel: Model<TaskEntity>,
     @InjectModel(UserEntity.name) private readonly userModel: Model<UserEntity>,
+    private readonly teamService: TeamService,
     private readonly logger: LoggerService
   ) {}
 
@@ -22,15 +24,19 @@ export class TaskService {
     try {
       // 将关联用户的用户名替换为对应模型的 objectId
       const users = await this.userModel.find({ username: { $in: task.relatives } })
+      task.relatives = users.map((user) => user._id.toString())
 
-      task.relatives = users.map((user) => user._id)
       const createdTask = await this.taskModel.create(task)
       await createdTask.save()
+
+      // 处理 teamId，如果存在该值，则需要将新建的任务ID赋值到 tasks 中
+      await this.teamService.updateTeamTasks(user, createdTask.teamId, createdTask._id.toString())
+
       this.response = getSuccessResponse('任务创建成功', createdTask.title)
       this.logger.info('/task/createTask', `${user.username}新建任务：${createdTask.title}`)
-    } catch {
+    } catch (err) {
       this.response = getFailResponse('任务创建失败', null)
-      this.logger.error('/task/createTask', `${user.username}创建任务 ${task.title} 失败`)
+      this.logger.error('/task/createTask', `${user.username}创建任务 ${task.title} 失败, 失败原因：${err}`)
     }
 
     return this.response

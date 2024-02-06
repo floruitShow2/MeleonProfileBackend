@@ -1,23 +1,44 @@
-import { Body, Controller, Get, Post, Req } from '@nestjs/common'
+import { Body, Controller, Get, Post, Req, UploadedFile, UseInterceptors } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { TeamEntity } from './dto/team.dto'
 import { TeamService } from './team.service'
+import { FileInterceptor } from '@nestjs/platform-express'
+import { genStaticPath } from '@/utils/format'
+import { diskStorage } from 'multer'
 
 @Controller('team')
-@ApiTags('team')
+@ApiTags('Teams')
 export class TeamController {
 
     constructor(private readonly teamService: TeamService) {}
 
     // 查询团队
-    @Get('getTeamsList')
+    @Get('/getTeamsList')
     getTeamsList(@Req() req: Request) {
         return this.teamService.findTeams(req['user'])
     }
 
     // 创建团队
-    @Post('createTeam')
-    createTeam(@Req() req: Request, @Body() team: TeamEntity) {
+    @Post('/createTeam')
+    @UseInterceptors(FileInterceptor('file', {
+        storage: diskStorage({
+            destination: function(req, res, cb) {
+                const storagePath = genStaticPath(`avatar/${req['user'].username}/logo`)
+                cb(null, storagePath)
+            },
+            filename: function(req, res, cb) {
+                cb(null, res.originalname)
+            }
+        })
+    }))
+    createTeam(@UploadedFile() file: Express.Multer.File, @Req() req: Request, @Body() team: TeamEntity) {
+        const user = req['user']
+        const { filename } = file
+        team.logo = filename
+            ? `http://localhost:3000/static/avatar/${user.username}/logo/${filename}`
+            : `http://localhost:3000/static/avatar/avatar_${
+                Math.floor(Math.random() * 5) + 1
+            }.png`
         return this.teamService.createTeam(req['user'], team)
     }
 

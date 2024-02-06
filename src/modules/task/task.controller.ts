@@ -11,10 +11,10 @@ import {
 import { FileFieldsInterceptor } from '@nestjs/platform-express'
 import { ApiTags } from '@nestjs/swagger'
 import { join } from 'path'
-import { existsSync, mkdirSync } from 'fs'
 import { diskStorage } from 'multer'
 import { TaskService } from './task.service'
 import { formatToDateTime } from '@/utils/time'
+import { genStoragePath } from '@/utils/format'
 import { TaskEntity, TaskSearchOptions } from './dto/task.dto'
 
 @Controller('task')
@@ -38,11 +38,7 @@ export class TaskController {
       {
         storage: diskStorage({
           destination: function (req, res, cb) {
-            const storagePath = join(
-              __dirname,
-              `../../../filesStorage/${req['user'].username}/task/${res.fieldname}`
-            )
-            if (!existsSync(storagePath)) mkdirSync(storagePath, { recursive: true })
+            const storagePath = genStoragePath(`${req['user'].username}/task/${res.fieldname}`)
             cb(null, storagePath)
           },
           filename: function (req, res, cb) {
