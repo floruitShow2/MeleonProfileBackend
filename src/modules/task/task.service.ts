@@ -57,7 +57,10 @@ export class TaskService {
           // 查询与接口调用用户相关联的任务
           {
             $match: {
-              $or: [{ relatives: { $in: [userId] } }, { creator: username }]
+              $or: [
+                { relatives: { $in: [userId] } },
+                { creator: username }
+              ]
             }
           },
           {
@@ -95,6 +98,7 @@ export class TaskService {
           {
             $project: {
               taskId: 1,
+              teamId: 1,
               group: 1,
               title: 1,
               desc: 1,

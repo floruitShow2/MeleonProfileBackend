@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post, Req, UploadedFile, UseInterceptors } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
-import { TeamEntity } from './dto/team.dto'
+import { TeamEntity, type MemberType } from './dto/team.dto'
 import { TeamService } from './team.service'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { genStaticPath } from '@/utils/format'
@@ -33,9 +33,8 @@ export class TeamController {
     }))
     createTeam(@UploadedFile() file: Express.Multer.File, @Req() req: Request, @Body() team: TeamEntity) {
         const user = req['user']
-        const { filename } = file
-        team.logo = filename
-            ? `http://localhost:3000/static/avatar/${user.username}/logo/${filename}`
+        team.logo = file?.filename
+            ? `http://localhost:3000/static/avatar/${user.username}/logo/${file.filename}`
             : `http://localhost:3000/static/avatar/avatar_${
                 Math.floor(Math.random() * 5) + 1
             }.png`
@@ -50,4 +49,13 @@ export class TeamController {
     @Post('removeTeam')
     removeTeam() {}
 
+    // 添加新成员
+    @Post('addMember')
+    updateMember(@Req() req: Request, @Body() data: { teamId: string, member: MemberType }) {
+        return this.teamService.addTeamMembers(req['user'], data.teamId, data.member)
+    }
+
+    // 修改成员权限
+
+    // 移除成员
 }
