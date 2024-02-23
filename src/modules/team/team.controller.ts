@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req, UploadedFile, UseInterceptors } from '@nestjs/common'
+import { Body, Controller, Get, Param, Post, Req, UploadedFile, UseInterceptors } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { TeamEntity, type MemberType } from './dto/team.dto'
 import { TeamService } from './team.service'
@@ -31,7 +31,7 @@ export class TeamController {
             }
         })
     }))
-    createTeam(@UploadedFile() file: Express.Multer.File, @Req() req: Request, @Body() team: TeamEntity) {
+    createTeam(@Req() req: Request, @UploadedFile() file: Express.Multer.File, @Body() team: TeamEntity) {
         const user = req['user']
         team.logo = file?.filename
             ? `http://localhost:3000/static/avatar/${user.username}/logo/${file.filename}`
@@ -51,8 +51,14 @@ export class TeamController {
 
     // 添加新成员
     @Post('addMember')
-    updateMember(@Req() req: Request, @Body() data: { teamId: string, member: MemberType }) {
+    addMember(@Req() req: Request, @Body() data: { teamId: string, member: MemberType }) {
         return this.teamService.addTeamMembers(req['user'], data.teamId, data.member)
+    }
+
+    // 查询团队成员
+    @Get('getTeamMembers')
+    getTeamMembers(@Req() req: Request, @Param('teamId') teamId: string) {
+
     }
 
     // 修改成员权限

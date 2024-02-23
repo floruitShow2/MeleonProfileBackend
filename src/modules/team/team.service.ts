@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { Model } from 'mongoose'
+import mongoose, { Model } from 'mongoose'
 import { UserTokenEntity } from '../user/dto/user.dto'
 import { TeamEntity, type TaskType, type MemberType } from './dto/team.dto'
 import { ApiResponse } from '@/interface/response.interface'
@@ -263,5 +263,57 @@ export class TeamService {
         }
 
         return this.response
+    }
+
+    async getTeamMembers(user: UserTokenEntity, teamId: string) {
+        const { userId } = user
+        const res = await this.teamModel.aggregate([
+            {
+                $match: { _id: new mongoose.Types.ObjectId(teamId) }
+            },
+            {
+                $addFields: {
+                    members: {
+                        $map: {
+                            input: '$members',
+                            as: 'member',
+                            in: {
+                                userId: { $toObjectId: '$$member.userId' },
+                                    joinTime: '$$member.joinTime',
+                                  role: '$$member.role'
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'members.userId',
+                    foreignField: '_id',
+                    as: 'membersDetail'
+                }
+            },
+            {
+                $project: {
+                    members: 1,
+                    'membersDetail.username': 1
+                }
+            }
+        ])
+
+        if (!res || !res.length) {
+            this.response = getFailResponse('未找到匹配的团队成员', null)
+            return this.response
+        }
+
+        console.log(res)
+        const { members, membersDetail } = res[0]
+        const membersMap: Record<string, MemberType> = {}
+        members.forEach(item => {
+            membersMap[item.userId] = item
+        })
+
+        membersDetail.map(item => {  })
     }
 }

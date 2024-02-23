@@ -3,9 +3,9 @@ FROM node:18.18.0 as builder
 ARG MODE=production
 ENV MODE=${MODE}
 
-WORKDIR /code
+WORKDIR /usr/share/nginx/server
 
-ADD . /code
+ADD . /usr/share/nginx/server
 
 RUN npm install --registry=https://registry.npm.taobao.org
 

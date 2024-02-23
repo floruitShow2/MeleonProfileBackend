@@ -49,9 +49,9 @@ export class TaskController {
     )
   )
   createTask(
-    @UploadedFiles() files: { cover?: Express.Multer.File; attachments?: Express.Multer.File[] },
+    @Req() req: Request,
     @Body('data') data: string,
-    @Req() req: Request
+    @UploadedFiles() files: { cover?: Express.Multer.File; attachments?: Express.Multer.File[] }
   ) {
     const user = req['user']
     const creator = user.username

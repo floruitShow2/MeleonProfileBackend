@@ -1,13 +1,13 @@
 import { Controller, Post, Get, Body, Req, UseInterceptors, UploadedFile } from '@nestjs/common'
-import { UserService } from './user.service'
-import { ApiTags, ApiOperation } from '@nestjs/swagger'
-import { PasswordsType, UserEntityDTO, UserSignUp } from '@/modules/user/dto/user.dto'
+import { join } from 'path'
+import { diskStorage } from 'multer'
+import { existsSync, mkdirSync } from 'fs'
 import { Roles } from '@/decorator/Roles'
 import { Role } from '@/constants/auth'
+import { ApiTags, ApiOperation } from '@nestjs/swagger'
 import { FileInterceptor } from '@nestjs/platform-express'
-import { diskStorage } from 'multer'
-import { join } from 'path'
-import { existsSync, mkdirSync } from 'fs'
+import { PasswordsType, UserEntityDTO, UserSignUp } from '@/modules/user/dto/user.dto'
+import { UserService } from './user.service'
 
 @Controller('user')
 @ApiTags('User')
