@@ -9,7 +9,7 @@ import { join } from "path"
 export const genStoragePath = (path: string): string => {
     const storagePath = join(
         __dirname,
-        `../../../filesStorage/${path}`
+        `../../../files/${path}`
     )
     if (!existsSync(storagePath)) mkdirSync(storagePath, { recursive: true })
     return storagePath

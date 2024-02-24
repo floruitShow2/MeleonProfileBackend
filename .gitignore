@@ -3,6 +3,7 @@
 /node_modules
 
 # files storage
+/files
 /filesStorage
 /public
 
