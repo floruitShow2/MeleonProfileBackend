@@ -39,7 +39,6 @@ const envFilePath = isDev ? ['.env.development'] : ['.env.production']
       validationSchema: Joi.object({
         MODE: Joi.string()
           .valid('development', 'production', 'test')
-          .required()
           .default('development')
       }),
       validationOptions: {
