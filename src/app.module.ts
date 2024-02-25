@@ -17,7 +17,7 @@ import {
   TaskModule,
   CommentModule,
   TagModule,
-  RedisModule,
+  // RedisModule,
   FileModule,
   TeamModule
 } from './modules'
@@ -65,7 +65,7 @@ const envFilePath = isDev ? ['.env.development'] : ['.env.production']
     BlogModule,
     EventsModule,
     TagModule,
-    RedisModule,
+    // RedisModule,
     // 文件模块
     FileModule,
     // 团队模块
