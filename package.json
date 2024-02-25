@@ -6,7 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "cross-env MODE=production nest build --webpack",
+    "build": "cross-env MODE=production nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "cross-env MODE=development nest start --watch",
@@ -48,7 +48,8 @@
     "socket.io": "^4.7.2",
     "uuid": "^9.0.1",
     "winston": "^3.10.0",
-    "winston-daily-rotate-file": "^4.7.1"
+    "winston-daily-rotate-file": "^4.7.1",
+    "crypto-js": "^4.1.1"
   },
   "devDependencies": {
     "@types/crypto-js": "^4.1.1",
@@ -59,7 +60,6 @@
     "@types/supertest": "^2.0.11",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
     "@typescript-eslint/parser": "^5.0.0",
-    "crypto-js": "^4.1.1",
     "eslint": "^8.0.1",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^4.0.0",
