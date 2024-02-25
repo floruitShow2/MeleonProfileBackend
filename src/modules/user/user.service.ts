@@ -4,7 +4,7 @@ import { Injectable } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { LoggerService } from '@/modules/logger/logger.service'
 import type { ApiResponse } from '@/interface/response.interface'
-import { DefaultUserEntity, UserSignUp, UserEntity, UserEntityDTO, UserTokenEntity, PasswordsType } from './DTO/user.dto'
+import { DefaultUserEntity, UserSignUp, UserEntity, UserEntityDTO, UserTokenEntity, PasswordsType } from './dto/user.dto'
 import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
 import { generateSalt, encrypt, compare } from '@/utils/encrypt'
 
