@@ -2,7 +2,7 @@ import { Prop, Schema } from '@nestjs/mongoose'
 import { ApiProperty } from '@nestjs/swagger'
 import { Document, Types } from 'mongoose'
 import type { TagType } from '@/interface/tag.interface'
-import { UserEntity } from '@/modules/user/DTO/user.dto'
+import { UserEntity } from '@/modules/user/dto/user.dto'
 
 enum TaskGroups {
   Todo = 'todo',

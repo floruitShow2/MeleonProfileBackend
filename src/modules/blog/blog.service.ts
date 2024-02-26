@@ -5,8 +5,8 @@ import { LoggerService } from '@/modules/logger/logger.service'
 import { ApiResponse } from '@/interface/response.interface'
 import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
 import { formatToDateTime } from '@/utils/time'
-import { BlogEntity } from './DTO/blog.dto'
-import { UserEntity, UserTokenEntity } from '../user/DTO/user.dto'
+import { BlogEntity } from './dto/blog.dto'
+import { UserEntity, UserTokenEntity } from '../user/dto/user.dto'
 
 @Injectable()
 export class BlogService {

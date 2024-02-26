@@ -7,7 +7,7 @@ import {
   Query,
   Param
 } from '@nestjs/common'
-import { BlogEntity } from './DTO/blog.dto'
+import { BlogEntity } from './dto/blog.dto'
 import { formatToDateTime } from '@/utils/time'
 import { BlogService } from './blog.service'
 import { ApiOperation, ApiTags, ApiBody } from '@nestjs/swagger'

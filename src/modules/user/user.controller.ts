@@ -6,7 +6,7 @@ import { Roles } from '@/decorator/Roles'
 import { Role } from '@/constants/auth'
 import { ApiTags, ApiOperation } from '@nestjs/swagger'
 import { FileInterceptor } from '@nestjs/platform-express'
-import { PasswordsType, UserEntityDTO, UserSignUp } from '@/modules/user/DTO/user.dto'
+import { PasswordsType, UserEntityDTO, UserSignUp } from '@/modules/user/dto/user.dto'
 import { UserService } from './user.service'
 
 @Controller('user')

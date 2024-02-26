@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, Post, Req, UploadedFile, UseInterceptors } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
-import { TeamEntity, type MemberType } from './DTO/team.dto'
+import { TeamEntity, type MemberType } from './dto/team.dto'
 import { TeamService } from './team.service'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { genStaticPath } from '@/utils/format'
