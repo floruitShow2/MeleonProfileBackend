@@ -1,5 +1,5 @@
-import { TaskEntity } from '@/modules/task/dto/task.dto'
-import { UserEntity } from '@/modules/user/dto/user.dto'
+import { TaskEntity } from '@/modules/task/DTO/task.dto'
+import { UserEntity } from '@/modules/user/DTO/user.dto'
 import { Prop, Schema } from '@nestjs/mongoose'
 import { ApiProperty } from '@nestjs/swagger'
 import { Document, Types } from 'mongoose'

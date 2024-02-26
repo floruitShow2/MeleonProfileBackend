@@ -3,10 +3,10 @@ import { InjectModel } from '@nestjs/mongoose'
 import mongoose, { Model } from 'mongoose'
 import { LoggerService } from '@/modules/logger/logger.service'
 import { ApiResponse } from '@/interface/response.interface'
-import { BlogEntity } from './dto/blog.dto'
 import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
 import { formatToDateTime } from '@/utils/time'
-import { UserEntity, UserTokenEntity } from '../user/dto/user.dto'
+import { BlogEntity } from './DTO/blog.dto'
+import { UserEntity, UserTokenEntity } from '../user/DTO/user.dto'
 
 @Injectable()
 export class BlogService {

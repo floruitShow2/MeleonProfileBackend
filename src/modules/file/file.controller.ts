@@ -1,6 +1,6 @@
 import { Body, Controller, Post, Req, UploadedFile, UploadedFiles, UseInterceptors } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
-import type { ChunkOptions, MergeOptions, VerifyOptions } from './dto/file.dto'
+import type { ChunkOptions, MergeOptions, VerifyOptions } from './DTO/file.dto'
 import { FileService } from './file.service'
 
 @Controller('file')

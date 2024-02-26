@@ -15,7 +15,7 @@ import { diskStorage } from 'multer'
 import { TaskService } from './task.service'
 import { formatToDateTime } from '@/utils/time'
 import { genStoragePath } from '@/utils/format'
-import { TaskEntity, TaskSearchOptions } from './dto/task.dto'
+import { TaskEntity, TaskSearchOptions } from './DTO/task.dto'
 
 @Controller('task')
 @ApiTags('Blogs')

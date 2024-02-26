@@ -2,12 +2,12 @@ import { Injectable } from '@nestjs/common'
 import { Model, Types } from 'mongoose'
 import { ApiResponse } from '@/interface/response.interface'
 import { LoggerService } from '@/modules/logger/logger.service'
-import { CommentEntity } from './dto/comment.dto'
 import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
 import { InjectModel } from '@nestjs/mongoose'
 import { formatToDateTime } from '@/utils/time'
 import { FlattenArray } from '@/utils/format'
-import { UserTokenEntity } from '../user/dto/user.dto'
+import { CommentEntity } from './DTO/comment.dto'
+import { UserTokenEntity } from '../user/DTO/user.dto'
 
 @Injectable()
 export class CommentService {

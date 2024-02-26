@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common'
 import { BlogService } from './blog.service'
 import { BlogController } from './blog.controller'
 import { MongooseModule } from '@nestjs/mongoose'
-import { BlogEntity } from './dto/blog.dto'
+import { BlogEntity } from './DTO/blog.dto'
 import { BlogSchema } from '../mongo/schema'
 
 @Module({

@@ -3,7 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose'
 import { TeamSchema } from '../mongo/schema/team.schema'
 import { TeamController } from './team.controller'
 import { TeamService } from './team.service'
-import { TeamEntity } from './dto/team.dto'
+import { TeamEntity } from './DTO/team.dto'
 
 @Module({
   imports: [

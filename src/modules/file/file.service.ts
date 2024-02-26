@@ -4,8 +4,8 @@ import { WriteStream, createReadStream, createWriteStream, existsSync, mkdirSync
 import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
 import type { ApiResponse } from '@/interface/response.interface'
 import { LoggerService } from '../logger/logger.service'
-import { UserTokenEntity } from '../user/dto/user.dto'
-import type { ChunkOptions, MergeOptions, VerifyOptions } from './dto/file.dto'
+import { UserTokenEntity } from '../user/DTO/user.dto'
+import type { ChunkOptions, MergeOptions, VerifyOptions } from './DTO/file.dto'
 
 @Injectable()
 export class FileService {

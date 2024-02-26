@@ -1,6 +1,6 @@
 import { Controller, Post, Get, Req, Body, UnauthorizedException, Query } from '@nestjs/common'
 import { CommentService } from './comment.service'
-import { CommentEntity } from './dto/comment.dto'
+import { CommentEntity } from './DTO/comment.dto'
 import { formatToDateTime } from '@/utils/time'
 import { ApiTags } from '@nestjs/swagger'
 
