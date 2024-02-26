@@ -6,9 +6,12 @@ import { ConfigService } from '@nestjs/config'
   imports: [
     MongooseModule.forRootAsync({
       useFactory: async (configService: ConfigService) => {
-        return {
-          uri: configService.get<string>('url')
-        }
+        /**
+         * @remark jenkins 上传项目代码时，.env 文件未被发送到服务器端，导致 ConfigService 没有生成响应的环境变量
+         */
+        const uri = configService.get<string>('url')
+        console.log('mongodb 地址', uri)
+        return { uri }
       },
       inject: [ConfigService]
     })

@@ -18,10 +18,14 @@ function initSwagger(app: INestApplication) {
 }
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
-    logger: false,
-    cors: true
-  })
+  /**
+   * @fix 在部署时，保留 { logger: false, cors: true } 参数会导致项目运行不起来，原因未知，暂时注释掉
+   */
+  // const app = await NestFactory.create(AppModule, {
+  //   logger: false,
+  //   cors: true
+  // })
+  const app = await NestFactory.create(AppModule)
 
   initSwagger(app)
   // 添加全局 api 前缀
