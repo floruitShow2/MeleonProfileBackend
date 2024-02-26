@@ -32,7 +32,9 @@ async function bootstrap() {
   app.enableShutdownHooks()
   app.enableCors()
 
-  await app.listen(3000)
+  await app.listen(3000, () => {
+    console.log('成功监听了 3000 端口')
+  })
 }
 
 bootstrap()
