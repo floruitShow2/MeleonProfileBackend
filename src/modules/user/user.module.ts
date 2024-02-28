@@ -7,6 +7,7 @@ import { UserEntity } from './dto/user.dto'
 import { UserService } from './user.service'
 import { UserController } from './user.controller'
 import { LoggerService } from '@/modules/logger/logger.service'
+import { ConfigService } from '@nestjs/config'
 
 @Module({
   imports: [
@@ -19,7 +20,7 @@ import { LoggerService } from '@/modules/logger/logger.service'
       }
     })
   ],
-  providers: [UserService, LoggerService],
+  providers: [UserService, LoggerService, ConfigService],
   controllers: [UserController],
   exports: [UserService]
 })

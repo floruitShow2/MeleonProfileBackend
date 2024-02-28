@@ -1,16 +1,20 @@
 import { Body, Controller, Get, Param, Post, Req, UploadedFile, UseInterceptors } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
+import { ConfigService } from '@nestjs/config'
+import { FileInterceptor } from '@nestjs/platform-express'
+import { diskStorage } from 'multer'
 import { TeamEntity, type MemberType } from './dto/team.dto'
 import { TeamService } from './team.service'
-import { FileInterceptor } from '@nestjs/platform-express'
 import { genStaticPath } from '@/utils/format'
-import { diskStorage } from 'multer'
 
 @Controller('team')
 @ApiTags('Teams')
 export class TeamController {
 
-    constructor(private readonly teamService: TeamService) {}
+    constructor(
+        private readonly teamService: TeamService,
+        private readonly configService: ConfigService
+    ) {}
 
     // 查询团队
     @Get('/getTeamsList')
@@ -34,8 +38,8 @@ export class TeamController {
     createTeam(@Req() req: Request, @UploadedFile() file: Express.Multer.File, @Body() team: TeamEntity) {
         const user = req['user']
         team.logo = file?.filename
-            ? `http://localhost:3000/static/avatar/${user.username}/logo/${file.filename}`
-            : `http://localhost:3000/static/avatar/avatar_${
+            ? `${this.configService.get('NEST_APP_URL')}/static/avatar/${user.username}/logo/${file.filename}`
+            : `${this.configService.get('NEST_APP_URL')}/static/avatar/avatar_${
                 Math.floor(Math.random() * 5) + 1
             }.png`
         return this.teamService.createTeam(req['user'], team)

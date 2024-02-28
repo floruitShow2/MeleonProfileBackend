@@ -7,6 +7,7 @@ import type { ApiResponse } from '@/interface/response.interface'
 import { DefaultUserEntity, UserSignUp, UserEntity, UserEntityDTO, UserTokenEntity, PasswordsType } from './dto/user.dto'
 import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
 import { generateSalt, encrypt, compare } from '@/utils/encrypt'
+import { ConfigService } from '@nestjs/config'
 
 @Injectable()
 export class UserService {
@@ -14,7 +15,8 @@ export class UserService {
   constructor(
     @InjectModel(UserEntity.name) private userModel: Model<UserEntity>,
     private readonly logger: LoggerService,
-    private readonly jwtService: JwtService
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService
   ) {}
 
   /**
@@ -69,7 +71,7 @@ export class UserService {
         ...DefaultUserEntity,
         ...user,
         salt,
-        avatar: `http://localhost:3000/static/avatar/avatar_${
+        avatar: `${this.configService.get('NEST_APP_URL')}/static/avatar/avatar_${
           Math.floor(Math.random() * 5) + 1
         }.png`
       })
@@ -185,7 +187,7 @@ export class UserService {
   async updateUserAvatar(user: UserTokenEntity, file: Express.Multer.File) {
     const { userId, username } = user
     const { fieldname, filename } = file
-    const storagePath = `http://localhost:3000/static/avatar/${username}/${fieldname}/${filename}`
+    const storagePath = `${this.configService.get('NEST_APP_URL')}/static/avatar/${username}/${fieldname}/${filename}`
     try {
       const res = await this.userModel.updateOne({
         _id: userId
