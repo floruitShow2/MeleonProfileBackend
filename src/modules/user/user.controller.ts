@@ -41,7 +41,7 @@ export class UserController {
   @Post('updateUserAvatar')
   @UseInterceptors(FileInterceptor('avatar', { storage: diskStorage({
     destination: function(req, res, cb) {
-      const storagePath = join(process.cwd(), `../../../public/avatar/${req['user'].username}/${res.fieldname}`)
+      const storagePath = join(process.cwd(), `/public/avatar/${req['user'].username}/${res.fieldname}`)
       if (!existsSync(storagePath)) mkdirSync(storagePath, { recursive: true })
       cb(null, storagePath)
     },

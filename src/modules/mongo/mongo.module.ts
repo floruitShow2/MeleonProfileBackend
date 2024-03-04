@@ -14,7 +14,7 @@ import { ConfigService } from '@nestjs/config'
         console.log('mongodb 地址', uri)
         return { uri }
       },
-      inject: [ConfigService]
+      inject: [ConfigService],
     })
   ]
 })

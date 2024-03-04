@@ -56,7 +56,7 @@ export class TaskController {
     const user = req['user']
     const creator = user.username
     const createTime = formatToDateTime(new Date())
-    const storagePath = join(process.cwd(), `../../../files/${creator}/task/`)
+    const storagePath = join(process.cwd(), `/files/${creator}/task/`)
     const task: TaskEntity = JSON.parse(data)
 
     // 补全前端提供的数据
