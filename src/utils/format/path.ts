@@ -8,7 +8,7 @@ import { join } from "path"
  */
 export const genStoragePath = (path: string): string => {
     const storagePath = join(
-        __dirname,
+        process.cwd(),
         `../../../files/${path}`
     )
     if (!existsSync(storagePath)) mkdirSync(storagePath, { recursive: true })
@@ -17,7 +17,7 @@ export const genStoragePath = (path: string): string => {
 
 export const genStaticPath = (path: string) => {
     const storagePath = join(
-        __dirname,
+        process.cwd(),
         `../../../public/${path}`
     )
     if (!existsSync(storagePath)) mkdirSync(storagePath, { recursive: true })

@@ -48,7 +48,7 @@ const envFilePath = isDev ? ['.env.development'] : ['.env.production']
     }),
     // 静态资源
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'public'),
+      rootPath: join(process.cwd(), '..', 'public'),
       serveRoot: '/static'
     }),
     // 数据库连接

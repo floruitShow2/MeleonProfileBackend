@@ -15,7 +15,7 @@ export class FileService {
     constructor(private readonly logger: LoggerService) {}
 
     genUploadDir(user: UserTokenEntity) {
-        const uploadDir = join(__dirname, `../../../files/${user.username}/file/`)
+        const uploadDir = join(process.cwd(), `../../../files/${user.username}/file/`)
         if (!existsSync(uploadDir)) mkdirSync(uploadDir, { recursive: true })
         return uploadDir
     }
