@@ -77,4 +77,10 @@ export class TaskController {
     const user = req['user']
     return this.taskService.getAllTasks(user, options)
   }
+
+  @Post('/updateTask')
+  updateTask(@Req() req: Request, @Body() data: { taskId: string, taskEntity: TaskEntity }) {
+    const { taskId, taskEntity } = data
+    return this.taskService.updateTaskEntity(req['user'], taskId, taskEntity)
+  }
 }

@@ -167,4 +167,28 @@ export class TaskService {
 
     return this.response
   }
+
+  async updateTaskEntity(user: UserTokenEntity, taskId: string, task: TaskEntity) {
+    try {
+      const res = await this.taskModel.updateOne({
+        _id: taskId
+      }, {
+        $set: task
+      })
+
+      const { matchedCount, modifiedCount } = res
+      if (matchedCount >= 1 && modifiedCount === 1) {
+        this.response = getSuccessResponse('任务信息更新成功', taskId)
+        this.logger.info('/task/updateTask', `${user.username}更新用户信息成功，任务ID: ${taskId}`)
+      } else {
+        this.response = getFailResponse('任务信息更新失败', null)
+        this.logger.info('/task/updateTask', `${user.username}更新任务信息失败，任务ID: ${taskId}`)
+      }
+    } catch (err) {
+      this.response = getFailResponse('任务信息更新失败', null)
+      this.logger.info('/task/updateTask', `${user.username}更新任务信息失败，任务ID: ${taskId}，失败原因：${err}`)
+    }
+
+    return this.response
+  }
 }
