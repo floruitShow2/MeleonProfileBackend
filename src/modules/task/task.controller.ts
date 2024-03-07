@@ -20,7 +20,7 @@ import { TaskEntity, TaskSearchOptions } from './dto/task.dto'
 @Controller('task')
 @ApiTags('Blogs')
 export class TaskController {
-  constructor(private taskService: TaskService) {}
+  constructor(private readonly taskService: TaskService) {}
 
   @Post('/createTask')
   @UseInterceptors(
@@ -64,9 +64,9 @@ export class TaskController {
     task.createTime = createTime
     task.lastUpdateTime = createTime
     task.relatives = [...task.relatives, creator]
-    if (files.cover) task.coverImage = storagePath + 'cover\\' + files.cover[0].originalname
+    if (files.cover) task.coverImage = join(storagePath, 'cover', files.cover[0].originalname)
     task.attachments = (files.attachments || []).map(
-      (file) => storagePath + 'attachments\\' + file.originalname
+      (file) => join(storagePath, 'attachments', file.originalname)
     )
 
     return this.taskService.createTask(user, task)

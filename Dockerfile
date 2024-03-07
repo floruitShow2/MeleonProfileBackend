@@ -6,7 +6,7 @@ ENV TZ=Asia/Shanghai \
 RUN ln -fs /usr/share/zoneinfo/${TZ} /etc/localtime && echo ${TZ} > /etc/timezone && dpkg-reconfigure --frontend noninteractive tzdata && rm -rf /var/lib/apt/lists/*
 
 ARG MODE=production
-ENV MODE=${MODE}
+ENV MODE=${NEST_APP_MODE}
 
 WORKDIR /app
 

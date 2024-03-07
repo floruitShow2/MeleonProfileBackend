@@ -25,7 +25,7 @@ import { AppController } from './app.controller'
 import { AppService } from './app.service'
 import { RolesGuard } from './guards/roles.guard'
 
-const isDev = process.env.MODE === 'development'
+const isDev = process.env.NEST_APP_MODE === 'development'
 const envFilePath = isDev ? ['.env.development'] : ['.env.production']
 
 @Module({
@@ -37,7 +37,7 @@ const envFilePath = isDev ? ['.env.development'] : ['.env.production']
       expandVariables: true,
       load: [GlobalConfig],
       validationSchema: Joi.object({
-        MODE: Joi.string()
+        NEST_APP_MODE: Joi.string()
           .valid('development', 'production', 'test')
           .default('development')
       }),
