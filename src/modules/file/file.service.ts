@@ -6,13 +6,17 @@ import type { ApiResponse } from '@/interface/response.interface'
 import { LoggerService } from '../logger/logger.service'
 import { UserTokenEntity } from '../user/dto/user.dto'
 import type { ChunkOptions, MergeOptions, VerifyOptions } from './dto/file.dto'
+import { OssService } from '../oss/oss.service'
 
 @Injectable()
 export class FileService {
 
     response: ApiResponse
 
-    constructor(private readonly logger: LoggerService) {}
+    constructor(
+        private readonly ossService: OssService,
+        private readonly logger: LoggerService
+    ) {}
 
     genUploadDir(user: UserTokenEntity) {
         const uploadDir = join(process.cwd(), `/files/${user.username}/file/`)
@@ -130,6 +134,13 @@ export class FileService {
         })
     }
 
+    /**
+     * @description 合并文件切片
+     * @param user
+     * @param filePath
+     * @param filehash
+     * @param size
+     */
     async mergeFileChunk(user: UserTokenEntity, filePath: string, filehash: string, size: number) {
         const chunkDir = this.genChunkDir(user, filehash)
         const chunkPaths: string[] = readdirSync(chunkDir)
@@ -181,6 +192,33 @@ export class FileService {
                 `${user.username}上传文件${filename}，执行合并操作失败，失败原因：${err}`
             )
         }
+        return this.response
+    }
+
+    /**
+     * @description 将文件上传至阿里云OSS对象存储
+     * @param user 用户信息
+     * @param file 文件
+     * @returns 
+     */
+    async uplodaFileToOSS(user: UserTokenEntity, file: Express.Multer.File) {
+        const username = user?.username ?? 'meleon'
+        const filename = file.originalname
+        try {
+            const ossUrl = await this.ossService.putOssFile(`/${username}/${filename}`, file.path)
+            this.response = getSuccessResponse('文件上传成功', ossUrl)
+            this.logger.info(
+                '/file/oss/uploadFile',
+                `${username}上传文件[${filename}]至 Aliyun OSS 成功，文件地址为 ${ossUrl}`
+            )
+        } catch (err) {
+            this.response = getFailResponse('文件合并失败', null)
+            this.logger.error(
+                '/file/oss/uploadFile',
+                `${username}上传文件[${filename}]失败，失败原因：${err}`
+            )
+        }
+
         return this.response
     }
 }

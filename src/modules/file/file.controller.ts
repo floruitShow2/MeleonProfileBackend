@@ -1,12 +1,18 @@
 import { Body, Controller, Post, Req, UploadedFile, UploadedFiles, UseInterceptors } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
-import type { ChunkOptions, MergeOptions, VerifyOptions } from './dto/file.dto'
+import { ApiTags } from '@nestjs/swagger'
+import { diskStorage } from 'multer'
+import { existsSync, mkdirSync } from 'fs'
+import { resolve } from 'path'
+import { OssService } from '@/modules/oss/oss.service'
 import { FileService } from './file.service'
+import type { ChunkOptions, MergeOptions, VerifyOptions } from './dto/file.dto'
 
 @Controller('file')
+@ApiTags('file')
 export class FileController {
   
-  constructor(private readonly fileService: FileService) {}
+  constructor(private readonly fileService: FileService, private readonly ossService: OssService) {}
 
   @Post('/verify')
   handleVerify(@Req() req: Request, @Body() verifyOptions: VerifyOptions) {
@@ -22,5 +28,24 @@ export class FileController {
   @Post('/merge')
   handleMerge(@Req() req: Request, @Body() mergeOptions: MergeOptions) {
     return this.fileService.handleMerge(req['user'], mergeOptions)
+  }
+
+  @Post('/oss/uploadFile')
+  @UseInterceptors(FileInterceptor('file', {
+    storage: diskStorage({
+      destination: (req, res, cb) => {
+        const storagePath = resolve(process.cwd(), `/files/${req['user']?.username}/oss/`)
+        if (!existsSync(storagePath)) {
+          mkdirSync(storagePath, { recursive: true })
+        }
+        cb(null, storagePath)
+      },
+      filename: (req, res, cb) => {
+        cb(null, res.originalname)
+      }
+    })
+  }))
+  handleTestOSS(@Req() req: Request, @UploadedFile() file: Express.Multer.File) {
+    return this.fileService.uplodaFileToOSS(req['user'], file)
   }
 }
