@@ -1,12 +1,18 @@
 import { Injectable } from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
 import * as OSS from 'ali-oss'
+import { DecryptPrivateInfo } from '@/utils/encrypt'
 import OSSConfig from './constants/oss.constant'
 
 @Injectable()
 export class OssService {
     client: OSS
-    constructor() {
-        this.client = new OSS(OSSConfig)
+    constructor(private readonly configService: ConfigService) {
+        this.client = new OSS({
+            ...OSSConfig,
+            accessKeyId: DecryptPrivateInfo(this.configService.get('NEST_OSS_ID')),
+            accessKeySecret: DecryptPrivateInfo(this.configService.get('NEST_OSS_SECRET')),
+        })
     }
 
     /**

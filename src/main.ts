@@ -3,6 +3,7 @@ import { AppModule } from './app.module'
 import { IoAdapter } from '@nestjs/platform-socket.io'
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'
 import { INestApplication } from '@nestjs/common'
+import { EncryptPrivateInfo, DecryptPrivateInfo } from './utils/encrypt'
 
 // swagger 文档服务
 function initSwagger(app: INestApplication) {
@@ -26,6 +27,8 @@ async function bootstrap() {
   //   cors: true
   // })
   const app = await NestFactory.create(AppModule)
+
+  console.log(EncryptPrivateInfo('VeABLirfs82vjAjqi5C9iFZf8wBnMl'))
 
   initSwagger(app)
   // 添加全局 api 前缀

@@ -1,5 +1,6 @@
 import * as crypto from 'crypto-js'
 
+// JWT
 export function generateSalt() {
   return crypto.lib.WordArray.random(16).toString()
 }

@@ -24,9 +24,9 @@ import {
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
 import { RolesGuard } from './guards/roles.guard'
+import { isDev } from './utils/is'
 
-const isDev = process.env.NEST_APP_MODE === 'development'
-const envFilePath = isDev ? ['.env.development'] : ['.env.production']
+const envFilePath = isDev() ? ['.env.development'] : ['.env.production']
 
 @Module({
   imports: [
