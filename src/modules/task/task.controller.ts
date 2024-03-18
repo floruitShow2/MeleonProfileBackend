@@ -38,8 +38,8 @@ export class TaskController {
       {
         storage: diskStorage({
           destination: function (req, res, cb) {
-            const storagePath = genStoragePath(`${req['user'].username}/task/${res.fieldname}`)
-            cb(null, storagePath)
+            const { diskPath } = genStoragePath(`/${req['user'].username}/task/${res.fieldname}`)
+            cb(null, diskPath)
           },
           filename: function (req, res, cb) {
             cb(null, res.originalname)
@@ -56,7 +56,7 @@ export class TaskController {
     const user = req['user']
     const creator = user.username
     const createTime = formatToDateTime(new Date())
-    const storagePath = join(process.cwd(), `/files/${creator}/task/`)
+    const storagePath = `${creator}/task/`
     const task: TaskEntity = JSON.parse(data)
 
     // 补全前端提供的数据
@@ -64,10 +64,12 @@ export class TaskController {
     task.createTime = createTime
     task.lastUpdateTime = createTime
     task.relatives = [...task.relatives, creator]
-    if (files.cover) task.coverImage = join(storagePath, 'cover', files.cover[0].originalname)
+    console.log(genStoragePath(join(storagePath, `/cover/${files.cover[0].originalname}`)))
+    if (files.cover) task.coverImage = genStoragePath(join(storagePath, `/cover/${files.cover[0].originalname}`)).storagePath
     task.attachments = (files.attachments || []).map(
-      (file) => join(storagePath, 'attachments', file.originalname)
+      (file) => genStoragePath(join(storagePath, `/attachments/${file.originalname}`)).storagePath
     )
+    console.log(task)
 
     return this.taskService.createTask(user, task)
   }

@@ -19,7 +19,12 @@ export class TaskService {
     private readonly logger: LoggerService
   ) {}
 
-  // 创建新任务
+  /**
+   * @description 创建新任务
+   * @param user 
+   * @param task 任务实体
+   * @returns 
+   */
   async createTask(user: UserTokenEntity, task: TaskEntity) {
     try {
       // 将关联用户的用户名替换为对应模型的 objectId
@@ -136,9 +141,9 @@ export class TaskService {
       res.forEach((task) => {
         const { group } = task
         // 处理附件内容
-        task.coverImage =
-          task.coverImage &&
-          `data:image/png;base64,${readFileSync(task.coverImage).toString('base64')}`
+        // task.coverImage =
+        //   task.coverImage &&
+        //   `data:image/png;base64,${readFileSync(task.coverImage).toString('base64')}`
         task.attachments = task.attachments.map((filePath) => {
           return filePath.split('\\').at(-1)
         })

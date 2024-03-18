@@ -5,7 +5,7 @@ import { FileInterceptor } from '@nestjs/platform-express'
 import { diskStorage } from 'multer'
 import { TeamEntity, type MemberType } from './dto/team.dto'
 import { TeamService } from './team.service'
-import { genStaticPath } from '@/utils/format'
+import { genStoragePath } from '@/utils/format'
 
 @Controller('team')
 @ApiTags('Teams')
@@ -27,8 +27,8 @@ export class TeamController {
     @UseInterceptors(FileInterceptor('file', {
         storage: diskStorage({
             destination: function(req, res, cb) {
-                const storagePath = genStaticPath(`avatar/${req['user'].username}/logo`)
-                cb(null, storagePath)
+                const { diskPath } = genStoragePath(`avatar/${req['user'].username}/logo`)
+                cb(null, diskPath)
             },
             filename: function(req, res, cb) {
                 cb(null, res.originalname)

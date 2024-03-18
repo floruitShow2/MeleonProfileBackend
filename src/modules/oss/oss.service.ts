@@ -3,6 +3,8 @@ import { ConfigService } from '@nestjs/config'
 import * as OSS from 'ali-oss'
 import { DecryptPrivateInfo } from '@/utils/encrypt'
 import OSSConfig from './constants/oss.constant'
+import { join } from 'path'
+import { createWriteStream, existsSync, mkdirSync } from 'fs'
 
 @Injectable()
 export class OssService {
@@ -80,6 +82,40 @@ export class OssService {
             return result
         } catch (err) {
             throw err
+        }
+    }
+
+    /**
+     * @description 将 OSS 上的文件下载到本地
+     * @param path 文件存储在 OSS 服务器上的路径
+     * @returns true | false 下载是否成功
+     */
+    async downloadFileStream(path: string) {
+        try {
+            const result = await this.client.getStream(path)
+            const folders = path.split('/')
+            const filename = folders.pop()
+            const targetFolder = join(
+                process.cwd(),
+                '/files/oss',
+                folders.join('/')
+            )
+
+            await new Promise((resolve, reject) => {
+                if (!existsSync(targetFolder)) mkdirSync(targetFolder, { recursive: true })
+                const writeStream = createWriteStream(join(targetFolder, filename))
+                result.stream.pipe(writeStream)
+                result.stream.on('error', () => {
+                    reject(false)
+                })
+                writeStream.on('finish', () => {
+                    resolve(true)
+                })
+            })
+            return true
+        } catch (err) {
+            console.log(err)
+            return false
         }
     }
 }

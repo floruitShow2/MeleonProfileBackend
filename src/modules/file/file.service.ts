@@ -1,12 +1,13 @@
-import { Injectable } from '@nestjs/common'
+import { HttpException, HttpStatus, Injectable, StreamableFile } from '@nestjs/common'
 import { join, resolve } from 'path'
-import { WriteStream, createReadStream, createWriteStream, existsSync, mkdirSync, readdirSync, rmdirSync, unlinkSync, writeFileSync } from 'fs'
+import { WriteStream, createReadStream, createWriteStream, existsSync, mkdirSync, readdirSync, rmdirSync, unlink, unlinkSync, writeFileSync } from 'fs'
 import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
 import type { ApiResponse } from '@/interface/response.interface'
 import { LoggerService } from '../logger/logger.service'
 import { UserTokenEntity } from '../user/dto/user.dto'
 import type { ChunkOptions, MergeOptions, VerifyOptions } from './dto/file.dto'
 import { OssService } from '../oss/oss.service'
+import { genStoragePath } from '@/utils/format'
 
 @Injectable()
 export class FileService {
@@ -202,6 +203,9 @@ export class FileService {
      * @returns 
      */
     async uplodaFileToOSS(user: UserTokenEntity, file: Express.Multer.File) {
+        if (!file) {
+            throw new HttpException('参数异常，文件未上传', HttpStatus.FORBIDDEN)
+        }
         const username = user?.username ?? 'meleon'
         const filename = file.originalname
         try {
@@ -212,7 +216,7 @@ export class FileService {
                 `${username}上传文件[${filename}]至 Aliyun OSS 成功，文件地址为 ${ossUrl}`
             )
         } catch (err) {
-            this.response = getFailResponse('文件合并失败', null)
+            this.response = getFailResponse('文件上传失败', null)
             this.logger.error(
                 '/file/oss/uploadFile',
                 `${username}上传文件[${filename}]失败，失败原因：${err}`
@@ -220,5 +224,36 @@ export class FileService {
         }
 
         return this.response
+    }
+
+    cleanUpFile(path: string) {
+        try {
+            if (existsSync(path)) {
+                unlinkSync(path)
+            }
+        } catch (err) {
+            console.log(err)
+        } 
+    }
+
+    async downloadFileFromOSS(user: UserTokenEntity, path: string) {
+        try {
+            const res = await this.ossService.downloadFileStream(path)
+            const storagePath = genStoragePath(`/oss/${path}`).diskPath
+            if (res && existsSync(storagePath)) {
+                const readStream = createReadStream(storagePath)
+                const streamableFile = new StreamableFile(readStream)
+
+                readStream.on('end', () => this.cleanUpFile(storagePath))
+                readStream.on('error', () => this.cleanUpFile(storagePath))
+
+                return streamableFile
+            } else {
+                return '失败了'
+            }
+        } catch (err) {
+            console.log(err)
+            return '失败了'
+        }
     }
 }

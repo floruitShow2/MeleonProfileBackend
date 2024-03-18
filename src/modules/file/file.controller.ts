@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, UploadedFile, UploadedFiles, UseInterceptors } from '@nestjs/common'
+import { Body, Controller, Get, Post, Query, Req, UploadedFile, UseInterceptors } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { ApiTags } from '@nestjs/swagger'
 import { diskStorage } from 'multer'
@@ -34,18 +34,24 @@ export class FileController {
   @UseInterceptors(FileInterceptor('file', {
     storage: diskStorage({
       destination: (req, res, cb) => {
-        const storagePath = resolve(process.cwd(), `/files/${req['user']?.username}/oss/`)
-        if (!existsSync(storagePath)) {
-          mkdirSync(storagePath, { recursive: true })
-        }
+        const storagePath = resolve(process.cwd(), `/files/${req['user']?.username || 'meleon'}/oss/`)
+        // if (!existsSync(storagePath)) {
+        //   mkdirSync(storagePath, { recursive: true })
+        // }
         cb(null, storagePath)
       },
       filename: (req, res, cb) => {
-        cb(null, res.originalname)
+        cb(null, res?.originalname)
       }
     })
   }))
   handleTestOSS(@Req() req: Request, @UploadedFile() file: Express.Multer.File) {
+    console.log('f', file)
     return this.fileService.uplodaFileToOSS(req['user'], file)
+  }
+
+  @Get('/oss/downloadFile')
+  handleDownloadFile(@Req() req: Request, @Query('path') path: string) {
+    return this.fileService.downloadFileFromOSS(req['user'], path)
   }
 }
