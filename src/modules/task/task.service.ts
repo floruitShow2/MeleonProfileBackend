@@ -1,13 +1,15 @@
-import { Injectable } from '@nestjs/common'
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
-import { readFileSync } from 'fs'
+import { existsSync, readFileSync, unlinkSync } from 'fs'
 import { UserEntity, UserTokenEntity } from '@/modules/user/dto/user.dto'
 import { TeamService } from '@/modules/team/team.service'
 import { ApiResponse } from '@/interface/response.interface'
 import { TaskEntity, TaskSearchOptions } from './dto/task.dto'
 import { LoggerService } from '../logger/logger.service'
 import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
+import { ConfigService } from '@nestjs/config'
+import { genStoragePath } from '@/utils/format'
 
 @Injectable()
 export class TaskService {
@@ -16,8 +18,19 @@ export class TaskService {
     @InjectModel(TaskEntity.name) private readonly taskModel: Model<TaskEntity>,
     @InjectModel(UserEntity.name) private readonly userModel: Model<UserEntity>,
     private readonly teamService: TeamService,
+    private readonly configService: ConfigService,
     private readonly logger: LoggerService
   ) {}
+
+  async findTaskById(taskId: string): Promise<TaskEntity[]> {
+    return await this.taskModel.aggregate([
+      {
+        $match: {
+          _id: { $toObjectId: taskId }
+        }
+      }
+    ])
+  }
 
   /**
    * @description 创建新任务
@@ -173,7 +186,7 @@ export class TaskService {
     return this.response
   }
 
-  async updateTaskEntity(user: UserTokenEntity, taskId: string, task: TaskEntity) {
+  async updateTaskEntity(user: UserTokenEntity, taskId: string, task: Partial<TaskEntity>) {
     try {
       const res = await this.taskModel.updateOne({
         _id: taskId
@@ -195,5 +208,23 @@ export class TaskService {
     }
 
     return this.response
+  }
+
+  async handleDeleteCover(user: UserTokenEntity, taskId: string) {
+    try {
+      const tasks = await this.findTaskById(taskId)
+      if (tasks && tasks.length) {
+        const { coverImage } = tasks[0]
+        const { storagePath } = genStoragePath(coverImage.replace(`${this.configService.get('NEST_APP_URL')}/static`, ''))
+        if (existsSync(storagePath)) unlinkSync(storagePath)
+        await this.updateTaskEntity(user, taskId, { coverImage: '' })
+        
+        this.response = getSuccessResponse('封面删除成功', true)
+        this.logger.info('/file/deleteCover', `${user.username}删除任务${taskId}的封面，执行成功`)
+      }
+    } catch (err) {
+      this.response = getSuccessResponse('封面删除失败', false)
+      this.logger.info('/file/deleteCover', `${user.username}删除任务${taskId}的封面，执行失败，失败原因：${err}`)
+    }
   }
 }

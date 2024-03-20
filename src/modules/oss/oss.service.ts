@@ -5,6 +5,7 @@ import { DecryptPrivateInfo } from '@/utils/encrypt'
 import OSSConfig from './constants/oss.constant'
 import { join } from 'path'
 import { createWriteStream, existsSync, mkdirSync } from 'fs'
+import { genStoragePath } from '@/utils/format'
 
 @Injectable()
 export class OssService {
@@ -95,15 +96,14 @@ export class OssService {
             const result = await this.client.getStream(path)
             const folders = path.split('/')
             const filename = folders.pop()
-            const targetFolder = join(
-                process.cwd(),
-                '/files/oss',
+            const { diskPath: targetFolder } = genStoragePath(join(
+                '/oss',
                 folders.join('/')
-            )
-
+            ))
+            
             await new Promise((resolve, reject) => {
                 if (!existsSync(targetFolder)) mkdirSync(targetFolder, { recursive: true })
-                const writeStream = createWriteStream(join(targetFolder, filename))
+                const writeStream = createWriteStream(join(targetFolder, filename), { flags: 'w' })
                 result.stream.pipe(writeStream)
                 result.stream.on('error', () => {
                     reject(false)

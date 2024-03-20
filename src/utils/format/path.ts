@@ -11,11 +11,12 @@ import { ConfigService } from '@nestjs/config'
  */
 export const genStoragePath = (path: string): { diskPath: string; storagePath: string } => {
     const configService = new ConfigService()
-    console.log(isDev(), configService.get('NEST_APP_URL'))
+    // url.resolve
     const storagePath = resolve(
         isDev() ? configService.get('NEST_APP_URL') : process.cwd(),
         `/static/files/${path}`
     )
+    // path.join
     const diskPath = join(
         process.cwd(),
         `/public/files/${path}`

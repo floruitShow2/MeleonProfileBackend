@@ -1,9 +1,10 @@
 import { NestFactory } from '@nestjs/core'
-import { AppModule } from './app.module'
 import { IoAdapter } from '@nestjs/platform-socket.io'
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'
 import { INestApplication } from '@nestjs/common'
-import { EncryptPrivateInfo, DecryptPrivateInfo } from './utils/encrypt'
+import * as compression from 'compression'
+import { AppModule } from './app.module'
+// import { EncryptPrivateInfo, DecryptPrivateInfo } from './utils/encrypt'
 
 // swagger 文档服务
 function initSwagger(app: INestApplication) {
@@ -28,15 +29,15 @@ async function bootstrap() {
   // })
   const app = await NestFactory.create(AppModule)
 
-  console.log(EncryptPrivateInfo('VeABLirfs82vjAjqi5C9iFZf8wBnMl'))
-
   initSwagger(app)
   // 添加全局 api 前缀
   app.setGlobalPrefix('api')
+  // 开启 socketio
   app.useWebSocketAdapter(new IoAdapter(app))
-  // app.useGlobalInterceptors(new LoggerInterceptor(new LoggerService()))
-  // app.useGlobalPipes(new ValidationPipe())
   app.enableShutdownHooks()
+  // 开启响应结果压缩
+  app.use(compression())
+  // 开启 cors 中间件
   app.enableCors()
 
   await app.listen(3000, () => {

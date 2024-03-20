@@ -136,7 +136,6 @@ export class CommentService {
 
   async addCommentLikes(user: UserTokenEntity, commentId: string, type: 'add' | 'sub') {
     const { userId, username } = user
-    console.log('a', userId)
     try {
       await this.commentModel.updateOne(
         { _id: commentId },

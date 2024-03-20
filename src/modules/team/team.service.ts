@@ -266,7 +266,7 @@ export class TeamService {
     }
 
     async getTeamMembers(user: UserTokenEntity, teamId: string) {
-        const { userId } = user
+        // const { userId } = user
         const res = await this.teamModel.aggregate([
             {
                 $match: { _id: new mongoose.Types.ObjectId(teamId) }
@@ -307,13 +307,12 @@ export class TeamService {
             return this.response
         }
 
-        console.log(res)
         const { members, membersDetail } = res[0]
         const membersMap: Record<string, MemberType> = {}
         members.forEach(item => {
             membersMap[item.userId] = item
         })
 
-        membersDetail.map(item => {  })
+        // membersDetail.map(item => {  })
     }
 }

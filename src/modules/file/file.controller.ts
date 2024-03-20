@@ -46,7 +46,6 @@ export class FileController {
     })
   }))
   handleTestOSS(@Req() req: Request, @UploadedFile() file: Express.Multer.File) {
-    console.log('f', file)
     return this.fileService.uplodaFileToOSS(req['user'], file)
   }
 
