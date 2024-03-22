@@ -21,6 +21,7 @@ export const genStoragePath = (path: string): { diskPath: string; storagePath: s
         process.cwd(),
         `/public/files/${path}`
     )
+
     if (!existsSync(diskPath)) mkdirSync(diskPath, { recursive: true })
 
     return {

@@ -1,15 +1,16 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
-import { Model } from 'mongoose'
-import { existsSync, readFileSync, unlinkSync } from 'fs'
+import mongoose, { Model } from 'mongoose'
+import { unlinkSync } from 'fs'
 import { UserEntity, UserTokenEntity } from '@/modules/user/dto/user.dto'
 import { TeamService } from '@/modules/team/team.service'
 import { ApiResponse } from '@/interface/response.interface'
-import { TaskEntity, TaskSearchOptions } from './dto/task.dto'
 import { LoggerService } from '../logger/logger.service'
 import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
 import { ConfigService } from '@nestjs/config'
 import { genStoragePath } from '@/utils/format'
+import { TaskEntity, TaskSearchOptions } from './dto/task.dto'
+import { join } from 'path'
 
 @Injectable()
 export class TaskService {
@@ -26,7 +27,7 @@ export class TaskService {
     return await this.taskModel.aggregate([
       {
         $match: {
-          _id: { $toObjectId: taskId }
+          _id: new mongoose.Types.ObjectId(taskId)
         }
       }
     ])
@@ -189,7 +190,7 @@ export class TaskService {
   async updateTaskEntity(user: UserTokenEntity, taskId: string, task: Partial<TaskEntity>) {
     try {
       const res = await this.taskModel.updateOne({
-        _id: taskId
+        _id: new mongoose.Types.ObjectId(taskId)
       }, {
         $set: task
       })
@@ -210,13 +211,30 @@ export class TaskService {
     return this.response
   }
 
+  async handleAddCover(user: UserTokenEntity, taskId: string, task: Partial<TaskEntity>) {
+    try {
+      await this.updateTaskEntity(user, taskId, task)
+      this.response = getSuccessResponse('封面新增成功', task.coverImage)
+    } catch {
+      this.response = getFailResponse('封面新增失败', '')
+    }
+
+    return this.response
+  }
+
   async handleDeleteCover(user: UserTokenEntity, taskId: string) {
     try {
       const tasks = await this.findTaskById(taskId)
       if (tasks && tasks.length) {
         const { coverImage } = tasks[0]
-        const { storagePath } = genStoragePath(coverImage.replace(`${this.configService.get('NEST_APP_URL')}/static`, ''))
-        if (existsSync(storagePath)) unlinkSync(storagePath)
+        /**
+         * @fix genStoragePath 生成存储路径时，附带了文件名，导致创建了以 文件名 命名的空文件夹，unlinkSync 只能删除文件，不能删除文件夹
+         * @fix url.resolve 生成路径时会把路径中的空格替换为 %20 ，导致找不到对应文件
+         */
+        const folders = coverImage.replace('%20', ' ').replace(`${this.configService.get('NEST_APP_URL')}/static/files`, '').split('/')
+        const filename = folders.pop()
+        const { diskPath } = genStoragePath(join(...folders))
+        unlinkSync(join(diskPath, filename))
         await this.updateTaskEntity(user, taskId, { coverImage: '' })
         
         this.response = getSuccessResponse('封面删除成功', true)

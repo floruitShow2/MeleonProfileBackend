@@ -102,7 +102,6 @@ export class OssService {
             ))
             
             await new Promise((resolve, reject) => {
-                if (!existsSync(targetFolder)) mkdirSync(targetFolder, { recursive: true })
                 const writeStream = createWriteStream(join(targetFolder, filename), { flags: 'w' })
                 result.stream.pipe(writeStream)
                 result.stream.on('error', () => {

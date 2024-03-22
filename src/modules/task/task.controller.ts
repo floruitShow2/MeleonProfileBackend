@@ -102,17 +102,17 @@ export class TaskController {
       }
     })
   }))
-  addCover(@Req() req: Request, @UploadedFile() cover: Express.Multer.File, @Body() taskId: string) {
+  addCover(@Req() req: Request, @UploadedFile() cover: Express.Multer.File, @Body() data: { taskId: string }) {
     const user: UserTokenEntity = req['user']
     const { username } = user
-    const { storagePath } = genStoragePath(`${username}/task/${cover.fieldname}`)
-    return this.taskService.updateTaskEntity(req['user'], taskId, { coverImage: storagePath })
+    const { storagePath } = genStoragePath(`${username}/task/${cover.fieldname}/${cover.originalname}`)
+    return this.taskService.handleAddCover(req['user'], data.taskId, { coverImage: storagePath })
   }
 
-  // 删除删除封面
+  // 删除封面
   @Post('/deleteCover')
-  deleteCover(@Req() req: Request, taskId: string) {
-    return this.taskService.handleDeleteCover(req['user'], taskId)
+  deleteCover(@Req() req: Request, @Body() data: { taskId: string }) {
+    return this.taskService.handleDeleteCover(req['user'], data.taskId)
   }
 
   // 上传任务附件
