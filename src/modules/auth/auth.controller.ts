@@ -1,28 +1,20 @@
-import { Controller, Get, Post, Body, Request, UseGuards } from '@nestjs/common'
+import { Controller, Get, HttpStatus, Post, Query, Redirect } from '@nestjs/common'
+import { ApiTags } from '@nestjs/swagger'
+import { HttpService } from '@nestjs/axios'
 import { AuthService } from './auth.service'
-import { UserEntity } from '@/modules/user/dto/user.dto'
-import { ApiOperation, ApiTags } from '@nestjs/swagger'
-import { AuthGuard } from '@/guards/auth.guard'
 
 @Controller('auth')
 @ApiTags('Auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly httpService: HttpService,
+    private readonly authService: AuthService) {}
 
-  @Post('/getAccessToken')
-  @ApiOperation({
-    summary: '获取 jwttoken'
-  })
-  async getAccessToken(@Body() user: UserEntity) {
-    return await this.authService.validateUser(user)
-  }
-
-  @UseGuards(AuthGuard)
-  @ApiOperation({
-    summary: '测试 guard 是否生效'
-  })
-  @Get('profile')
-  getProfile(@Request() request) {
-    return request.user
+  @Get('/github')
+  async handleGithubAuth(@Query() query: { code: string }) {
+    const tokenEntity = await this.authService.genGithubToken(query.code)
+    const userInfo = await this.authService.genUserInfo(tokenEntity)
+    console.log('auth controller', userInfo)
+    return this.authService.handleGithubSignup(tokenEntity, userInfo)
   }
 }

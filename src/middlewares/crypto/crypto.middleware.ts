@@ -20,6 +20,7 @@ export class CryptoMiddleware implements NestMiddleware {
       })
       return
     } else {
+      console.log(payload)
       const { username, userId, roles, timestamp, exp } = payload
       if (Date.now() - timestamp > exp) {
         // 超时

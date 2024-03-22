@@ -51,6 +51,11 @@ export class UserService {
     ])
   }
 
+  async createUser(user: UserEntityDTO) {
+    const createUser = await this.userModel.create(user)
+    await createUser.save()
+  }
+
   /**
    * @description 用户注册接口
    * @param user
@@ -66,16 +71,16 @@ export class UserService {
     try {
       // 注册后对密码执行加密
       const salt = generateSalt()
-      user.password = encrypt(user.password, salt)
-      const createUser = await this.userModel.create({
+      const userEntity: UserEntityDTO & { salt: string } = {
         ...DefaultUserEntity,
         ...user,
         salt,
+        password: encrypt(user.password, salt),
         avatar: `${this.configService.get('NEST_APP_URL')}/static/avatar/avatar_${
           Math.floor(Math.random() * 5) + 1
         }.png`
-      })
-      await createUser.save()
+      }
+      await this.createUser(userEntity)
       this.response = getSuccessResponse('注册成功', user.username)
       this.logger.info('/user/signup', '新增用户成功')
     } catch (err) {
@@ -98,13 +103,14 @@ export class UserService {
       this.logger.error('/user/login', `${user.username}登录失败，未找到该用户`)
       return this.response
     }
+    // 比较密码是否匹配
     if (!compare(user.password, res[findIdx].password, res[findIdx].salt)) {
       this.response = getFailResponse('密码错误，登录失败', null)
       this.logger.error('/user/login', `${user.username}登录失败，密码不匹配`)
       return this.response
     }
     const token = this.jwtService.sign({
-      ...user,
+      username: user.username,
       userId: res[0].userId,
       roles: res[0].roles,
       timestamp: Date.now()
@@ -213,6 +219,12 @@ export class UserService {
     return this.response
   }
 
+  /**
+   * @description 更新用户密码
+   * @param user
+   * @param {PasswordsType} passwords
+   * @returns
+   */
   async updatePassword(user: UserTokenEntity, passwords: PasswordsType) {
     const res = await this.findOneByName(user, true)
     if (!res || !res.length) return

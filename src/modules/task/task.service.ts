@@ -82,17 +82,21 @@ export class TaskService {
               ]
             }
           },
+          // 筛选条件过滤
           {
             $match: {
               title: { $regex: options.title, $options: 'i' },
               ...dateOptions
             }
           },
+          // _id => taskId
           {
             $addFields: {
-              taskId: '$_id'
+              taskId: { $toString: '$_id' },
+              teamObjectId: { $toObjectId: '$teamId' }
             }
           },
+          // 联表查询
           {
             $lookup: {
               from: 'users',
@@ -102,22 +106,24 @@ export class TaskService {
             }
           },
           {
-            $addFields: {
-              _idStr: { $toString: '$_id' }
+            $lookup: {
+              from: 'comments',
+              foreignField: 'targetId',
+              localField: 'taskId',
+              as: 'commentsList'
             }
           },
           {
             $lookup: {
-              from: 'comments',
-              foreignField: 'targetId',
-              localField: '_idStr',
-              as: 'commentsList'
+              from: 'teams',
+              foreignField: '_id',
+              localField: 'teamObjectId',
+              as: 'teamDetails'
             }
           },
           {
             $project: {
               taskId: 1,
-              teamId: 1,
               group: 1,
               title: 1,
               desc: 1,
@@ -138,7 +144,19 @@ export class TaskService {
                   }
                 }
               },
+              teams: {
+                $map: {
+                  input: '$teamDetails',
+                  as: 'team',
+                  in: {
+                    teamName: '$$team.teamName',
+                    logo: '$$team.logo',
+                    teamId: '$teamId'
+                  }
+                }
+              },
               comments: { $size: '$commentsList' },
+              teamId: 1,
               attachments: 1
             }
           },
@@ -158,9 +176,9 @@ export class TaskService {
         // task.coverImage =
         //   task.coverImage &&
         //   `data:image/png;base64,${readFileSync(task.coverImage).toString('base64')}`
-        task.attachments = task.attachments.map((filePath) => {
-          return filePath.split('\\').at(-1)
-        })
+        // task.attachments = task.attachments.map((filePath) => {
+        //   return filePath.split('\\').at(-1)
+        // })
         // 处理用户信息
         if (map.has(group)) {
           map.set(group, [...map.get(group), task])

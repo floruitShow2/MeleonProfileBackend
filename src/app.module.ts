@@ -10,6 +10,7 @@ import { HttpExceptionFilter } from '@/filters/exception/exception.filter'
 import GlobalConfig from '@/config/global.config'
 // 模块
 import {
+  AuthModule,
   MongoModule,
   LoggerModule,
   UserModule,
@@ -55,6 +56,8 @@ const envFilePath = isDev() ? ['.env.development'] : ['.env.production']
     MongoModule,
     // 日志服务
     LoggerModule,
+    // 授权模块
+    AuthModule,
     // 用户模块
     UserModule,
     // 任务管理模块
