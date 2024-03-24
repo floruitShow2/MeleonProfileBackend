@@ -8,7 +8,8 @@ import { AuthService } from './auth.service'
 export class AuthController {
   constructor(
     private readonly httpService: HttpService,
-    private readonly authService: AuthService) {}
+    private readonly authService: AuthService
+  ) {}
 
   @Get('/github')
   async handleGithubAuth(@Query() query: { code: string }) {

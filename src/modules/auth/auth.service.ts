@@ -18,7 +18,7 @@ export class AuthService {
   ) {}
 
   /**
-   * @description 生成 token 
+   * @description 生成 token
    * @param code github 授权后返回的 code
    * @returns {GithubTokenEntity}
    */
@@ -34,23 +34,21 @@ export class AuthService {
         `code=${code}`,
       headers: {
         'Content-Type': 'application/json',
-        accept: 'application/json',
+        accept: 'application/json'
       }
     }
 
     const { data } = await firstValueFrom(
-      this.httpService.post<GithubTokenEntity>(
-        config.uri,
-        null,
-        {
+      this.httpService
+        .post<GithubTokenEntity>(config.uri, null, {
           headers: {
             'Content-Type': 'application/json',
-            accept: 'application/json',
+            accept: 'application/json'
           }
-        }
-      ).pipe((res) => {
-        return res
-      })
+        })
+        .pipe((res) => {
+          return res
+        })
     )
 
     return data
@@ -71,7 +69,7 @@ export class AuthService {
       }
     }
     const { data } = await firstValueFrom(
-      this.httpService.get(githubConfig.uri, { headers: githubConfig.headers }).pipe(res => res)
+      this.httpService.get(githubConfig.uri, { headers: githubConfig.headers }).pipe((res) => res)
     )
 
     return data
@@ -81,6 +79,7 @@ export class AuthService {
     console.log(tokens, userInfo)
     // 创建单独
     try {
+      console.log(this.jwtService.decode(tokens.access_token))
       this.response = getSuccessResponse('登录成功', {
         accessToken: tokens.access_token
       })

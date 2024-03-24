@@ -69,7 +69,7 @@ export class TaskEntity extends Document {
   @ApiProperty({
     description: '所属团队'
   })
-  readonly teamId: string
+  teamId: string
 
   @Prop()
   @ApiProperty({

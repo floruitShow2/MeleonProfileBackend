@@ -6,7 +6,6 @@ import { Document } from 'mongoose'
 
 @Schema()
 export class UserEntity extends Document {
-
   @Prop()
   @ApiProperty({
     description: '用户ID'

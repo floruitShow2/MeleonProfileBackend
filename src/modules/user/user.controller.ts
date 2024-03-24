@@ -8,6 +8,7 @@ import { ApiTags, ApiOperation } from '@nestjs/swagger'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { PasswordsType, UserEntityDTO, UserSignUp } from '@/modules/user/dto/user.dto'
 import { UserService } from './user.service'
+import { genStoragePath } from '@/utils/format'
 
 @Controller('user')
 @ApiTags('User')
@@ -39,16 +40,19 @@ export class UserController {
   }
 
   @Post('updateUserAvatar')
-  @UseInterceptors(FileInterceptor('avatar', { storage: diskStorage({
-    destination: function(req, res, cb) {
-      const storagePath = join(process.cwd(), `/public/avatar/${req['user'].username}/${res.fieldname}`)
-      if (!existsSync(storagePath)) mkdirSync(storagePath, { recursive: true })
-      cb(null, storagePath)
-    },
-    filename: function (req, res, cb) {
-      cb(null, res.originalname)
-    }
-  }) }))
+  @UseInterceptors(
+    FileInterceptor('avatar', {
+      storage: diskStorage({
+        destination: function (req, res, cb) {
+          const { diskPath } = genStoragePath(join(`${req['user'].username}/${res.fieldname}`))
+          cb(null, diskPath)
+        },
+        filename: function (req, res, cb) {
+          cb(null, res.originalname)
+        }
+      })
+    })
+  )
   @ApiOperation({
     summary: '更新用户头像'
   })

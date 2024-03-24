@@ -124,10 +124,16 @@ export class CommentService {
         return item
       })
 
-      this.logger.info('/comment/getCommentsById', `${user.username}查询id为${targetId}的评论时成功`)
+      this.logger.info(
+        '/comment/getCommentsById',
+        `${user.username}查询id为${targetId}的评论时成功`
+      )
       this.response = getSuccessResponse('评论列表获取成功', result)
     } catch (error) {
-      this.logger.error('/comment/getCommentsById', `${user.username}查询id为${targetId}的评论时失败，失败原因：${error}`)
+      this.logger.error(
+        '/comment/getCommentsById',
+        `${user.username}查询id为${targetId}的评论时失败，失败原因：${error}`
+      )
       this.response = getFailResponse('评论列表获取失败', null)
     }
 

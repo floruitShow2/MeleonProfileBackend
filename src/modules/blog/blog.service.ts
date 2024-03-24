@@ -20,7 +20,7 @@ export class BlogService {
   // utils
   /**
    * @description 统计给定用户发布的所有文章的统计数据
-   * @param userId 
+   * @param userId
    */
   async getBlogsStatistics(userId: string) {
     const res = await this.blogModel.aggregate([
@@ -57,7 +57,7 @@ export class BlogService {
       commentCount: 0
     }
 
-    res.forEach(item => {
+    res.forEach((item) => {
       statistic.blogCount += 1
       statistic.viewCount += item.views
       statistic.likeCount += item.likes
@@ -79,7 +79,10 @@ export class BlogService {
   async createBlogs(blogs: BlogEntity[]) {
     try {
       const result = await this.blogModel.create(blogs)
-      this.response = getSuccessResponse('博客文件上传成功', result.map(item => item.title))
+      this.response = getSuccessResponse(
+        '博客文件上传成功',
+        result.map((item) => item.title)
+      )
       this.logger.info('/blog/uploadBlogs', '上传博客文件成功')
     } catch {
       this.response = getFailResponse('博客文件上传失败', null)
@@ -258,7 +261,7 @@ export class BlogService {
           }
         ])
         .exec()
-      
+
       if (res && res.length) {
         // 文章阅读数加一
         const blogEntity = res[0] as BlogEntity
@@ -266,8 +269,8 @@ export class BlogService {
           {
             _id: blogEntity.blogId
           },
-          { $set: { views: blogEntity.views + 1 }
-        })
+          { $set: { views: blogEntity.views + 1 } }
+        )
 
         const { uploader, ...rest } = blogEntity
         // 返回值中的 views 字段值 +1
@@ -277,7 +280,8 @@ export class BlogService {
         this.response = getSuccessResponse('博客内容查询成功', {
           articleInfo: rest,
           authorInfo: {
-            ...(uploader as unknown as UserEntity), ...statistics
+            ...(uploader as unknown as UserEntity),
+            ...statistics
           }
         })
         this.logger.info('/blog/:id', `${username}查询《${res[0].title || ''}》成功`)
@@ -297,7 +301,7 @@ export class BlogService {
    * @description 点赞博客
    * @param user从 userToken 中解析出来的用户信息
    * @param blogId 博客ID
-   * @returns 
+   * @returns
    */
   async handleBlogLike(user: UserTokenEntity, blogId: string) {
     const { userId } = user

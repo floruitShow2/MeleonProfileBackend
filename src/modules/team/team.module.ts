@@ -7,9 +7,7 @@ import { TeamEntity } from './dto/team.dto'
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: TeamEntity.name, schema: TeamSchema, collection: 'teams' }
-    ])
+    MongooseModule.forFeature([{ name: TeamEntity.name, schema: TeamSchema, collection: 'teams' }])
   ],
   controllers: [TeamController],
   providers: [TeamService],

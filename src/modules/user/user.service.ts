@@ -4,10 +4,18 @@ import { Injectable } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { LoggerService } from '@/modules/logger/logger.service'
 import type { ApiResponse } from '@/interface/response.interface'
-import { DefaultUserEntity, UserSignUp, UserEntity, UserEntityDTO, UserTokenEntity, PasswordsType } from './dto/user.dto'
+import {
+  DefaultUserEntity,
+  UserSignUp,
+  UserEntity,
+  UserEntityDTO,
+  UserTokenEntity,
+  PasswordsType
+} from './dto/user.dto'
 import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
 import { generateSalt, encrypt, compare } from '@/utils/encrypt'
 import { ConfigService } from '@nestjs/config'
+import { genStoragePath } from '@/utils/format'
 
 @Injectable()
 export class UserService {
@@ -36,18 +44,18 @@ export class UserService {
       },
       needAll
         ? {
-          $project: {
-            _id: 0,
-            __v: 0
+            $project: {
+              _id: 0,
+              __v: 0
+            }
           }
-        }
         : {
-          $project: {
-            _id: 0,
-            __v: 0,
-            salt: 0
+            $project: {
+              _id: 0,
+              __v: 0,
+              salt: 0
+            }
           }
-        }
     ])
   }
 
@@ -148,19 +156,25 @@ export class UserService {
 
   /**
    * @description 更新用户个人信息
-   * @param user 
-   * @param userInfo 
-   * @returns 
+   * @param user
+   * @param userInfo
+   * @returns
    */
-  async updateUserInfo(user: UserTokenEntity, userInfo: Partial<UserEntityDTO>): Promise<ApiResponse> {
+  async updateUserInfo(
+    user: UserTokenEntity,
+    userInfo: Partial<UserEntityDTO>
+  ): Promise<ApiResponse> {
     // 更新前移除 userId 等基于数据库文档生成的字段
     delete userInfo.userId
     try {
-      const res = await this.userModel.updateOne({
-        _id: user.userId
-      }, {
-        $set: userInfo
-      })
+      const res = await this.userModel.updateOne(
+        {
+          _id: user.userId
+        },
+        {
+          $set: userInfo
+        }
+      )
 
       const { matchedCount, modifiedCount } = res
       if (matchedCount >= 1 && modifiedCount === 1) {
@@ -188,18 +202,22 @@ export class UserService {
    * @description 更新用户头像
    * @param user 从 token 中解析出来的用户信息
    * @param file 头像文件
-   * @returns 
+   * @returns
    */
   async updateUserAvatar(user: UserTokenEntity, file: Express.Multer.File) {
     const { userId, username } = user
     const { fieldname, filename } = file
-    const storagePath = `${this.configService.get('NEST_APP_URL')}/static/avatar/${username}/${fieldname}/${filename}`
+    const { storagePath } = genStoragePath(`${username}/${fieldname}/${filename}`)
+    // const storagePath = `${this.configService.get('NEST_APP_URL')}/static/avatar/${username}/${fieldname}/${filename}`
     try {
-      const res = await this.userModel.updateOne({
-        _id: userId
-      }, {
-        $set: { avatar: storagePath }
-      })
+      const res = await this.userModel.updateOne(
+        {
+          _id: userId
+        },
+        {
+          $set: { avatar: storagePath }
+        }
+      )
       const { matchedCount, modifiedCount } = res
       if (matchedCount >= 1 && modifiedCount === 1) {
         const res = await this.findOneByName({ username })
@@ -244,18 +262,21 @@ export class UserService {
     }
 
     try {
-      const res = await this.userModel.updateOne({
-        _id: user.userId
-      }, {
-        $set: { password: encrypt(newPwd, salt) }
-      })
+      const res = await this.userModel.updateOne(
+        {
+          _id: user.userId
+        },
+        {
+          $set: { password: encrypt(newPwd, salt) }
+        }
+      )
 
       const { matchedCount, modifiedCount } = res
       if (matchedCount >= 1 && modifiedCount === 1) {
         this.response = getSuccessResponse('用户密码更新成功', 'ok')
         this.logger.info('/user/updatePassword', `${user.username} 更新登录密码成功`)
       }
-    } catch(err) {
+    } catch (err) {
       this.response = getFailResponse('服务器异常，密码更新失败', null)
       this.logger.error('/user/updatePassword', `服务器异常，${user.username}更新密码失败`)
     }

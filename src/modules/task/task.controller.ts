@@ -66,7 +66,10 @@ export class TaskController {
     task.createTime = createTime
     task.lastUpdateTime = createTime
     task.relatives = [...task.relatives, creator]
-    if (files.cover) task.coverImage = genStoragePath(join(storagePath, `/cover/${files.cover[0].originalname}`)).storagePath
+    if (files.cover)
+      task.coverImage = genStoragePath(
+        join(storagePath, `/cover/${files.cover[0].originalname}`)
+      ).storagePath
     task.attachments = (files.attachments || []).map(
       (file) => genStoragePath(join(storagePath, `/attachments/${file.originalname}`)).storagePath
     )
@@ -81,7 +84,7 @@ export class TaskController {
   }
 
   @Post('/updateTask')
-  updateTask(@Req() req: Request, @Body() data: { taskId: string, taskEntity: TaskEntity }) {
+  updateTask(@Req() req: Request, @Body() data: { taskId: string; taskEntity: TaskEntity }) {
     const { taskId, taskEntity } = data
     return this.taskService.updateTaskEntity(req['user'], taskId, taskEntity)
   }
@@ -91,21 +94,29 @@ export class TaskController {
    * @return url 文件存储路径
    */
   @Post('/addCover')
-  @UseInterceptors(FileInterceptor('cover', {
-    storage: diskStorage({
-      destination: function (req, res, cb) {
-        const { diskPath } = genStoragePath(`/${req['user'].username}/task/${res.fieldname}`)
-        cb(null, diskPath)
-      },
-      filename: function (req, res, cb) {
-        cb(null, res.originalname)
-      }
+  @UseInterceptors(
+    FileInterceptor('cover', {
+      storage: diskStorage({
+        destination: function (req, res, cb) {
+          const { diskPath } = genStoragePath(`/${req['user'].username}/task/${res.fieldname}`)
+          cb(null, diskPath)
+        },
+        filename: function (req, res, cb) {
+          cb(null, res.originalname)
+        }
+      })
     })
-  }))
-  addCover(@Req() req: Request, @UploadedFile() cover: Express.Multer.File, @Body() data: { taskId: string }) {
+  )
+  addCover(
+    @Req() req: Request,
+    @UploadedFile() cover: Express.Multer.File,
+    @Body() data: { taskId: string }
+  ) {
     const user: UserTokenEntity = req['user']
     const { username } = user
-    const { storagePath } = genStoragePath(`${username}/task/${cover.fieldname}/${cover.originalname}`)
+    const { storagePath } = genStoragePath(
+      `${username}/task/${cover.fieldname}/${cover.originalname}`
+    )
     return this.taskService.handleAddCover(req['user'], data.taskId, { coverImage: storagePath })
   }
 

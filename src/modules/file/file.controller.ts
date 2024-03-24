@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Post, Query, Req, UploadedFile, UseInterceptors } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Query,
+  Req,
+  UploadedFile,
+  UseInterceptors
+} from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { ApiTags } from '@nestjs/swagger'
 import { diskStorage } from 'multer'
@@ -11,7 +20,6 @@ import type { ChunkOptions, MergeOptions, VerifyOptions } from './dto/file.dto'
 @Controller('file')
 @ApiTags('file')
 export class FileController {
-  
   constructor(private readonly fileService: FileService, private readonly ossService: OssService) {}
 
   @Post('/verify')
@@ -21,7 +29,11 @@ export class FileController {
 
   @Post('/uploadFileChunk')
   @UseInterceptors(FileInterceptor('chunk'))
-  handleFileSlice(@Req() req: Request, @UploadedFile() chunk: Express.Multer.File, @Body() chunkOptions: ChunkOptions) {
+  handleFileSlice(
+    @Req() req: Request,
+    @UploadedFile() chunk: Express.Multer.File,
+    @Body() chunkOptions: ChunkOptions
+  ) {
     return this.fileService.handleChunkUpload(req['user'], chunk, chunkOptions)
   }
 
@@ -31,20 +43,25 @@ export class FileController {
   }
 
   @Post('/oss/uploadFile')
-  @UseInterceptors(FileInterceptor('file', {
-    storage: diskStorage({
-      destination: (req, res, cb) => {
-        const storagePath = resolve(process.cwd(), `/files/${req['user']?.username || 'meleon'}/oss/`)
-        // if (!existsSync(storagePath)) {
-        //   mkdirSync(storagePath, { recursive: true })
-        // }
-        cb(null, storagePath)
-      },
-      filename: (req, res, cb) => {
-        cb(null, res?.originalname)
-      }
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: (req, res, cb) => {
+          const storagePath = resolve(
+            process.cwd(),
+            `/files/${req['user']?.username || 'meleon'}/oss/`
+          )
+          // if (!existsSync(storagePath)) {
+          //   mkdirSync(storagePath, { recursive: true })
+          // }
+          cb(null, storagePath)
+        },
+        filename: (req, res, cb) => {
+          cb(null, res?.originalname)
+        }
+      })
     })
-  }))
+  )
   handleTestOSS(@Req() req: Request, @UploadedFile() file: Express.Multer.File) {
     return this.fileService.uplodaFileToOSS(req['user'], file)
   }

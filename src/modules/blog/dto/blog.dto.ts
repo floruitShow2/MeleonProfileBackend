@@ -4,7 +4,6 @@ import { ApiProperty } from '@nestjs/swagger'
 
 @Schema()
 export class BlogEntity extends Document {
-
   @Prop()
   @ApiProperty({
     description: '文章ID'

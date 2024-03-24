@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Post,
-  Get,
-  Req,
-  Body,
-  Query,
-  Param
-} from '@nestjs/common'
+import { Controller, Post, Get, Req, Body, Query, Param } from '@nestjs/common'
 import { BlogEntity } from './dto/blog.dto'
 import { formatToDateTime } from '@/utils/time'
 import { BlogService } from './blog.service'
@@ -47,7 +39,7 @@ export class BlogController {
   async getBlogsList(@Req() req: Request, @Query('searchQuery') searchQuery: string) {
     return this.blogService.findBlogs(req['user'], searchQuery)
   }
-  
+
   @Post('like')
   @ApiOperation({
     summary: '点赞博客'

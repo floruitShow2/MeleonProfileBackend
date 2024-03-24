@@ -13,7 +13,7 @@ import { genMongoConnection } from '@/utils/database'
         console.log('base url of mongodb: ', genMongoConnection())
         return { uri: genMongoConnection() }
       },
-      inject: [ConfigService],
+      inject: [ConfigService]
     })
   ]
 })

@@ -35,9 +35,9 @@ export class TaskService {
 
   /**
    * @description 创建新任务
-   * @param user 
+   * @param user
    * @param task 任务实体
-   * @returns 
+   * @returns
    */
   async createTask(user: UserTokenEntity, task: TaskEntity) {
     try {
@@ -45,6 +45,7 @@ export class TaskService {
       const users = await this.userModel.find({ username: { $in: task.relatives } })
       task.relatives = users.map((user) => user._id.toString())
 
+      if (!task.teamId) delete task.teamId
       const createdTask = await this.taskModel.create(task)
       await createdTask.save()
 
@@ -55,7 +56,10 @@ export class TaskService {
       this.logger.info('/task/createTask', `${user.username}新建任务：${createdTask.title}`)
     } catch (err) {
       this.response = getFailResponse('任务创建失败', null)
-      this.logger.error('/task/createTask', `${user.username}创建任务 ${task.title} 失败, 失败原因：${err}`)
+      this.logger.error(
+        '/task/createTask',
+        `${user.username}创建任务 ${task.title} 失败, 失败原因：${err}`
+      )
     }
 
     return this.response
@@ -76,10 +80,7 @@ export class TaskService {
           // 查询与接口调用用户相关联的任务
           {
             $match: {
-              $or: [
-                { relatives: { $in: [userId] } },
-                { creator: username }
-              ]
+              $or: [{ relatives: { $in: [userId] } }, { creator: username }]
             }
           },
           // 筛选条件过滤
@@ -199,7 +200,7 @@ export class TaskService {
       this.logger.info('/task/getAllTasks', `${username}查询所有他的相关任务`)
     } catch (error) {
       this.response = getFailResponse('查询任务失败', null)
-      this.logger.error('/task/getAllTasks', '查询任务行为失败')
+      this.logger.error('/task/getAllTasks', `查询任务行为失败，失败原因：${error}`)
     }
 
     return this.response
@@ -207,11 +208,14 @@ export class TaskService {
 
   async updateTaskEntity(user: UserTokenEntity, taskId: string, task: Partial<TaskEntity>) {
     try {
-      const res = await this.taskModel.updateOne({
-        _id: new mongoose.Types.ObjectId(taskId)
-      }, {
-        $set: task
-      })
+      const res = await this.taskModel.updateOne(
+        {
+          _id: new mongoose.Types.ObjectId(taskId)
+        },
+        {
+          $set: task
+        }
+      )
 
       const { matchedCount, modifiedCount } = res
       if (matchedCount >= 1 && modifiedCount === 1) {
@@ -223,7 +227,10 @@ export class TaskService {
       }
     } catch (err) {
       this.response = getFailResponse('任务信息更新失败', null)
-      this.logger.info('/task/updateTask', `${user.username}更新任务信息失败，任务ID: ${taskId}，失败原因：${err}`)
+      this.logger.info(
+        '/task/updateTask',
+        `${user.username}更新任务信息失败，任务ID: ${taskId}，失败原因：${err}`
+      )
     }
 
     return this.response
@@ -249,18 +256,23 @@ export class TaskService {
          * @fix genStoragePath 生成存储路径时，附带了文件名，导致创建了以 文件名 命名的空文件夹，unlinkSync 只能删除文件，不能删除文件夹
          * @fix url.resolve 生成路径时会把路径中的空格替换为 %20 ，导致找不到对应文件
          */
-        const folders = coverImage.replace('%20', ' ').replace(`${this.configService.get('NEST_APP_URL')}/static/files`, '').split('/')
+        const folders = coverImage
+          .replace(`${this.configService.get('NEST_APP_URL')}/static/files`, '')
+          .split('/')
         const filename = folders.pop()
         const { diskPath } = genStoragePath(join(...folders))
         unlinkSync(join(diskPath, filename))
         await this.updateTaskEntity(user, taskId, { coverImage: '' })
-        
+
         this.response = getSuccessResponse('封面删除成功', true)
         this.logger.info('/file/deleteCover', `${user.username}删除任务${taskId}的封面，执行成功`)
       }
     } catch (err) {
       this.response = getSuccessResponse('封面删除失败', false)
-      this.logger.info('/file/deleteCover', `${user.username}删除任务${taskId}的封面，执行失败，失败原因：${err}`)
+      this.logger.info(
+        '/file/deleteCover',
+        `${user.username}删除任务${taskId}的封面，执行失败，失败原因：${err}`
+      )
     }
   }
 }
