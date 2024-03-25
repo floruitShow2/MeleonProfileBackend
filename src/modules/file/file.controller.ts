@@ -11,11 +11,10 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express'
 import { ApiTags } from '@nestjs/swagger'
 import { diskStorage } from 'multer'
-import { existsSync, mkdirSync } from 'fs'
 import { resolve } from 'path'
 import { OssService } from '@/modules/oss/oss.service'
 import { FileService } from './file.service'
-import type { ChunkOptions, MergeOptions, VerifyOptions } from './dto/file.dto'
+import type { ChunkOptions, MergeOptions, VerifyOptions } from './interface/file.interface'
 
 @Controller('file')
 @ApiTags('file')

@@ -1,13 +1,12 @@
 import { Module } from '@nestjs/common'
 import { MongooseModule } from '@nestjs/mongoose'
 import { JwtModule } from '@nestjs/jwt'
+import { ConfigService } from '@nestjs/config'
 import { JwtConstants } from '@/constants'
 import { UserSchema } from '@/modules/mongo/schema/user.schema'
-import { UserEntity } from './dto/user.dto'
 import { UserService } from './user.service'
 import { UserController } from './user.controller'
-import { LoggerService } from '@/modules/logger/logger.service'
-import { ConfigService } from '@nestjs/config'
+import { UserEntity } from './dto/user.dto'
 
 @Module({
   imports: [
@@ -20,7 +19,7 @@ import { ConfigService } from '@nestjs/config'
       }
     })
   ],
-  providers: [UserService, LoggerService, ConfigService],
+  providers: [UserService, ConfigService],
   controllers: [UserController],
   exports: [UserService]
 })

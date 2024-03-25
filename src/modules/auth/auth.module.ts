@@ -6,10 +6,10 @@ import { UserModule } from '../user/user.module'
 
 @Module({
   imports: [
-    UserModule,
     HttpModule.register({
-      timeout: 30000
-    })
+      timeout: 60000
+    }),
+    UserModule
   ],
   controllers: [AuthController],
   providers: [AuthService]

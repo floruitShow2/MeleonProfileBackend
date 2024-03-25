@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common'
+import { MongooseModule } from '@nestjs/mongoose'
+import { UserEntity } from '@/modules/user/dto/user.dto'
 import { CommentController } from './comment.controller'
 import { CommentService } from './comment.service'
-import { MongooseModule } from '@nestjs/mongoose'
 import { CommentEntity } from './dto/comment.dto'
-import { CommentSchema, UserSchema } from '../mongo/schema'
-import { UserEntity } from '../user/dto/user.dto'
+import { CommentSchema, UserSchema } from '@/modules/mongo/schema'
 
 @Module({
   imports: [

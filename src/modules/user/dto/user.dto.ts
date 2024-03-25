@@ -1,17 +1,11 @@
-import { Role } from '@/constants/auth'
 import { Prop, Schema } from '@nestjs/mongoose'
 import { ApiProperty, PickType } from '@nestjs/swagger'
 import { IsNotEmpty, MinLength } from 'class-validator'
 import { Document } from 'mongoose'
+import { Role } from '@/constants/auth'
 
 @Schema()
 export class UserEntity extends Document {
-  @Prop()
-  @ApiProperty({
-    description: '用户ID'
-  })
-  readonly userId: string
-
   @Prop()
   @ApiProperty({
     description: '用户名',
@@ -124,70 +118,4 @@ export class UserSignUp extends PickType(UserEntity, ['username', 'password']) {
     message: '密码长度最少为 6 位'
   })
   password: string
-}
-
-export interface UserEntityDTO {
-  username: string
-
-  password: string
-
-  avatar: string
-
-  introduction: string
-
-  email: string
-
-  phone: string
-
-  location: string
-
-  roles: Role[]
-
-  socialAccounts: string[]
-
-  job: string
-
-  organization: string
-
-  registrationDate: string
-
-  certification: string
-
-  userId?: string
-}
-
-export class UserTokenEntity extends PickType(UserEntity, ['username', 'userId', 'roles']) {}
-
-export const DefaultUserEntity: UserEntityDTO = {
-  username: '',
-
-  password: '',
-
-  avatar: '',
-
-  email: '',
-
-  job: '',
-
-  organization: '',
-
-  location: '',
-
-  introduction: '',
-
-  phone: '',
-
-  registrationDate: '',
-
-  certification: '',
-
-  roles: [Role.User],
-
-  socialAccounts: []
-}
-
-export interface PasswordsType {
-  oldPwd: string
-  newPwd: string
-  confirmPwd: string
 }

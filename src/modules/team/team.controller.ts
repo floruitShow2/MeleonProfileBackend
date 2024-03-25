@@ -12,9 +12,10 @@ import { ApiTags } from '@nestjs/swagger'
 import { ConfigService } from '@nestjs/config'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { diskStorage } from 'multer'
-import { TeamEntity, type MemberType } from './dto/team.dto'
-import { TeamService } from './team.service'
 import { genStoragePath } from '@/utils/format'
+import { TeamEntity } from './dto/team.dto'
+import { TeamService } from './team.service'
+import type { MemberType } from './interface/team.interface'
 
 @Controller('team')
 @ApiTags('Teams')

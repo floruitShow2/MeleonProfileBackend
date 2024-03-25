@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
+import { createWriteStream } from 'fs'
 import * as OSS from 'ali-oss'
-import { DecryptPrivateInfo } from '@/utils/encrypt'
-import OSSConfig from './constants/oss.constant'
 import { join } from 'path'
-import { createWriteStream, existsSync, mkdirSync } from 'fs'
+import { DecryptPrivateInfo } from '@/utils/encrypt'
 import { genStoragePath } from '@/utils/format'
+import OSSConfig from './constants/oss.constant'
 
 @Injectable()
 export class OssService {

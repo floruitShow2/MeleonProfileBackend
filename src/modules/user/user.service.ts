@@ -1,21 +1,17 @@
-import { Model } from 'mongoose'
+import mongoose, { Model } from 'mongoose'
 import { InjectModel } from '@nestjs/mongoose'
 import { Injectable } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { LoggerService } from '@/modules/logger/logger.service'
-import type { ApiResponse } from '@/interface/response.interface'
-import {
-  DefaultUserEntity,
-  UserSignUp,
-  UserEntity,
-  UserEntityDTO,
-  UserTokenEntity,
-  PasswordsType
-} from './dto/user.dto'
+import { UserSignUp, UserEntity } from './dto/user.dto'
+import { DefaultUserEntity } from './interface/user.interface'
 import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
 import { generateSalt, encrypt, compare } from '@/utils/encrypt'
 import { ConfigService } from '@nestjs/config'
 import { genStoragePath } from '@/utils/format'
+import type { FilterByValue } from '@/interface/util.interface'
+import type { ApiResponse } from '@/interface/response.interface'
+import type { UserEntityDTO, UserTokenEntity, PasswordsType } from './interface/user.interface'
 
 @Injectable()
 export class UserService {
@@ -32,10 +28,13 @@ export class UserService {
    * @param username 用户名
    * @returns 查询结果
    */
-  async findOneByName(user: { username: string }, needAll = false): Promise<UserEntity[]> {
+  async findOneByField(
+    user: Partial<FilterByValue<UserEntityDTO, string> & { _id: mongoose.Types.ObjectId }>,
+    needAll = false
+  ): Promise<UserEntityDTO[]> {
     return await this.userModel.aggregate([
       {
-        $match: { username: user.username }
+        $match: user
       },
       {
         $addFields: {
@@ -59,9 +58,23 @@ export class UserService {
     ])
   }
 
-  async createUser(user: UserEntityDTO) {
-    const createUser = await this.userModel.create(user)
-    await createUser.save()
+  async createUser(user: Partial<UserEntityDTO>) {
+    // 注册后对密码执行加密
+    const salt = generateSalt()
+    const userEntity: UserEntityDTO & { salt: string } = {
+      ...DefaultUserEntity,
+      ...user,
+      salt,
+      password: user.password ? encrypt(user.password, salt) : '',
+      avatar:
+        user.avatar ??
+        `${this.configService.get('NEST_APP_URL')}/static/avatar/avatar_${
+          Math.floor(Math.random() * 5) + 1
+        }.png`
+    }
+    console.log(userEntity)
+    const createUser = await this.userModel.create(userEntity)
+    return await createUser.save()
   }
 
   /**
@@ -70,23 +83,15 @@ export class UserService {
    * @returns
    */
   async signup(user: UserSignUp): Promise<ApiResponse> {
-    const res = await this.findOneByName(user)
+    const res = await this.findOneByField({ username: user.username })
     if (res && res.length) {
       this.response = getFailResponse('该用户名已被注册', null)
       this.logger.error('/user/signup', `用户${user.username}已注册`)
       return this.response
     }
     try {
-      // 注册后对密码执行加密
-      const salt = generateSalt()
-      const userEntity: UserEntityDTO & { salt: string } = {
-        ...DefaultUserEntity,
-        ...user,
-        salt,
-        password: encrypt(user.password, salt),
-        avatar: `${this.configService.get('NEST_APP_URL')}/static/avatar/avatar_${
-          Math.floor(Math.random() * 5) + 1
-        }.png`
+      const userEntity: Partial<UserEntityDTO> = {
+        ...user
       }
       await this.createUser(userEntity)
       this.response = getSuccessResponse('注册成功', user.username)
@@ -104,7 +109,7 @@ export class UserService {
    * @returns
    */
   async login(user: UserSignUp): Promise<ApiResponse> {
-    const res = await this.findOneByName(user, true)
+    const res = await this.findOneByField({ username: user.username }, true)
     const findIdx = res.findIndex((user) => user.password === user.password)
     if (!res || !res.length || findIdx === -1) {
       this.response = getFailResponse('用户未注册，登录失败', null)
@@ -138,7 +143,7 @@ export class UserService {
    */
   async getUserInfo(user: UserTokenEntity) {
     try {
-      const res = await this.findOneByName(user)
+      const res = await this.findOneByField({ _id: new mongoose.Types.ObjectId(user.userId) })
       if (!res || !res.length) {
         this.logger.error('/user/getUserInfo', `查询${user.username}的用户信息失败`)
         this.response = getFailResponse('未找到用户', null)
@@ -178,7 +183,7 @@ export class UserService {
 
       const { matchedCount, modifiedCount } = res
       if (matchedCount >= 1 && modifiedCount === 1) {
-        const res = await this.findOneByName({ username: userInfo.username || user.username })
+        const res = await this.findOneByField({ username: userInfo.username || user.username })
 
         const token = this.jwtService.sign({
           ...user,
@@ -220,7 +225,7 @@ export class UserService {
       )
       const { matchedCount, modifiedCount } = res
       if (matchedCount >= 1 && modifiedCount === 1) {
-        const res = await this.findOneByName({ username })
+        const res = await this.findOneByField({ username })
         if (res.length) {
           const { password, ...rest } = res[0]
           this.response = getSuccessResponse('头像更换成功', rest)
@@ -244,7 +249,7 @@ export class UserService {
    * @returns
    */
   async updatePassword(user: UserTokenEntity, passwords: PasswordsType) {
-    const res = await this.findOneByName(user, true)
+    const res = await this.findOneByField({ _id: new mongoose.Types.ObjectId(user.userId) }, true)
     if (!res || !res.length) return
     const { password, salt } = res[0]
 

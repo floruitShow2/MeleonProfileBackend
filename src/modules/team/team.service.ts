@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common'
-import mongoose, { Model } from 'mongoose'
-import { UserTokenEntity } from '../user/dto/user.dto'
-import { TeamEntity, type TaskType, type MemberType } from './dto/team.dto'
-import { ApiResponse } from '@/interface/response.interface'
-import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
-import { LoggerService } from '../logger/logger.service'
 import { InjectModel } from '@nestjs/mongoose'
+import mongoose, { Model } from 'mongoose'
+import { LoggerService } from '@/modules/logger/logger.service'
+import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
 import { formatToDateTime } from '@/utils/time'
+import { TeamEntity } from './dto/team.dto'
+import type { ApiResponse } from '@/interface/response.interface'
+import type { UserTokenEntity } from '@/modules/user/interface/user.interface'
+import type { TaskType, MemberType } from './interface/team.interface'
 
 @Injectable()
 export class TeamService {

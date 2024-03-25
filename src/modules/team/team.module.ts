@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common'
 import { MongooseModule } from '@nestjs/mongoose'
-import { TeamSchema } from '../mongo/schema/team.schema'
+import { TeamSchema } from '@/modules/mongo/schema'
 import { TeamController } from './team.controller'
 import { TeamService } from './team.service'
 import { TeamEntity } from './dto/team.dto'

@@ -8,17 +8,16 @@ import {
   mkdirSync,
   readdirSync,
   rmdirSync,
-  unlink,
   unlinkSync,
   writeFileSync
 } from 'fs'
 import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
 import type { ApiResponse } from '@/interface/response.interface'
-import { LoggerService } from '../logger/logger.service'
-import { UserTokenEntity } from '../user/dto/user.dto'
-import type { ChunkOptions, MergeOptions, VerifyOptions } from './dto/file.dto'
-import { OssService } from '../oss/oss.service'
 import { genStoragePath } from '@/utils/format'
+import { LoggerService } from '../logger/logger.service'
+import { UserTokenEntity } from '../user/interface/user.interface'
+import type { ChunkOptions, MergeOptions, VerifyOptions } from './interface/file.interface'
+import { OssService } from '../oss/oss.service'
 
 @Injectable()
 export class FileService {

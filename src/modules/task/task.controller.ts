@@ -13,11 +13,12 @@ import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express
 import { ApiTags } from '@nestjs/swagger'
 import { join } from 'path'
 import { diskStorage } from 'multer'
-import { TaskService } from './task.service'
 import { formatToDateTime } from '@/utils/time'
 import { genStoragePath } from '@/utils/format'
-import { TaskEntity, TaskSearchOptions } from './dto/task.dto'
-import { UserTokenEntity } from '../user/dto/user.dto'
+import { TaskService } from './task.service'
+import { TaskEntity } from './dto/task.dto'
+import type { UserTokenEntity } from '@/modules/user/interface/user.interface'
+import type { TaskSearchOptions } from './interface/task.interface'
 
 @Controller('task')
 @ApiTags('Blogs')
