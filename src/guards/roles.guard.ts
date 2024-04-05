@@ -1,6 +1,6 @@
-import { ROLES_KEY } from '@/decorator/Roles'
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
+import { ROLES_KEY } from '@/decorator/Roles'
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -17,11 +17,7 @@ export class RolesGuard implements CanActivate {
     }
 
     const { user } = context.switchToHttp().getRequest()
-    const filterRoles = user.roles.filter((role) => requiredRoles.includes(role))
-    if (filterRoles.length > 0) {
-      // 有对应权限，可以访问
-      return true
-    }
-    return false
+    console.log(requiredRoles, user.role)
+    return requiredRoles.includes(user.role)
   }
 }

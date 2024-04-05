@@ -7,8 +7,8 @@ import { Roles } from '@/decorator/Roles'
 import { Role } from '@/constants/auth'
 import { genStoragePath } from '@/utils/format'
 import { UserService } from './user.service'
-import { UserSignUp } from './dto/user.dto'
-import type { PasswordsType, UserEntityDTO } from './interface/user.interface'
+import { UserEntity, UserSignUp } from './dto/user.dto'
+import type { PasswordsType } from './interface/user.interface'
 
 @Controller('user')
 @ApiTags('User')
@@ -64,7 +64,8 @@ export class UserController {
   @ApiOperation({
     summary: '更新用户信息'
   })
-  async updateUserInfo(@Req() request: Request, @Body() userInfo: Partial<UserEntityDTO>) {
+  async updateUserInfo(@Req() request: Request, @Body() userInfo: UserEntity) {
+    console.log(userInfo)
     return this.userService.updateUserInfo(request['user'], userInfo)
   }
 
@@ -74,6 +75,14 @@ export class UserController {
   })
   async updatePassword(@Req() request: Request, @Body() pwds: PasswordsType) {
     return this.userService.updatePassword(request['user'], pwds)
+  }
+
+  @Post('fillPassword')
+  @ApiOperation({
+    summary: '补全用户密码'
+  })
+  async fillPassword(@Body() data: { userId: string; password: string }) {
+    return this.userService.fillPassword(data.userId, data.password)
   }
 
   // 该接口仅对权限为 admin 的用户开发，测试 Guards 能否拦截权限不符合的用户发来的请求

@@ -1,6 +1,6 @@
-import { Controller, Sse } from '@nestjs/common'
-import { Observable, interval, map } from 'rxjs'
-import { Message } from '@/interface/message.interface'
+import { Controller } from '@nestjs/common'
+// import { Observable, interval, map } from 'rxjs'
+// import { Message } from '@/interface/message.interface'
 
 @Controller('message')
 export class MessageController {

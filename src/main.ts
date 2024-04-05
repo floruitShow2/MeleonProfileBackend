@@ -1,9 +1,10 @@
+import { HttpStatus, INestApplication, ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import { IoAdapter } from '@nestjs/platform-socket.io'
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'
-import { INestApplication } from '@nestjs/common'
 import * as compression from 'compression'
 import { AppModule } from './app.module'
+import 'reflect-metadata'
 // import { EncryptPrivateInfo, DecryptPrivateInfo } from './utils/encrypt'
 
 // swagger 文档服务
@@ -39,6 +40,11 @@ async function bootstrap() {
   app.use(compression())
   // 开启 cors 中间件
   app.enableCors()
+  app.useGlobalPipes(new ValidationPipe({
+    transform: true,
+    whitelist: true,
+    errorHttpStatusCode: HttpStatus.BAD_REQUEST
+  }))
 
   await app.listen(3000, () => {
     console.log('成功监听了 3000 端口')

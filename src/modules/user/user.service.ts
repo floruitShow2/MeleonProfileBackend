@@ -125,7 +125,7 @@ export class UserService {
     const token = this.jwtService.sign({
       username: user.username,
       userId: res[0].userId,
-      roles: res[0].roles,
+      role: res[0].role,
       timestamp: Date.now()
     })
     this.response = getSuccessResponse('登录成功', {
@@ -150,6 +150,7 @@ export class UserService {
         return this.response
       }
       this.logger.info('/user/getUserInfo', `查询${user.username}的用户信息成功`)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, ...rest } = res[0]
       this.response = getSuccessResponse('获取用户信息成功', rest)
     } catch (err) {
@@ -165,12 +166,9 @@ export class UserService {
    * @param userInfo
    * @returns
    */
-  async updateUserInfo(
-    user: UserTokenEntity,
-    userInfo: Partial<UserEntityDTO>
-  ): Promise<ApiResponse> {
+  async updateUserInfo(user: UserTokenEntity, userInfo: Partial<UserEntity>): Promise<ApiResponse> {
     // 更新前移除 userId 等基于数据库文档生成的字段
-    delete userInfo.userId
+    // delete userInfo.userId
     try {
       const res = await this.userModel.updateOne(
         {
@@ -188,7 +186,7 @@ export class UserService {
         const token = this.jwtService.sign({
           ...user,
           userId: res[0].userId,
-          roles: res[0].roles,
+          role: res[0].role,
           timestamp: Date.now()
         })
 
@@ -227,6 +225,7 @@ export class UserService {
       if (matchedCount >= 1 && modifiedCount === 1) {
         const res = await this.findOneByField({ username })
         if (res.length) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { password, ...rest } = res[0]
           this.response = getSuccessResponse('头像更换成功', rest)
         } else {
@@ -286,6 +285,38 @@ export class UserService {
       this.logger.error('/user/updatePassword', `服务器异常，${user.username}更新密码失败`)
     }
 
+    return this.response
+  }
+
+  /**
+   * @description 未登录情况下，更新用户密码
+   * @param userId
+   * @param password
+   */
+  async fillPassword(userId: string, password: string) {
+    try {
+      const res = await this.findOneByField({ _id: new mongoose.Types.ObjectId(userId) }, true)
+      if (res && res.length) {
+        const { username, role, salt } = res[0]
+        const userTokenEntity: UserTokenEntity = {
+          username,
+          userId,
+          role
+        }
+        await this.updateUserInfo(userTokenEntity, { password: encrypt(password, salt) })
+        const token = this.jwtService.sign({
+          ...userTokenEntity,
+          timestamp: Date.now()
+        })
+        this.response = getSuccessResponse('密码设置成功', {
+          accessToken: token
+        })
+        this.logger.info('/user/fillPwd', `${username} 设置密码成功，可以登录`)
+      }
+    } catch (err) {
+      this.response = getSuccessResponse('密码设置失败', null)
+      this.logger.info('/user/fillPwd', `密码设置失败，失败原因：${err}`)
+    }
     return this.response
   }
 }

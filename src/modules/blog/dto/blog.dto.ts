@@ -1,7 +1,8 @@
 import { Document } from 'mongoose'
 import { Schema, Prop } from '@nestjs/mongoose'
 import { ApiProperty } from '@nestjs/swagger'
-
+import { IsArray, IsNotEmpty, IsNumber, ValidateNested } from 'class-validator'
+import { Type } from 'class-transformer'
 @Schema()
 export class BlogEntity extends Document {
   @Prop()
@@ -14,6 +15,7 @@ export class BlogEntity extends Document {
   @ApiProperty({
     description: '文章名称'
   })
+  @IsNumber()
   readonly title: string
 
   @Prop()
@@ -27,6 +29,7 @@ export class BlogEntity extends Document {
     description: '文章内容，将 md 文档解析为字符串',
     example: '## 二级标题'
   })
+  @IsNotEmpty()
   readonly content: string
 
   @Prop()
@@ -74,4 +77,12 @@ export class BlogEntity extends Document {
   @Prop()
   @ApiProperty()
   status: 'total' | 'notPassed' | 'inReview' | 'published'
+}
+
+@Schema()
+export class CreateBlogDto {
+  @ValidateNested({ each: true })
+  @Type(() => BlogEntity)
+  @IsArray()
+  blogs: BlogEntity[]
 }

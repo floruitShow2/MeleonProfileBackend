@@ -224,7 +224,7 @@ export class BlogService {
               'uploaders._id': 0,
               'uploaders.__v': 0,
               'uploaders.password': 0,
-              'uploaders.roles': 0,
+              'uploaders.role': 0,
               'uploaders.salt': 0,
               'uploaders.phone': 0,
               'uploaders.certification': 0,

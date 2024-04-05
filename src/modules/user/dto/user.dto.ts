@@ -48,7 +48,7 @@ export class UserEntity extends Document {
   @ApiProperty({
     description: '角色'
   })
-  readonly roles: Role[]
+  readonly role: Role
 
   @Prop()
   @ApiProperty({

@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common'
 import { HttpService } from '@nestjs/axios'
+import { JwtService } from '@nestjs/jwt'
 import { firstValueFrom } from 'rxjs'
 import { LoggerService } from '@/modules/logger/logger.service'
-import { getSuccessResponse } from '@/utils/service/response'
+import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
 import { UserService } from '@/modules/user/user.service'
 import type { ApiResponse } from '@/interface/response.interface'
 import type { UserEntityDTO } from '@/modules/user/interface/user.interface'
@@ -15,6 +16,7 @@ export class AuthService {
   constructor(
     private readonly httpService: HttpService,
     private readonly userService: UserService,
+    private readonly jwtService: JwtService,
     private readonly loggerService: LoggerService
   ) {}
 
@@ -118,6 +120,20 @@ export class AuthService {
       // 获取 github 账号信息
       const userInfo = await this.genUserInfo(tokenEntity)
       // 根据 userInfo 里的 id 判断是否已有授权用户
+      const findUser = await this.userService.findOneByField({ certification: userInfo.id })
+      // 用户已创建，直接登录
+      if (findUser && findUser.length) {
+        const token = this.jwtService.sign({
+          username: findUser[0].username,
+          userId: findUser[0].userId,
+          role: findUser[0].role,
+          timestamp: Date.now()
+        })
+        this.response = getSuccessResponse('账号已授权，登录成功', { accessToken: token })
+        this.loggerService.info('/auth/github', `${findUser[0].username}已授权，直接登录`)
+        return this.response
+      }
+      // 获取 github 邮箱信息
       const emailsInfo = await this.getUserEmail(tokenEntity)
       if (userInfo) userInfo.email = emailsInfo
       const userEntity: Partial<UserEntityDTO> = {
@@ -132,9 +148,12 @@ export class AuthService {
       this.response = getSuccessResponse('授权账户创建成功', {
         userId: String(res._id)
       })
+      this.loggerService.info('/auth/github', `${res.username}通过 gihub auth 创建账户成功`)
       return this.response
     } catch (err) {
-      console.log('err', err)
+      this.response = getFailResponse('授权失败', null)
+      this.loggerService.error('/auth/github', `授权失败，失败原因：${err}`)
+      return this.response
     }
   }
 }

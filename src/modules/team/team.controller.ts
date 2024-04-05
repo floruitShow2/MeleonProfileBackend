@@ -1,13 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Post,
-  Req,
-  UploadedFile,
-  UseInterceptors
-} from '@nestjs/common'
+import { Body, Controller, Get, Post, Req, UploadedFile, UseInterceptors } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { ConfigService } from '@nestjs/config'
 import { FileInterceptor } from '@nestjs/platform-express'
@@ -63,12 +54,12 @@ export class TeamController {
   }
 
   // 更新团队【更新团队成员、移交团队所有权等】
-  @Post('updateTeam')
-  updateTeam() {}
+  // @Post('updateTeam')
+  // updateTeam() {}
 
   // 注销团队
-  @Post('removeTeam')
-  removeTeam() {}
+  // @Post('removeTeam')
+  // removeTeam() {}
 
   // 添加新成员
   @Post('addMember')
@@ -77,8 +68,8 @@ export class TeamController {
   }
 
   // 查询团队成员
-  @Get('getTeamMembers')
-  getTeamMembers(@Req() req: Request, @Param('teamId') teamId: string) {}
+  // @Get('getTeamMembers')
+  // getTeamMembers(@Req() req: Request, @Param('teamId') teamId: string) {}
 
   // 修改成员权限
 

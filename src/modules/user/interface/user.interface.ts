@@ -15,7 +15,7 @@ export interface UserEntityDTO {
 
   location: string
 
-  roles: Role[]
+  role: Role
 
   socialAccounts: string[]
 
@@ -32,7 +32,7 @@ export interface UserEntityDTO {
   salt?: string
 }
 
-export type UserTokenEntity = Pick<UserEntityDTO, 'username' | 'userId' | 'roles'>
+export type UserTokenEntity = Pick<UserEntityDTO, 'username' | 'userId' | 'role'>
 
 export interface PasswordsType {
   oldPwd: string
@@ -63,7 +63,7 @@ export const DefaultUserEntity: UserEntityDTO = {
 
   certification: '',
 
-  roles: [Role.User],
+  role: Role.User,
 
   socialAccounts: []
 }

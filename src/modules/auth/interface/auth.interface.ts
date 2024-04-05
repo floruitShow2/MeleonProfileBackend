@@ -1,5 +1,3 @@
-import { Schema } from '@nestjs/mongoose'
-
 export interface GithubTokenEntity {
   access_token: string
   expires_in: number
