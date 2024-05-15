@@ -12,6 +12,7 @@ import { map } from 'rxjs/operators'
 export class EventsGateway {
   @SubscribeMessage('events')
   findAll(@MessageBody() data: any, @ConnectedSocket() client: Socket) {
+    console.log(data)
     return from([1, 2, 3]).pipe(
       map((item) => {
         client.emit('onEvents', { event: 'events', originData: data, data: item })

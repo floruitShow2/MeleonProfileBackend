@@ -40,11 +40,12 @@ async function bootstrap() {
   app.use(compression())
   // 开启 cors 中间件
   app.enableCors()
-  app.useGlobalPipes(new ValidationPipe({
-    transform: true,
-    whitelist: true,
-    errorHttpStatusCode: HttpStatus.BAD_REQUEST
-  }))
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      errorHttpStatusCode: HttpStatus.BAD_REQUEST
+    })
+  )
 
   await app.listen(3000, () => {
     console.log('成功监听了 3000 端口')

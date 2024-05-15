@@ -11,12 +11,21 @@ export class UserEntity extends Document {
     description: '用户名',
     example: 'meleon'
   })
+  @IsNotEmpty({
+    message: '用户名不能为空'
+  })
   readonly username: string
 
   @Prop()
   @ApiProperty({
     description: '密码',
     example: '123456'
+  })
+  @IsNotEmpty({
+    message: '密码不能为空'
+  })
+  @MinLength(6, {
+    message: '密码长度最少为 6 位'
   })
   readonly password: string
 
@@ -95,27 +104,4 @@ export class UserEntity extends Document {
 }
 
 @Schema()
-export class UserSignUp extends PickType(UserEntity, ['username', 'password']) {
-  @Prop()
-  @ApiProperty({
-    description: '用户名',
-    example: 'meleon'
-  })
-  @IsNotEmpty({
-    message: '用户名不能为空'
-  })
-  readonly username: string
-
-  @Prop()
-  @ApiProperty({
-    description: '用户密码',
-    example: '232000'
-  })
-  @IsNotEmpty({
-    message: '密码不能为空'
-  })
-  @MinLength(6, {
-    message: '密码长度最少为 6 位'
-  })
-  password: string
-}
+export class UserSignUp extends PickType(UserEntity, ['username', 'password']) {}

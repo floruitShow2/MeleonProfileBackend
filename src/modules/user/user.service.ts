@@ -58,6 +58,16 @@ export class UserService {
     ])
   }
 
+  async findUserById(id: string) {
+    try {
+      const res = await this.userModel.findOne({ id })
+      return res
+    } catch (error) {
+      console.log(error)
+      return null
+    }
+  }
+
   async createUser(user: Partial<UserEntityDTO>) {
     // 注册后对密码执行加密
     const salt = generateSalt()

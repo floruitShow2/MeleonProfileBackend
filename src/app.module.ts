@@ -5,7 +5,7 @@ import { ServeStaticModule } from '@nestjs/serve-static'
 import { join } from 'path'
 import * as Joi from 'joi'
 import { CryptoMiddleware } from '@/middlewares'
-// import { EventsModule } from '@/gateway/events.module'
+import { EventsModule } from '@/gateway/events.module'
 import { HttpExceptionFilter } from '@/filters/exception/exception.filter'
 import GlobalConfig from '@/config/global.config'
 // 模块
@@ -20,7 +20,9 @@ import {
   TagModule,
   RedisModule,
   FileModule,
-  TeamModule
+  TeamModule,
+  ChatRoomModule,
+  ChatMessageModule
 } from './modules'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
@@ -72,7 +74,10 @@ const envFilePath = isDev() ? ['.env.development'] : ['.env.production']
     // 文件模块
     FileModule,
     // 团队模块
-    TeamModule
+    TeamModule,
+    EventsModule,
+    ChatRoomModule,
+    ChatMessageModule
   ],
   controllers: [AppController],
   providers: [
