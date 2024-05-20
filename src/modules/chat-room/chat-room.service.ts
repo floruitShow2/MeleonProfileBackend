@@ -1,15 +1,16 @@
-import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException } from '@nestjs/common'
+import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
+import { ConfigService } from '@nestjs/config'
 import mongoose, { Model } from 'mongoose'
 import { LoggerService } from '@/modules/logger/logger.service'
 import { UserService } from '@/modules/user/user.service'
 import { UserTokenEntity } from '@/modules/user/interface/user.interface'
+import { MessageType } from '@/modules/chat-message/dto/chat-message.dto'
 import { ApiResponse } from '@/interface/response.interface'
-import { ChatRoomEntity, ChatRoomInput } from './dto/chat-room.dto'
 import { formatToDateTime } from '@/utils/time'
-import { getSuccessResponse } from '@/utils/service/response'
-import { ConfigService } from '@nestjs/config'
-import { MessageType } from '../chat-message/dto/chat-message.dto'
+import { encryptPrivateInfo, decryptPrivateInfo } from '@/utils/encrypt'
+import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
+import { ChatRoomEntity, ChatRoomInput } from './dto/chat-room.dto'
 
 @Injectable()
 export class ChatRoomService {
@@ -18,7 +19,6 @@ export class ChatRoomService {
   constructor(
     @InjectModel(ChatRoomEntity.name) private chatRoomModel: Model<ChatRoomEntity>,
     private readonly userService: UserService,
-    private readonly logger: LoggerService,
     private readonly configService: ConfigService
   ) {}
 
@@ -90,11 +90,11 @@ export class ChatRoomService {
 
   async findRoomById(roomId: string): Promise<ChatRoomEntity> {
     try {
-        console.log(roomId)
-        return await this.chatRoomModel.findOne({ _id: roomId })
+      const findRoom = await this.chatRoomModel.findOne({ _id: roomId })
+      if (!findRoom) throw new BadRequestException('参数异常，聊天室不存在')
+      return findRoom
     } catch (err) {
-        console.log(err)
-        throw new InternalServerErrorException()
+        throw new InternalServerErrorException(err)
     }
   }
 
@@ -112,5 +112,109 @@ export class ChatRoomService {
         console.log(err)
         throw new InternalServerErrorException()
     }
-}
+  }
+
+  /**
+   * @description 基于 roomId 生成邀请二维码，返回给前端
+   * @param roomId
+   */
+  async generateInviteCode(userId: string, roomId: string) {
+    try {
+      const findRoom = await this.findRoomById(roomId)
+      if (!findRoom) {
+        throw new BadRequestException('参数异常，聊天室不存在')
+      }
+      this.response = getSuccessResponse('ok', encryptPrivateInfo(`${roomId}-${userId}`))
+      return this.response
+    } catch (err) {
+      throw new InternalServerErrorException(err)
+    }
+  }
+
+  /**
+   * @description 判断某个用户是否已经存在于聊天室内
+   * @param userId
+   * @param roomId
+   * @returns
+   */
+  async isAlreadyInRoom(userId: string, roomId: string) {
+    try {
+      const findRoom = await this.findRoomById(roomId)
+      return findRoom.members.includes(new mongoose.Types.ObjectId(userId))
+    } catch (err) {
+      return new InternalServerErrorException(err)
+    }
+  }
+
+  /**
+   * 
+   * @param user 被邀请人
+   * @param inviteCode 邀请码，由 房间ID 和 邀请人ID 加密构成
+   */
+  async inviteMember(user: UserTokenEntity, inviteCode: string) {
+    const [roomId] = decryptPrivateInfo(inviteCode).split('-')
+    if (await this.isAlreadyInRoom(user.userId, roomId)) {
+      throw new BadRequestException('您已经在群聊中了，无需重新加入群聊')
+    }
+
+    try {
+      await this.chatRoomModel.updateOne(
+        { _id: roomId },
+        {
+          $push: {
+            members: user.userId || ''
+          }
+        }
+      )
+      this.response = getSuccessResponse('成员已加入群聊', 'ok')
+      return this.response
+    } catch (err) {
+      throw new InternalServerErrorException(err)
+    }
+  }
+
+  /**
+   * @description 移除群聊中的某个用户，仅限管理员移除或本人退出
+   * @param user
+   * @param roomId
+   * @param userId
+   * @returns 
+   */
+  async removeMember(user: UserTokenEntity, roomId: string, userId: string) {
+    const findRoom = await this.findRoomById(roomId)
+    // 非群聊创建者 或 移除的用户非本人，无权限
+    if (findRoom.creator !== new mongoose.Types.ObjectId(user.userId) && user.userId !== userId) {
+      throw new UnauthorizedException('无删除权限，请联系管理员授予')
+    }
+
+    // 聊天室内没有该用户
+    const isUserInRoom = findRoom.members.includes(new mongoose.Types.ObjectId(userId))
+    if (!isUserInRoom) {
+      throw new BadRequestException('该用户未加入当前聊天室')
+    }
+
+    try {
+      const res = await this.chatRoomModel.updateOne({ _id: roomId }, { $pull: { members: userId } })
+      this.response = getSuccessResponse('用户移除成功', userId)
+      return this.response
+    } catch (err) {
+      throw new InternalServerErrorException(err)
+    }
+  }
+
+  /**
+   * @description 获取聊天室成员列表
+   * @param roomId
+   * @returns
+   */
+  async getMembers(roomId: string) {
+    try {
+      const findRoom = await this.findRoomById(roomId)
+      const findUsers = await this.userService.findUsesrByIds(findRoom.members)
+      this.response = getSuccessResponse('成员列表获取成功', findUsers)
+      return this.response
+    } catch (err) {
+      throw new InternalServerErrorException(err)
+    }
+  }
 }

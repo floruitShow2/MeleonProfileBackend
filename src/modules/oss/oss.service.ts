@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config'
 import { createWriteStream } from 'fs'
 import * as OSS from 'ali-oss'
 import { join } from 'path'
-import { DecryptPrivateInfo } from '@/utils/encrypt'
+import { decryptPrivateInfo } from '@/utils/encrypt'
 import { genStoragePath } from '@/utils/format'
 import OSSConfig from './constants/oss.constant'
 
@@ -13,8 +13,8 @@ export class OssService {
   constructor(private readonly configService: ConfigService) {
     this.client = new OSS({
       ...OSSConfig,
-      accessKeyId: DecryptPrivateInfo(this.configService.get('NEST_OSS_ID')),
-      accessKeySecret: DecryptPrivateInfo(this.configService.get('NEST_OSS_SECRET'))
+      accessKeyId: decryptPrivateInfo(this.configService.get('NEST_OSS_ID')),
+      accessKeySecret: decryptPrivateInfo(this.configService.get('NEST_OSS_SECRET'))
     })
   }
 

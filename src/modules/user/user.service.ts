@@ -1,6 +1,6 @@
 import mongoose, { Model } from 'mongoose'
 import { InjectModel } from '@nestjs/mongoose'
-import { Injectable } from '@nestjs/common'
+import { Injectable, InternalServerErrorException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { LoggerService } from '@/modules/logger/logger.service'
 import { UserSignUp, UserEntity } from './dto/user.dto'
@@ -58,13 +58,39 @@ export class UserService {
     ])
   }
 
-  async findUserById(id: string) {
+  async findUsesrByIds(ids: mongoose.Types.ObjectId[]): Promise<UserEntity[]> {
     try {
-      const res = await this.userModel.findOne({ id })
-      return res
+      const res = await this.userModel.aggregate([
+        {
+          $match: {
+            _id: {
+              $in: ids
+            }
+          }
+        },
+        {
+          $addFields: {
+            userId: '$_id'
+          }
+        },
+        {
+          $project: {
+            userId: 1,
+            username: 1,
+            avatar: 1,
+            email: 1
+          }
+        },
+        {
+          $project: {
+            _id: 0
+          }
+        }
+      ])
+      console.log(res)
+      return res || []
     } catch (error) {
-      console.log(error)
-      return null
+      throw new InternalServerErrorException(error)
     }
   }
 

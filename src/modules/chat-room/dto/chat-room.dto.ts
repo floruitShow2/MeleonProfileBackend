@@ -2,6 +2,7 @@ import { Prop, Schema } from '@nestjs/mongoose'
 import { ApiProperty, PickType } from '@nestjs/swagger'
 import { IsNotEmpty } from 'class-validator'
 import mongoose, { Document } from 'mongoose'
+import { UserEntity } from '@/modules/user/dto/user.dto'
 
 @Schema()
 export class ChatRoomEntity extends Document {
@@ -18,7 +19,7 @@ export class ChatRoomEntity extends Document {
   })
   roomCover: string
 
-  @Prop({ type: [{ type: mongoose.Types.ObjectId, ref: 'User' }] })
+  @Prop({ type: [{ type: mongoose.Types.ObjectId, ref: UserEntity.name }] })
   @ApiProperty({
     description: '成员ID列表'
   })
@@ -51,5 +52,12 @@ export class ChatRoomEntity extends Document {
   creator: mongoose.Types.ObjectId
 }
 
-@Schema()
 export class ChatRoomInput extends PickType(ChatRoomEntity, ['roomName', 'roomCover']) {}
+
+export class RemoveMemberInput {
+  @IsNotEmpty()
+  userId: string
+
+  @IsNotEmpty()
+  roomId: string
+}

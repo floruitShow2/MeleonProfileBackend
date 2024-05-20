@@ -5,7 +5,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'
 import * as compression from 'compression'
 import { AppModule } from './app.module'
 import 'reflect-metadata'
-// import { EncryptPrivateInfo, DecryptPrivateInfo } from './utils/encrypt'
+// import { encryptPrivateInfo, decryptPrivateInfo } from './utils/encrypt'
 
 // swagger 文档服务
 function initSwagger(app: INestApplication) {
