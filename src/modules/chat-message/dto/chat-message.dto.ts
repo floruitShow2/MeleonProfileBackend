@@ -1,6 +1,10 @@
-import mongoose, { Document } from 'mongoose'
 import { Prop, Schema } from '@nestjs/mongoose'
-import { ApiProperty } from '@nestjs/swagger'
+import { ApiProperty, PickType } from '@nestjs/swagger'
+import mongoose, { Document } from 'mongoose'
+import { IsNotEmpty } from 'class-validator'
+import { ChatRoomEntity } from '@/modules/chat-room/dto/chat-room.dto'
+import { UserEntity } from '@/modules/user/dto/user.dto'
+import { PaginationInput } from '@/interface/pagination.interface'
 
 export enum MessageType {
   TEXT = 'text',
@@ -9,19 +13,23 @@ export enum MessageType {
 
 @Schema()
 export class ChatMessageEntity extends Document {
-  @Prop({ type: { type: mongoose.Types.ObjectId, ref: 'ChatRoom' } })
+  @Prop()
+  messageId: mongoose.Types.ObjectId
+
+  @Prop({ type: mongoose.Types.ObjectId, ref: ChatRoomEntity.name })
   @ApiProperty({
     description: '聊天室ID'
   })
-  roomId: string
+  @IsNotEmpty()
+  roomId: mongoose.Types.ObjectId
 
-  @Prop({ type: { type: mongoose.Types.ObjectId, ref: 'User' } })
+  @Prop({ type: mongoose.Types.ObjectId, ref: UserEntity.name })
   @ApiProperty({
     description: '发布人ID'
   })
   profileId: mongoose.Types.ObjectId
 
-  @Prop({ type: [{ type: mongoose.Types.ObjectId, ref: 'User' }] })
+  @Prop({ type: [{ type: mongoose.Types.ObjectId, ref: UserEntity.name }] })
   @ApiProperty({
     description: '消息提及的用户'
   })
@@ -50,4 +58,17 @@ export class ChatMessageEntity extends Document {
     description: '文件资源链接，图片类型与文件类型共用，展示组件前端控制'
   })
   url: string
+}
+
+export class ChatMessageInput extends PickType(ChatMessageEntity, [
+  'roomId',
+  'profileId',
+  'type',
+  'content',
+  'url'
+]) {}
+
+export class ChatMessagePagingInput extends PaginationInput {
+  @IsNotEmpty()
+  roomId: string
 }

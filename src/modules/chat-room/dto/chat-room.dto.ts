@@ -45,7 +45,7 @@ export class ChatRoomEntity extends Document {
   })
   createTime: string
 
-  @Prop({ type: mongoose.Types.ObjectId, ref: 'User' })
+  @Prop({ type: mongoose.Types.ObjectId, ref: UserEntity.name })
   @ApiProperty({
     description: '创建人'
   })

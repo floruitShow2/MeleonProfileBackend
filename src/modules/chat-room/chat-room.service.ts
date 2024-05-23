@@ -1,4 +1,10 @@
-import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common'
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException
+} from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { ConfigService } from '@nestjs/config'
 import mongoose, { Model } from 'mongoose'
@@ -94,23 +100,24 @@ export class ChatRoomService {
       if (!findRoom) throw new BadRequestException('参数异常，聊天室不存在')
       return findRoom
     } catch (err) {
-        throw new InternalServerErrorException(err)
+      throw new InternalServerErrorException(err)
     }
   }
 
   async deleteRoom(user: UserTokenEntity, roomId: string) {
     const targetRoom = await this.findRoomById(roomId)
     if (!targetRoom) throw new BadRequestException('Room not found')
-    
-    if (targetRoom.creator.toString() !== user.userId) throw new ForbiddenException('not authorized')
-  
+
+    if (targetRoom.creator.toString() !== user.userId)
+      throw new ForbiddenException('not authorized')
+
     try {
-        await this.chatRoomModel.deleteOne({ _id: roomId })
-        this.response = getSuccessResponse('聊天室删除成功', roomId)
-        return this.response
-    } catch(err) {
-        console.log(err)
-        throw new InternalServerErrorException()
+      await this.chatRoomModel.deleteOne({ _id: roomId })
+      this.response = getSuccessResponse('聊天室删除成功', roomId)
+      return this.response
+    } catch (err) {
+      console.log(err)
+      throw new InternalServerErrorException()
     }
   }
 
@@ -147,7 +154,7 @@ export class ChatRoomService {
   }
 
   /**
-   * 
+   *
    * @param user 被邀请人
    * @param inviteCode 邀请码，由 房间ID 和 邀请人ID 加密构成
    */
@@ -178,7 +185,7 @@ export class ChatRoomService {
    * @param user
    * @param roomId
    * @param userId
-   * @returns 
+   * @returns
    */
   async removeMember(user: UserTokenEntity, roomId: string, userId: string) {
     const findRoom = await this.findRoomById(roomId)
@@ -194,7 +201,10 @@ export class ChatRoomService {
     }
 
     try {
-      const res = await this.chatRoomModel.updateOne({ _id: roomId }, { $pull: { members: userId } })
+      const res = await this.chatRoomModel.updateOne(
+        { _id: roomId },
+        { $pull: { members: userId } }
+      )
       this.response = getSuccessResponse('用户移除成功', userId)
       return this.response
     } catch (err) {

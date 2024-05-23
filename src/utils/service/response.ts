@@ -1,13 +1,13 @@
 import { ApiResponse } from '@/interface/response.interface'
 
-export function getSuccessResponse<T>(msg: string, data: T): ApiResponse {
+export function getSuccessResponse<T>(msg: string, data: T): ApiResponse<T> {
   return {
     Code: 1,
     Message: msg,
     ReturnData: data
   }
 }
-export function getFailResponse<T>(msg: string, data: T): ApiResponse {
+export function getFailResponse<T>(msg: string, data: T): ApiResponse<T> {
   return {
     Code: -1,
     Message: msg,
