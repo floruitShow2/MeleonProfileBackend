@@ -5,16 +5,18 @@ import { IsNotEmpty } from 'class-validator'
 import { ChatRoomEntity } from '@/modules/chat-room/dto/chat-room.dto'
 import { UserEntity } from '@/modules/user/dto/user.dto'
 import { PaginationInput } from '@/interface/pagination.interface'
-
-export enum MessageType {
-  TEXT = 'text',
-  Image = 'image'
-}
+import { MessageTypeEnum, FileTypeEnum } from '@/constants'
 
 @Schema()
 export class ChatMessageEntity extends Document {
   @Prop()
   messageId: mongoose.Types.ObjectId
+
+  @Prop()
+  @ApiProperty({
+    description: '回复操作里, 目标消息的ID'
+  })
+  replyId: mongoose.Types.ObjectId
 
   @Prop({ type: mongoose.Types.ObjectId, ref: ChatRoomEntity.name })
   @ApiProperty({
@@ -45,7 +47,7 @@ export class ChatMessageEntity extends Document {
   @ApiProperty({
     description: '消息类型'
   })
-  type: MessageType
+  type: MessageTypeEnum | FileTypeEnum
 
   @Prop()
   @ApiProperty({
@@ -58,6 +60,12 @@ export class ChatMessageEntity extends Document {
     description: '文件资源链接，图片类型与文件类型共用，展示组件前端控制'
   })
   url: string
+
+  @Prop({ type: [{ type: mongoose.Types.ObjectId, ref: UserEntity.name }] })
+  @ApiProperty({
+    description: '可以看到当前消息的用户ID列表'
+  })
+  visibleUsers: mongoose.Types.ObjectId[]
 }
 
 export class ChatMessageInput extends PickType(ChatMessageEntity, [

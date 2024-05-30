@@ -27,6 +27,10 @@ export function formatTimeAgo(time: Date | string | number) {
   const days = hours / 24
   const weeks = days / 7
   const months = days / 30
+  const year = months / 12
+  if (year > 1) {
+    return `${Math.floor(year)}年前`
+  }
   if (months > 1) {
     return `${Math.floor(months)}月前`
   }

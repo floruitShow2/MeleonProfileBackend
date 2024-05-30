@@ -1,16 +1,19 @@
 import { Module } from '@nestjs/common'
 import { MongooseModule } from '@nestjs/mongoose'
+import { ChatMessageSchema } from '@/modules/mongo/schema/chat.scehma'
+import { ChatRoomService } from '@/modules/chat-room/chat-room.service'
 import { ChatMessageService } from './chat-message.service'
 import { ChatMessageController } from './chat-message.controller'
 import { ChatMessageGateway } from './chat-message.gateway'
 import { ChatMessageEntity } from './dto/chat-message.dto'
-import { ChatMessageSchema } from '../mongo/schema/chat.scehma'
+import { ChatRoomModule } from '../chat-room/chat-room.module'
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: ChatMessageEntity.name, schema: ChatMessageSchema, collection: 'chatMessages' }
-    ])
+    ]),
+    ChatRoomModule
   ],
   providers: [ChatMessageService, ChatMessageGateway],
   controllers: [ChatMessageController]

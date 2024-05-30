@@ -19,7 +19,6 @@ export class TaskService {
   private response: ApiResponse
   constructor(
     @InjectModel(TaskEntity.name) private readonly taskModel: Model<TaskEntity>,
-    @InjectModel(UserEntity.name) private readonly userModel: Model<UserEntity>,
     private readonly teamService: TeamService,
     private readonly configService: ConfigService,
     private readonly logger: LoggerService
@@ -44,8 +43,9 @@ export class TaskService {
   async createTask(user: UserTokenEntity, task: TaskEntity) {
     try {
       // 将关联用户的用户名替换为对应模型的 objectId
-      const users = await this.userModel.find({ username: { $in: task.relatives } })
-      task.relatives = users.map((user) => user._id.toString())
+      // const users = await this.userModel.find({ username: { $in: task.relatives } })
+      // task.relatives = users.map((user) => user._id.toString())
+      task.relatives = []
 
       if (!task.teamId) delete task.teamId
       const createdTask = await this.taskModel.create(task)

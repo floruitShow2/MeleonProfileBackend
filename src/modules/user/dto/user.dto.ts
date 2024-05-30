@@ -104,4 +104,4 @@ export class UserEntity extends Document {
 }
 
 @Schema()
-export class UserSignUp extends PickType(UserEntity, ['username', 'password']) {}
+export class UserSignUpInput extends PickType(UserEntity, ['username', 'password']) {}

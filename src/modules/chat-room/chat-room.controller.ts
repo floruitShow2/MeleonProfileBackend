@@ -14,8 +14,8 @@ export class ChatRoomController {
     return this.chatRoomService.createRoom(req.user, chatRoomInput)
   }
 
-  @Get('/getRoomsById')
-  getRoomsById(@Req() req: Request) {
+  @Get('/getRooms')
+  getRoomsByUserId(@Req() req: Request) {
     return this.chatRoomService.getRoomsByUserId(req.user?.userId)
   }
 
@@ -27,6 +27,11 @@ export class ChatRoomController {
   @Get('/getInviteCode')
   getInviteCode(@Req() req: Request, @Query('roomId') roomId: string) {
     return this.chatRoomService.generateInviteCode(req.user.userId, roomId)
+  }
+
+  @Get('/getDetailsByInviteCode')
+  getDetailsByInviteCode(@Query('inviteCode') inviteCode: string) {
+    return this.chatRoomService.getDetailsByInviteCode(inviteCode)
   }
 
   @Post('/inviteMember')

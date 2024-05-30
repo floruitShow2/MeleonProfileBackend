@@ -7,7 +7,7 @@ import { Roles } from '@/decorator/Roles'
 import { Role } from '@/constants/auth'
 import { genStoragePath } from '@/utils/format'
 import { UserService } from './user.service'
-import { UserEntity, UserSignUp } from './dto/user.dto'
+import { UserEntity, UserSignUpInput } from './dto/user.dto'
 import type { PasswordsType } from './interface/user.interface'
 
 @Controller('user')
@@ -19,7 +19,7 @@ export class UserController {
   @ApiOperation({
     summary: '用户注册接口'
   })
-  async signup(@Body() userDto: UserSignUp) {
+  async signup(@Body() userDto: UserSignUpInput) {
     return await this.userService.signup(userDto)
   }
 
@@ -27,7 +27,7 @@ export class UserController {
   @ApiOperation({
     summary: '用户登录接口'
   })
-  async login(@Body() userDto: UserSignUp) {
+  async login(@Body() userDto: UserSignUpInput) {
     return await this.userService.login(userDto)
   }
 

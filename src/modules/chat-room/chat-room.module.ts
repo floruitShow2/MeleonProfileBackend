@@ -14,6 +14,7 @@ import { ChatRoomEntity } from './dto/chat-room.dto'
     UserModule
   ],
   providers: [ChatRoomService],
-  controllers: [ChatRoomController]
+  controllers: [ChatRoomController],
+  exports: [ChatRoomService]
 })
 export class ChatRoomModule {}

@@ -1,5 +1,6 @@
 export enum SocketEmitEvents {
-  CREATE_MESSAGE = 'createMessage'
+  CREATE_MESSAGE = 'createMessage',
+  DELETE_MESSAGE = 'deleteMessage'
 }
 
 export enum SocketOnEvents {

@@ -1,8 +1,8 @@
+import { ConfigService } from '@nestjs/config'
 import { existsSync, mkdirSync } from 'fs'
 import { join } from 'path'
 import { resolve } from 'url'
-import { isDev } from '../is'
-import { ConfigService } from '@nestjs/config'
+import { isDev } from '@/utils/is'
 
 /**
  * @description 生成并返回文件存储路径，并创建响应的文件目录

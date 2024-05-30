@@ -10,8 +10,7 @@ import { TaskController } from './task.controller'
 @Module({
   imports: [
     MongooseModule.forFeature([
-      { name: TaskEntity.name, schema: TaskSchema, collection: 'tasks' },
-      { name: UserEntity.name, schema: UserSchema, collection: 'users' }
+      { name: TaskEntity.name, schema: TaskSchema, collection: 'tasks' }
     ]),
     TeamModule
   ],

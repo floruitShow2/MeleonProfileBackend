@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose'
 import { Injectable, InternalServerErrorException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { LoggerService } from '@/modules/logger/logger.service'
-import { UserSignUp, UserEntity } from './dto/user.dto'
+import { UserSignUpInput, UserEntity } from './dto/user.dto'
 import { DefaultUserEntity } from './interface/user.interface'
 import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
 import { generateSalt, encrypt, compare } from '@/utils/encrypt'
@@ -52,13 +52,15 @@ export class UserService {
             $project: {
               _id: 0,
               __v: 0,
-              salt: 0
+              salt: 0,
+              password: 0,
+              certification: 0
             }
           }
     ])
   }
 
-  async findUsesrByIds(ids: mongoose.Types.ObjectId[]): Promise<UserEntity[]> {
+  async findUsersByIds(ids: mongoose.Types.ObjectId[]): Promise<UserEntity[]> {
     try {
       const res = await this.userModel.aggregate([
         {
@@ -87,7 +89,6 @@ export class UserService {
           }
         }
       ])
-      console.log(res)
       return res || []
     } catch (error) {
       throw new InternalServerErrorException(error)
@@ -108,7 +109,6 @@ export class UserService {
           Math.floor(Math.random() * 5) + 1
         }.png`
     }
-    console.log(userEntity)
     const createUser = await this.userModel.create(userEntity)
     return await createUser.save()
   }
@@ -118,7 +118,7 @@ export class UserService {
    * @param user
    * @returns
    */
-  async signup(user: UserSignUp): Promise<ApiResponse> {
+  async signup(user: UserSignUpInput): Promise<ApiResponse> {
     const res = await this.findOneByField({ username: user.username })
     if (res && res.length) {
       this.response = getFailResponse('该用户名已被注册', null)
@@ -144,7 +144,7 @@ export class UserService {
    * @param user 用户的部分信息
    * @returns
    */
-  async login(user: UserSignUp): Promise<ApiResponse> {
+  async login(user: UserSignUpInput): Promise<ApiResponse> {
     const res = await this.findOneByField({ username: user.username }, true)
     const findIdx = res.findIndex((user) => user.password === user.password)
     if (!res || !res.length || findIdx === -1) {
@@ -325,7 +325,7 @@ export class UserService {
   }
 
   /**
-   * @description 未登录情况下，更新用户密码
+   * @description 通过第三方登录等方式创建用户时，需要额外执行补全用户密码的逻辑
    * @param userId
    * @param password
    */

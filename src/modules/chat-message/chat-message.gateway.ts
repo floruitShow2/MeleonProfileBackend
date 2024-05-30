@@ -27,6 +27,11 @@ export class ChatMessageGateway implements OnGatewayConnection {
     this.server.to(roomId).emit(SocketOnEvents.MSG_CREATE, newMessage)
   }
 
+  /**
+   * @description 监听创建消息的事件
+   * @param data
+   * @param client
+   */
   @SubscribeMessage(SocketEmitEvents.CREATE_MESSAGE)
   async handleCreateMessage(
     @MessageBody() data: ChatMessageInput,
@@ -34,5 +39,10 @@ export class ChatMessageGateway implements OnGatewayConnection {
   ) {
     const newMessage = await this.chatMessageService.createMessage(data)
     this.broadcastMessage(data.roomId.toString(), newMessage)
+  }
+
+  @SubscribeMessage(SocketEmitEvents.DELETE_MESSAGE)
+  async handleDeleteMessage() {
+    
   }
 }

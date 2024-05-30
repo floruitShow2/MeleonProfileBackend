@@ -2,14 +2,17 @@ import { BadRequestException, Injectable, InternalServerErrorException } from '@
 import mongoose, { Model } from 'mongoose'
 import { InjectModel } from '@nestjs/mongoose'
 import { formatToDateTime } from '@/utils/time'
-import { ChatMessageEntity, ChatMessageInput, ChatMessagePagingInput } from './dto/chat-message.dto'
 import { getSuccessResponse } from '@/utils/service/response'
-import { ApiResponse } from '@/interface/response.interface'
+import { genStoragePath } from '@/utils/format'
+import { genFileType } from '@/utils/file'
+import { ChatMessageEntity, ChatMessageInput, ChatMessagePagingInput } from './dto/chat-message.dto'
+import { ChatRoomService } from '../chat-room/chat-room.service'
 
 @Injectable()
 export class ChatMessageService {
   constructor(
-    @InjectModel(ChatMessageEntity.name) private readonly chatMessageModel: Model<ChatMessageEntity>
+    @InjectModel(ChatMessageEntity.name) private readonly chatMessageModel: Model<ChatMessageEntity>,
+    private readonly chatRoomService: ChatRoomService
   ) {}
 
   /**
@@ -26,14 +29,33 @@ export class ChatMessageService {
           }
         },
         {
+          $lookup: {
+            from: 'users',
+            foreignField: '_id',
+            localField: 'profileId',
+            as: 'profile'
+          }
+        },
+        {
+          $unwind: '$profile'
+        },
+        {
           $addFields: {
-            messageId: '$_id'
+            messageId: '$_id',
+            'profile.userId': '$profile._id'
           }
         },
         {
           $project: {
             _id: 0,
-            __v: 0
+            __v: 0,
+            profileId: 0,
+            'profile._id': 0,
+            'profile.__v': 0,
+            'profile.salt': 0,
+            'profile.role': 0,
+            'profile.password': 0,
+            'profile.certification': 0
           }
         }
       ])
@@ -74,14 +96,34 @@ export class ChatMessageService {
           $limit: limit
         },
         {
-          $addFields: {
-            messageId: '$_id'
+          $lookup: {
+            from: 'users',
+            foreignField: '_id',
+            localField: 'profileId',
+            as: 'profile'
           }
         },
         {
+          $unwind: '$profile'
+        },
+        {
+          $addFields: {
+            messageId: '$_id',
+            'profile.userId': '$profile._id'
+          }
+        },
+        { $sort: { createTime: 1 } },
+        {
           $project: {
             _id: 0,
-            __v: 0
+            __v: 0,
+            profileId: 0,
+            'profile._id': 0,
+            'profile.__v': 0,
+            'profile.salt': 0,
+            'profile.role': 0,
+            'profile.password': 0,
+            'profile.certification': 0
           }
         }
       ])
@@ -115,4 +157,43 @@ export class ChatMessageService {
       throw new InternalServerErrorException()
     }
   }
+
+  /**
+   * @description 用户上传文件后，生成 Message.Entity 格式
+   * @param roomId
+   * @param userId
+   * @param files
+   */
+  createFileMessage(roomId: string, userId: string, files: Express.Multer.File[]) {
+    return files.map((file) => {
+      const { storagePath } = genStoragePath(`${userId}/${file.originalname}`)
+
+      return {
+        roomId,
+        profileId: userId,
+        content: '',
+        type: genFileType(file),
+        url: storagePath
+      }
+    })
+  }
+
+  /**
+   * @description 撤回消息
+   * @param userId 用户id，撤回操作仅限本人及群聊管理员
+   * @param messageId
+   */
+  recallMessage(userId: string, messageId: string) {}
+  /**
+   * @description 删除消息，
+   * @param messageId 
+   */
+  deleteMessage(messageId: string[]) {}
+
+  /**
+   * @description 
+   * @param userId 
+   * @param roomId 
+   */
+  clearMessagesRecord(userId: string, roomId: string) {}
 }

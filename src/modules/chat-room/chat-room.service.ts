@@ -8,14 +8,12 @@ import {
 import { InjectModel } from '@nestjs/mongoose'
 import { ConfigService } from '@nestjs/config'
 import mongoose, { Model } from 'mongoose'
-import { LoggerService } from '@/modules/logger/logger.service'
 import { UserService } from '@/modules/user/user.service'
 import { UserTokenEntity } from '@/modules/user/interface/user.interface'
-import { MessageType } from '@/modules/chat-message/dto/chat-message.dto'
 import { ApiResponse } from '@/interface/response.interface'
 import { formatToDateTime } from '@/utils/time'
 import { encryptPrivateInfo, decryptPrivateInfo } from '@/utils/encrypt'
-import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
+import { getSuccessResponse } from '@/utils/service/response'
 import { ChatRoomEntity, ChatRoomInput } from './dto/chat-room.dto'
 
 @Injectable()
@@ -32,7 +30,6 @@ export class ChatRoomService {
     const { userId } = user
     const createTime = formatToDateTime(new Date())
 
-    console.log(userId)
     try {
       const res = await this.chatRoomModel.create({
         roomName: chatRoomInput.roomName,
@@ -79,15 +76,7 @@ export class ChatRoomService {
         }
       ])
 
-      this.response = getSuccessResponse(
-        '房间查询成功',
-        res.map((room) => ({
-          ...room,
-          messages: [
-            { message: { type: MessageType.TEXT, content: 'this is a message for testing' } }
-          ]
-        }))
-      )
+      this.response = getSuccessResponse('房间查询成功', res)
       return this.response
     } catch (err) {
       throw new InternalServerErrorException()
@@ -96,9 +85,26 @@ export class ChatRoomService {
 
   async findRoomById(roomId: string): Promise<ChatRoomEntity> {
     try {
-      const findRoom = await this.chatRoomModel.findOne({ _id: roomId })
-      if (!findRoom) throw new BadRequestException('参数异常，聊天室不存在')
-      return findRoom
+      const findRoom = await this.chatRoomModel.aggregate([
+        {
+          $match: {
+            _id: new mongoose.Types.ObjectId(roomId)
+          }
+        },
+        {
+          $addFields: {
+            roomId: '$_id'
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            __v: 0
+          }
+        }
+      ])
+      if (!findRoom || !findRoom.length) throw new BadRequestException('参数异常，聊天室不存在')
+      return findRoom[0]
     } catch (err) {
       throw new InternalServerErrorException(err)
     }
@@ -122,7 +128,7 @@ export class ChatRoomService {
   }
 
   /**
-   * @description 基于 roomId 生成邀请二维码，返回给前端
+   * @description 基于 roomId 生成邀请二维码，包含 聊天室ID 及 二维码创建者ID
    * @param roomId
    */
   async generateInviteCode(userId: string, roomId: string) {
@@ -132,6 +138,24 @@ export class ChatRoomService {
         throw new BadRequestException('参数异常，聊天室不存在')
       }
       this.response = getSuccessResponse('ok', encryptPrivateInfo(`${roomId}-${userId}`))
+      return this.response
+    } catch (err) {
+      throw new InternalServerErrorException(err)
+    }
+  }
+
+  /**
+   * @description 根据邀请码查询 房间 及 邀请方 的信息
+   * @param inviteCode
+   * @returns
+   */
+  async getDetailsByInviteCode(inviteCode: string) {
+    console.log(inviteCode)
+    const [roomId, userId] = decryptPrivateInfo(inviteCode).split('-')
+    try {
+      const roomDetails = await this.findRoomById(roomId)
+      const userDetails = await this.userService.findOneByField({ _id: new mongoose.Types.ObjectId(userId) })
+      this.response = getSuccessResponse('查询成功', { room: roomDetails, user: userDetails[0] })
       return this.response
     } catch (err) {
       throw new InternalServerErrorException(err)
@@ -220,7 +244,8 @@ export class ChatRoomService {
   async getMembers(roomId: string) {
     try {
       const findRoom = await this.findRoomById(roomId)
-      const findUsers = await this.userService.findUsesrByIds(findRoom.members)
+      console.log(findRoom)
+      const findUsers = await this.userService.findUsersByIds(findRoom.members)
       this.response = getSuccessResponse('成员列表获取成功', findUsers)
       return this.response
     } catch (err) {
