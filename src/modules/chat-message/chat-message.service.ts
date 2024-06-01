@@ -5,14 +5,14 @@ import { formatToDateTime } from '@/utils/time'
 import { getSuccessResponse } from '@/utils/service/response'
 import { genStoragePath } from '@/utils/format'
 import { genFileType } from '@/utils/file'
+import { ChatRoomService } from '@/modules/chat-room/chat-room.service'
 import { ChatMessageEntity, ChatMessageInput, ChatMessagePagingInput } from './dto/chat-message.dto'
-import { ChatRoomService } from '../chat-room/chat-room.service'
 
 @Injectable()
 export class ChatMessageService {
   constructor(
     @InjectModel(ChatMessageEntity.name) private readonly chatMessageModel: Model<ChatMessageEntity>,
-    private readonly chatRoomService: ChatRoomService
+    private readonly chatRoomService: ChatRoomService,
   ) {}
 
   /**
@@ -164,18 +164,26 @@ export class ChatMessageService {
    * @param userId
    * @param files
    */
-  createFileMessage(roomId: string, userId: string, files: Express.Multer.File[]) {
-    return files.map((file) => {
-      const { storagePath } = genStoragePath(`${userId}/${file.originalname}`)
+  async createFileMessage(roomId: string, userId: string, files: Express.Multer.File[]): Promise<ChatMessageEntity[]> {
+    const chatMessageInputs = files.map((file) => {
+      console.log(file)
+      const { storagePath } = genStoragePath(`${userId}/${file.filename}`)
 
       return {
-        roomId,
-        profileId: userId,
-        content: '',
+        roomId: new mongoose.Types.ObjectId(roomId),
+        profileId: new mongoose.Types.ObjectId(userId),
         type: genFileType(file),
+        content: file.filename,
         url: storagePath
       }
     })
+
+    try {
+      const res = await Promise.all(chatMessageInputs.map(msg => this.createMessage(msg)))
+      return res
+    } catch (err) {
+      throw new InternalServerErrorException(err)
+    }
   }
 
   /**

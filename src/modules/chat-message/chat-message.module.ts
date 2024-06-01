@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common'
 import { MongooseModule } from '@nestjs/mongoose'
 import { ChatMessageSchema } from '@/modules/mongo/schema/chat.scehma'
-import { ChatRoomService } from '@/modules/chat-room/chat-room.service'
 import { ChatMessageService } from './chat-message.service'
 import { ChatMessageController } from './chat-message.controller'
 import { ChatMessageGateway } from './chat-message.gateway'

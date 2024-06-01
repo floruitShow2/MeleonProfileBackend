@@ -1,3 +1,5 @@
+
+import { Inject, forwardRef } from '@nestjs/common'
 import {
   ConnectedSocket,
   MessageBody,
@@ -16,14 +18,17 @@ export class ChatMessageGateway implements OnGatewayConnection {
   @WebSocketServer()
   server: Server
 
-  constructor(private readonly chatMessageService: ChatMessageService) {}
+  constructor(
+    private readonly chatMessageService: ChatMessageService
+  ) {}
 
   handleConnection(client: Socket) {
     const roomId = client.handshake.query.roomId
     client.join(roomId)
   }
 
-  broadcastMessage(roomId: string, newMessage: ChatMessageEntity) {
+  broadcastMessage(roomId: string, newMessage: ChatMessageEntity[]) {
+    console.log(roomId)
     this.server.to(roomId).emit(SocketOnEvents.MSG_CREATE, newMessage)
   }
 
@@ -38,7 +43,7 @@ export class ChatMessageGateway implements OnGatewayConnection {
     @ConnectedSocket() client: Socket
   ) {
     const newMessage = await this.chatMessageService.createMessage(data)
-    this.broadcastMessage(data.roomId.toString(), newMessage)
+    this.broadcastMessage(data.roomId.toString(), [newMessage])
   }
 
   @SubscribeMessage(SocketEmitEvents.DELETE_MESSAGE)

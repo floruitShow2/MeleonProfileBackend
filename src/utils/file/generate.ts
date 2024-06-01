@@ -1,11 +1,11 @@
 import { FileTypeEnum } from '@/constants/file.enum'
 
-const mimeTypeMap: Record<FileTypeEnum, RegExp> = {
-    [FileTypeEnum.IMAGE]: /^image\//,
-    [FileTypeEnum.PDF]: /^application\/pdf$/,
-    [FileTypeEnum.Video]: /^video\//,
-    [FileTypeEnum.Audio]: /^audio\//
-}
+const mimeTypeMap: Array<[FileTypeEnum, RegExp]> = [
+    [FileTypeEnum.IMAGE, /^image\//],
+    [FileTypeEnum.VIDEO, /^video\//],
+    [FileTypeEnum.AUDIO, /^audio\//],
+    [FileTypeEnum.FILE, /\s\S/]
+]
 
 /**
  * @description 根据 文件信息 生成 文件类型
@@ -14,7 +14,7 @@ const mimeTypeMap: Record<FileTypeEnum, RegExp> = {
  */
 export const genFileType = (file: Express.Multer.File): FileTypeEnum | null => {
     const { mimetype } = file
-    for (const [fileType, regex] of Object.entries(mimeTypeMap)) {
+    for (const [fileType, regex] of mimeTypeMap) {
         if (regex.test(mimetype)) {
             return fileType as FileTypeEnum
         }

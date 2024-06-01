@@ -11,13 +11,19 @@ import {
 import { FilesInterceptor } from '@nestjs/platform-express'
 import { Request } from 'express'
 import { diskStorage } from 'multer'
+import * as iconv from 'iconv-lite'
 import { genStoragePath } from '@/utils/format'
+import { getSuccessResponse } from '@/utils/service/response'
 import { ChatMessagePagingInput } from './dto/chat-message.dto'
 import { ChatMessageService } from './chat-message.service'
+import { ChatMessageGateway } from './chat-message.gateway'
 
 @Controller('/chat/message')
 export class ChatMessageController {
-  constructor(private readonly chatMessageService: ChatMessageService) {}
+  constructor(
+    private readonly chatMessageService: ChatMessageService,
+    private readonly chatMessageGateway: ChatMessageGateway
+  ) {}
 
   @Get('/getMessagesList')
   findMessagesByPages(@Query() pagingInput: ChatMessagePagingInput) {
@@ -33,16 +39,21 @@ export class ChatMessageController {
           cb(null, diskPath)
         },
         filename: function (req, res, cb) {
-          cb(null, res.originalname)
+          const buf = Buffer.from(res.originalname, 'binary')
+          const decodedName = iconv.decode(buf, 'utf-8')
+          console.log('filename', decodedName)
+          cb(null, decodedName)
         }
       })
     })
   )
-  uploadFile(
+  async uploadFile(
     @Req() req: Request,
     @UploadedFiles() files: Express.Multer.File[],
     @Body('roomId') roomId: string
   ) {
-    return this.chatMessageService.createFileMessage(roomId, req.user.userId, files)
+    const newMessages = await this.chatMessageService.createFileMessage(roomId, req.user.userId, files)
+    this.chatMessageGateway.broadcastMessage(roomId, newMessages)
+    return getSuccessResponse('消息已发布', newMessages)
   }
 }
