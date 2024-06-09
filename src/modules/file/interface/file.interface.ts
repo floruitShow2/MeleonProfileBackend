@@ -1,3 +1,5 @@
+import { IsNotEmpty, IsNumber } from "class-validator"
+
 export interface VerifyOptions {
   // 文件哈希
   filehash: string
@@ -18,4 +20,12 @@ export interface MergeOptions {
   size: number
   filename: string
   filehash: string
+}
+
+export class GetFrameInput {
+  @IsNotEmpty()
+  url: string
+
+  @IsNumber()
+  seconds: number
 }

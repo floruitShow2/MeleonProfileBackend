@@ -244,7 +244,6 @@ export class ChatRoomService {
   async getMembers(roomId: string) {
     try {
       const findRoom = await this.findRoomById(roomId)
-      console.log(findRoom)
       const findUsers = await this.userService.findUsersByIds(findRoom.members)
       this.response = getSuccessResponse('成员列表获取成功', findUsers)
       return this.response

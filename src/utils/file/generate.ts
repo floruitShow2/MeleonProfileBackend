@@ -4,7 +4,7 @@ const mimeTypeMap: Array<[FileTypeEnum, RegExp]> = [
     [FileTypeEnum.IMAGE, /^image\//],
     [FileTypeEnum.VIDEO, /^video\//],
     [FileTypeEnum.AUDIO, /^audio\//],
-    [FileTypeEnum.FILE, /\s\S/]
+    [FileTypeEnum.FILE, /\s*\/\s*/]
 ]
 
 /**

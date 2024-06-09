@@ -2,6 +2,7 @@ import { ConfigService } from '@nestjs/config'
 import { existsSync, mkdirSync } from 'fs'
 import { join } from 'path'
 import { resolve } from 'url'
+import * as iconv from 'iconv-lite'
 import { isDev } from '@/utils/is'
 
 /**
@@ -25,4 +26,30 @@ export const genStoragePath = (path: string): { diskPath: string; storagePath: s
     diskPath,
     storagePath
   }
+}
+
+export const splitFilenameFromUrl = (url: string) => {
+  const paths = url.split('/')
+  const filename = paths.pop()
+  const prefixUrl = paths.join('/')
+  return [filename, prefixUrl]
+}
+
+export const formatUrlAsUTF = (url: string) => {
+  const [filename, prefixUrl] = splitFilenameFromUrl(url)
+  const buf = Buffer.from(filename, 'binary')
+  const decodedName = iconv.decode(buf, 'utf-8')
+  return (`${prefixUrl}/${decodedName}`).replace('%20', ' ')
+}
+
+export const translateUrlToDiskPath = (url: string) => {
+    const staticPathIndex = url.indexOf('/static/files/')
+
+    if (staticPathIndex === -1) {
+      throw new Error('Invalid url')
+    }
+
+    const relativePath = url.slice(staticPathIndex + '/static/files/'.length)
+    const diskPath = join(process.cwd(), `/public/files/${relativePath}`)
+    return diskPath
 }

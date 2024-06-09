@@ -40,8 +40,8 @@ export class ChatMessageController {
         },
         filename: function (req, res, cb) {
           const buf = Buffer.from(res.originalname, 'binary')
-          const decodedName = iconv.decode(buf, 'utf-8')
-          console.log('filename', decodedName)
+          const decodedName = iconv.decode(buf, 'utf-8').replace(/[\s%20]+/g, '')
+          console.log(decodedName)
           cb(null, decodedName)
         }
       })

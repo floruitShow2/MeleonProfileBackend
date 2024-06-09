@@ -14,7 +14,7 @@ import { diskStorage } from 'multer'
 import { resolve } from 'path'
 import { OssService } from '@/modules/oss/oss.service'
 import { FileService } from './file.service'
-import type { ChunkOptions, MergeOptions, VerifyOptions } from './interface/file.interface'
+import type { ChunkOptions, MergeOptions, VerifyOptions, GetFrameInput } from './interface/file.interface'
 
 @Controller('file')
 @ApiTags('file')
@@ -68,5 +68,10 @@ export class FileController {
   @Get('/oss/downloadFile')
   handleDownloadFile(@Req() req: Request, @Query('path') path: string) {
     return this.fileService.downloadFileFromOSS(req['user'], path)
+  }
+
+  @Get('/video/getFrame')
+  getVideoFrame(@Query() queries: GetFrameInput) {
+    return this.fileService.getVideoFrame(queries)
   }
 }
