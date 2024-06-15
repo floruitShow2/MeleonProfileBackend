@@ -1,10 +1,10 @@
 import { FileTypeEnum } from '@/constants/file.enum'
 
 const mimeTypeMap: Array<[FileTypeEnum, RegExp]> = [
-    [FileTypeEnum.IMAGE, /^image\//],
-    [FileTypeEnum.VIDEO, /^video\//],
-    [FileTypeEnum.AUDIO, /^audio\//],
-    [FileTypeEnum.FILE, /\s*\/\s*/]
+    [FileTypeEnum.IMAGE, /\.(jpg|jpeg|png|gif|bmp|webp)$/i],
+    [FileTypeEnum.VIDEO, /\.(mp4|avi)$/i],
+    [FileTypeEnum.AUDIO, /\.(mp3|wav)$/i],
+    [FileTypeEnum.FILE, /\.[a-zA-Z0-9]+$/i]
 ]
 
 /**
@@ -13,9 +13,9 @@ const mimeTypeMap: Array<[FileTypeEnum, RegExp]> = [
  * @returns
  */
 export const genFileType = (file: Express.Multer.File): FileTypeEnum | null => {
-    const { mimetype } = file
+    const { filename } = file
     for (const [fileType, regex] of mimeTypeMap) {
-        if (regex.test(mimetype)) {
+        if (regex.test(filename)) {
             return fileType as FileTypeEnum
         }
     }
