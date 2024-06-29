@@ -25,7 +25,7 @@ export class UserService {
 
   /**
    * @description 查找数据库中符合该用户名的用户
-   * @param username 用户名
+   * @param UserEntityDTO
    * @returns 查询结果
    */
   async findOneByField(

@@ -236,6 +236,14 @@ export class ChatRoomService {
     }
   }
 
+  async getMemberIds(roomId: string) {
+    try {
+      const findRoom = await this.findRoomById(roomId)
+      return findRoom.members
+    } catch {
+      return []
+    }
+  }
   /**
    * @description 获取聊天室成员列表
    * @param roomId
@@ -243,8 +251,8 @@ export class ChatRoomService {
    */
   async getMembers(roomId: string) {
     try {
-      const findRoom = await this.findRoomById(roomId)
-      const findUsers = await this.userService.findUsersByIds(findRoom.members)
+      const memeberIds = await this.getMemberIds(roomId)
+      const findUsers = await this.userService.findUsersByIds(memeberIds)
       this.response = getSuccessResponse('成员列表获取成功', findUsers)
       return this.response
     } catch (err) {

@@ -19,6 +19,7 @@ export class ChatMessageGateway implements OnGatewayConnection {
   server: Server
 
   constructor(
+    @Inject(forwardRef(() => ChatMessageService))
     private readonly chatMessageService: ChatMessageService
   ) {}
 
@@ -28,7 +29,6 @@ export class ChatMessageGateway implements OnGatewayConnection {
   }
 
   broadcastMessage(roomId: string, newMessage: ChatMessageEntity[]) {
-    console.log(roomId)
     this.server.to(roomId).emit(SocketOnEvents.MSG_CREATE, newMessage)
   }
 

@@ -6,6 +6,8 @@ import { Role } from '@/constants/auth'
 
 @Schema()
 export class UserEntity extends Document {
+  userId: string
+  
   @Prop()
   @ApiProperty({
     description: '用户名',

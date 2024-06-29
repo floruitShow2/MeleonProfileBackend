@@ -71,6 +71,7 @@ export class ChatMessageEntity extends Document {
 export class ChatMessageInput extends PickType(ChatMessageEntity, [
   'roomId',
   'profileId',
+  'createTime',
   'type',
   'content',
   'url'

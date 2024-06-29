@@ -26,8 +26,8 @@ export class ChatMessageController {
   ) {}
 
   @Get('/getMessagesList')
-  findMessagesByPages(@Query() pagingInput: ChatMessagePagingInput) {
-    return this.chatMessageService.findMessagesByPages(pagingInput)
+  findMessagesByPages(@Req() req: Request, @Query() pagingInput: ChatMessagePagingInput) {
+    return this.chatMessageService.findMessagesByPages(req.user.userId, pagingInput)
   }
 
   @Post('/createFileMessage')
@@ -55,5 +55,10 @@ export class ChatMessageController {
     const newMessages = await this.chatMessageService.createFileMessage(roomId, req.user.userId, files)
     this.chatMessageGateway.broadcastMessage(roomId, newMessages)
     return getSuccessResponse('消息已发布', newMessages)
+  }
+
+  @Post('/recall')
+  async recallMessage(@Req() req: Request, @Body('messageId') messageId: string) {
+    return await this.chatMessageService.recallMessage(req.user.userId, messageId)
   }
 }

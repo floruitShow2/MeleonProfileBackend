@@ -1,18 +1,27 @@
-import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common'
-import mongoose, { Model } from 'mongoose'
+import { BadRequestException, Inject, Injectable, InternalServerErrorException, forwardRef } from '@nestjs/common'
+import mongoose, { Model, Mongoose } from 'mongoose'
 import { InjectModel } from '@nestjs/mongoose'
 import { formatToDateTime } from '@/utils/time'
-import { getSuccessResponse } from '@/utils/service/response'
+import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
 import { genStoragePath } from '@/utils/format'
+import { isObjectId, isUndefined } from '@/utils/is'
 import { genFileType } from '@/utils/file'
+import { UserService } from '@/modules/user/user.service'
 import { ChatRoomService } from '@/modules/chat-room/chat-room.service'
 import { ChatMessageEntity, ChatMessageInput, ChatMessagePagingInput } from './dto/chat-message.dto'
+import { MessageTypeEnum } from '@/constants'
+import { ChatMessageGateway } from './chat-message.gateway'
+import { UserEntity } from '../user/dto/user.dto'
 
 @Injectable()
 export class ChatMessageService {
   constructor(
-    @InjectModel(ChatMessageEntity.name) private readonly chatMessageModel: Model<ChatMessageEntity>,
+    @InjectModel(ChatMessageEntity.name)
+    private readonly chatMessageModel: Model<ChatMessageEntity>,
+    @Inject(forwardRef(() => ChatMessageGateway))
+    private chatMessageGateway: ChatMessageGateway,
     private readonly chatRoomService: ChatRoomService,
+    private readonly userService: UserService
   ) {}
 
   /**
@@ -20,19 +29,27 @@ export class ChatMessageService {
    * @param messageId
    * @returns
    */
-  async findMessageById(messageId: string): Promise<ChatMessageEntity> {
+  async findMessageById(messageId: string): Promise<ChatMessageEntity & { profile: UserEntity }> {
+    const targetId = isObjectId(messageId) ? messageId : new mongoose.Types.ObjectId(messageId)
     try {
       const res = await this.chatMessageModel.aggregate([
         {
           $match: {
-            _id: messageId
+            _id: targetId
+          }
+        },
+        {
+          $addFields: {
+            profileObjectId: {
+              $toObjectId: '$profileId'
+            }
           }
         },
         {
           $lookup: {
             from: 'users',
             foreignField: '_id',
-            localField: 'profileId',
+            localField: 'profileObjectId',
             as: 'profile'
           }
         },
@@ -50,6 +67,7 @@ export class ChatMessageService {
             _id: 0,
             __v: 0,
             profileId: 0,
+            profileObjectId: 0,
             'profile._id': 0,
             'profile.__v': 0,
             'profile.salt': 0,
@@ -72,7 +90,7 @@ export class ChatMessageService {
   /**
    * @description 根据聊天室ID，按时间顺序[倒序]，分页查询聊天记录
    */
-  async findMessagesByPages(pagingInput: ChatMessagePagingInput) {
+  async findMessagesByPages(userId: string, pagingInput: ChatMessagePagingInput) {
     const { roomId, page, pageSize } = pagingInput
     const skip = (page - 1) * pageSize
     const limit = pageSize
@@ -81,7 +99,10 @@ export class ChatMessageService {
       const messages = await this.chatMessageModel.aggregate([
         {
           $match: {
-            roomId: new mongoose.Types.ObjectId(roomId)
+            roomId,
+            visibleUsers: {
+              $in: [new mongoose.Types.ObjectId(userId)]
+            }
           }
         },
         {
@@ -96,10 +117,17 @@ export class ChatMessageService {
           $limit: limit
         },
         {
+          $addFields: {
+            profileObjectId: {
+              $toObjectId: '$profileId'
+            }
+          }
+        },
+        {
           $lookup: {
             from: 'users',
             foreignField: '_id',
-            localField: 'profileId',
+            localField: 'profileObjectId',
             as: 'profile'
           }
         },
@@ -118,6 +146,7 @@ export class ChatMessageService {
             _id: 0,
             __v: 0,
             profileId: 0,
+            profileObjectId: 0,
             'profile._id': 0,
             'profile.__v': 0,
             'profile.salt': 0,
@@ -139,13 +168,14 @@ export class ChatMessageService {
    * @returns
    */
   async createMessage(chatMessageInput: ChatMessageInput): Promise<ChatMessageEntity> {
-    const { profileId, roomId, type, content, url } = chatMessageInput
+    const { profileId, roomId, createTime, type, content, url } = chatMessageInput
     try {
       const data = {
-        roomId: new mongoose.Types.ObjectId(roomId),
-        profileId: new mongoose.Types.ObjectId(profileId),
+        roomId,
+        profileId,
         metions: [],
-        createTime: formatToDateTime(new Date()),
+        visibleUsers: await this.chatRoomService.getMemberIds(String(roomId)),
+        createTime: isUndefined(createTime) ? formatToDateTime(new Date()) : formatToDateTime(createTime),
         type,
         content,
         url
@@ -154,7 +184,7 @@ export class ChatMessageService {
       const saveRes = await res.save()
       return await this.findMessageById(saveRes._id)
     } catch (err) {
-      throw new InternalServerErrorException()
+      throw new InternalServerErrorException(err)
     }
   }
 
@@ -166,12 +196,12 @@ export class ChatMessageService {
    */
   async createFileMessage(roomId: string, userId: string, files: Express.Multer.File[]): Promise<ChatMessageEntity[]> {
     const chatMessageInputs = files.map((file) => {
-      console.log(file)
       const { storagePath } = genStoragePath(`${userId}/${file.filename}`)
 
       return {
         roomId: new mongoose.Types.ObjectId(roomId),
         profileId: new mongoose.Types.ObjectId(userId),
+        createTime: undefined,
         type: genFileType(file),
         content: file.filename,
         url: storagePath
@@ -191,7 +221,41 @@ export class ChatMessageService {
    * @param userId 用户id，撤回操作仅限本人及群聊管理员
    * @param messageId
    */
-  recallMessage(userId: string, messageId: string) {}
+  async recallMessage(userId: string, messageId: string) {
+    try {
+      const message = await this.findMessageById(messageId)
+      if (message.profile.userId.toString() !== userId) {
+        throw new BadRequestException('该条消息非本人发送，无法撤回')
+      }
+
+      const res = await this.chatMessageModel.updateOne(
+        { _id: messageId },
+        { $set: { visibleUsers: [] } }
+      )
+
+      const { matchedCount, modifiedCount } = res
+      if (matchedCount >= 1 && modifiedCount === 1) {
+        const profileId = new mongoose.Types.ObjectId(userId)
+        const user = await this.userService.findUsersByIds([profileId])
+        const newRecallMsg = await this.createMessage({
+          roomId: message.roomId,
+          profileId,
+          createTime: message.createTime,
+          type: MessageTypeEnum.ACTION,
+          content: `${user[0].username} 撤回了一条消息`,
+          url: ''
+        })
+        this.chatMessageGateway.broadcastMessage(message.roomId.toString(), [newRecallMsg])
+
+        return getSuccessResponse('撤回消息成功', message._id)
+      } else {
+        return getFailResponse('消息撤回失败', message._id)
+      }
+      
+    } catch (err) {
+      throw new InternalServerErrorException(err.message)
+    } 
+  }
   /**
    * @description 删除消息，
    * @param messageId 
