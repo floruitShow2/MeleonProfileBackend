@@ -1,13 +1,11 @@
 import { Prop, Schema } from '@nestjs/mongoose'
-import { ApiProperty, PickType } from '@nestjs/swagger'
+import { ApiProperty, OmitType, PickType } from '@nestjs/swagger'
 import { IsNotEmpty, MinLength } from 'class-validator'
 import { Document } from 'mongoose'
 import { Role } from '@/constants/auth'
 
 @Schema()
 export class UserEntity extends Document {
-  userId: string
-  
   @Prop()
   @ApiProperty({
     description: '用户名',
@@ -105,5 +103,50 @@ export class UserEntity extends Document {
   readonly certification: string
 }
 
+export class UserResponseEntity extends OmitType(
+  UserEntity, 
+  [
+    '_id',
+    'password',
+    'salt',
+    'certification'
+  ]
+) {
+  @Prop()
+  userId: string
+}
+
 @Schema()
 export class UserSignUpInput extends PickType(UserEntity, ['username', 'password']) {}
+
+@Schema()
+export class UserUpdatePwdInput {
+  @Prop()
+  @ApiProperty({
+    description: '旧密码',
+    example: '123456'
+  })
+  @IsNotEmpty({
+    message: '旧密码不能为空'
+  })
+  readonly oldPwd: string
+
+  @Prop()
+  @ApiProperty({
+    description: '新密码',
+    example: '456789'
+  })
+  @IsNotEmpty()
+  readonly newPwd: string
+
+  @Prop()
+  @ApiProperty({
+    description: '确认新密码',
+    example: '456789'
+  })
+  @IsNotEmpty()
+  readonly confirmPwd: string
+}
+
+@Schema()
+export class UserTokenEntity extends PickType(UserResponseEntity, ['userId', 'role']) {}

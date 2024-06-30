@@ -1,6 +1,6 @@
 import { Prop, Schema } from '@nestjs/mongoose'
 import { ApiProperty } from '@nestjs/swagger'
-import { Document, Types } from 'mongoose'
+import mongoose, { Document, Types } from 'mongoose'
 import type { TagType } from '@/interface/tag.interface'
 import { UserEntity } from '@/modules/user/dto/user.dto'
 
@@ -59,11 +59,11 @@ export class TaskEntity extends Document {
   })
   tags: TagType[]
 
-  @Prop()
+  @Prop({ type: Types.ObjectId, ref: UserEntity.name })
   @ApiProperty({
     description: '任务创建人'
   })
-  creator: string
+  creator: mongoose.Types.ObjectId
 
   @Prop()
   @ApiProperty({

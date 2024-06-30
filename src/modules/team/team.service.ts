@@ -6,7 +6,7 @@ import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
 import { formatToDateTime } from '@/utils/time'
 import { TeamEntity } from './dto/team.dto'
 import type { ApiResponse } from '@/interface/response.interface'
-import type { UserTokenEntity } from '@/modules/user/interface/user.interface'
+import type { UserTokenEntity } from '@/modules/user/dto/user.dto'
 import type { TaskType, MemberType } from './interface/team.interface'
 
 @Injectable()
@@ -58,13 +58,13 @@ export class TeamService {
    * @returns
    */
   async createTeam(user: UserTokenEntity, team: TeamEntity) {
-    const { userId, username } = user
+    const { userId } = user
 
     // 如果创建同名任务，则返回失败信息
     const teams = await this.findTeamByName(team.teamName, userId)
     if (teams && teams.length) {
       this.response = getFailResponse(`你已经创建过团队“${team.teamName}”`, null)
-      this.logger.error('/team/createTeam', `${username}创建重复团队，取消创建`)
+      this.logger.error('/team/createTeam', `${userId}创建重复团队，取消创建`)
       return this.response
     }
 
@@ -78,10 +78,10 @@ export class TeamService {
       const res = await this.teamModel.create(team)
       res.save()
       this.response = getSuccessResponse('团队创建成功', res._id)
-      this.logger.info('/team/createTeam', `${username}创建团队【${team.teamName}】成功`)
+      this.logger.info('/team/createTeam', `${userId}创建团队【${team.teamName}】成功`)
     } catch (err) {
       this.response = getFailResponse('团队创建失败', null)
-      this.logger.error('/team/createTeam', `${username}创建团队失败，失败原因：${err}`)
+      this.logger.error('/team/createTeam', `${userId}创建团队失败，失败原因：${err}`)
     }
 
     return this.response
@@ -93,7 +93,7 @@ export class TeamService {
    * @returns
    */
   async findTeams(user: UserTokenEntity) {
-    const { userId, username } = user
+    const { userId } = user
     try {
       const res = await this.teamModel.aggregate([
         {
@@ -155,12 +155,12 @@ export class TeamService {
       ])
 
       this.response = getSuccessResponse('查询团队成功', res)
-      this.logger.info('/team/getTeamsList', `${username}调用查询团队接口，执行成功`)
+      this.logger.info('/team/getTeamsList', `${userId}调用查询团队接口，执行成功`)
     } catch (err) {
       this.response = getFailResponse('查询团队失败', null)
       this.logger.error(
         '/team/getTeamsList',
-        `${username}调用查询团队接口，执行失败，失败原因：${err}`
+        `${userId}调用查询团队接口，执行失败，失败原因：${err}`
       )
     }
 
@@ -189,12 +189,12 @@ export class TeamService {
       )
       this.logger.info(
         '/teamService/updateTeamTasks',
-        `${user.username}在团队中创建新的任务记录，执行成功, 执行结果：${JSON.stringify(res)}`
+        `${user.userId}在团队中创建新的任务记录，执行成功, 执行结果：${JSON.stringify(res)}`
       )
     } catch (err) {
       this.logger.error(
         '/teamService/updateTeamTasks',
-        `${user.username}在团队中创建新的任务记录，执行失败，失败原因：${err}`
+        `${user.userId}在团队中创建新的任务记录，执行失败，失败原因：${err}`
       )
     }
   }
@@ -211,7 +211,7 @@ export class TeamService {
     member: Pick<MemberType, 'userId' | 'role'>
   ) {
     try {
-      const { userId, username } = user
+      const { userId } = user
       const team = await this.teamModel.findOne(
         { _id: teamId },
         { teamId: 1, creator: 1, members: 1 }
@@ -228,7 +228,7 @@ export class TeamService {
       const hasRole = team.members.find((item) => item.userId === userId && item.role < 2)
       if (team.creator !== userId && !hasRole) {
         this.response = getFailResponse('您没有新增用户的权限', null)
-        this.logger.error('/team/addMember', `${username} 没有向团队${teamId}新增用户的权限`)
+        this.logger.error('/team/addMember', `${userId} 没有向团队${teamId}新增用户的权限`)
         return this.response
       }
 
@@ -239,7 +239,7 @@ export class TeamService {
         this.response = getFailResponse('该成员已经加入团队', null)
         this.logger.error(
           '/team/addMember',
-          `${username}已经向团队${teamId}新增过用户${member.userId}`
+          `${userId}已经向团队${teamId}新增过用户${member.userId}`
         )
         return this.response
       }
@@ -264,15 +264,15 @@ export class TeamService {
         this.logger.info(
           '/team/addMember',
           findIdx !== -1
-            ? `${username}更新了团队${teamId}中添加成员${member.userId}的角色信息`
-            : `${username}成功向团队${teamId}中添加新成员${member.userId}`
+            ? `${userId}更新了团队${teamId}中添加成员${member.userId}的角色信息`
+            : `${userId}成功向团队${teamId}中添加新成员${member.userId}`
         )
       } else {
         // 更新失败
         this.response = getFailResponse('新成员添加失败', member.userId)
         this.logger.error(
           '/team/addMember',
-          `${username}未能向团队${teamId}中添加新成员${member.userId}`
+          `${userId}未能向团队${teamId}中添加新成员${member.userId}`
         )
       }
     } catch (err) {

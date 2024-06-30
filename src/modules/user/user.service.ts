@@ -3,15 +3,15 @@ import { InjectModel } from '@nestjs/mongoose'
 import { Injectable, InternalServerErrorException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { LoggerService } from '@/modules/logger/logger.service'
-import { UserSignUpInput, UserEntity } from './dto/user.dto'
-import { DefaultUserEntity } from './interface/user.interface'
+import { UserSignUpInput, UserEntity, UserUpdatePwdInput, UserResponseEntity } from './dto/user.dto'
+import { DefaultUserEntity } from './constant/user.constant'
 import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
 import { generateSalt, encrypt, compare } from '@/utils/encrypt'
 import { ConfigService } from '@nestjs/config'
 import { genStoragePath } from '@/utils/format'
 import type { FilterByValue } from '@/interface/util.interface'
 import type { ApiResponse } from '@/interface/response.interface'
-import type { UserEntityDTO, UserTokenEntity, PasswordsType } from './interface/user.interface'
+import type { UserTokenEntity } from './dto/user.dto'
 
 @Injectable()
 export class UserService {
@@ -24,40 +24,64 @@ export class UserService {
   ) {}
 
   /**
-   * @description 查找数据库中符合该用户名的用户
-   * @param UserEntityDTO
+   * @description 查找数据库中符合筛选条件的用户，返回处理后的数据
+   * @param UserEntity
    * @returns 查询结果
    */
-  async findOneByField(
-    user: Partial<FilterByValue<UserEntityDTO, string> & { _id: mongoose.Types.ObjectId }>,
-    needAll = false
-  ): Promise<UserEntityDTO[]> {
-    return await this.userModel.aggregate([
-      {
-        $match: user
-      },
-      {
-        $addFields: {
-          userId: { $toString: '$_id' }
+  async findUserByField(user: Partial<FilterByValue<UserEntity, string>>): Promise<UserResponseEntity> {
+    try {
+      const res: UserResponseEntity[] = await this.userModel.aggregate([
+        {
+          $match: user
+        },
+        {
+          $addFields: {
+            userId: { $toString: '$_id' }
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            __v: 0,
+            salt: 0,
+            password: 0,
+            certification: 0
+          }
         }
-      },
-      needAll
-        ? {
-            $project: {
-              _id: 0,
-              __v: 0
-            }
+      ])
+      return res[0]
+    } catch (err) {
+      throw new InternalServerErrorException(err.message)
+    }
+  }
+
+  /**
+   * @description 查找数据库中符合筛选条件的用户，返回原始数据
+   * @param UserEntity
+   * @returns 查询结果
+   */
+  async findUserSchemaByField(user: Partial<FilterByValue<UserEntity, string>>): Promise<UserEntity> {
+    try {
+      const res: UserEntity[] = await this.userModel.aggregate([
+        {
+          $match: user
+        },
+        {
+          $addFields: {
+            userId: { $toString: '$_id' }
           }
-        : {
-            $project: {
-              _id: 0,
-              __v: 0,
-              salt: 0,
-              password: 0,
-              certification: 0
-            }
+        },
+        {
+          $project: {
+            _id: 0,
+            __v: 0
           }
-    ])
+        }
+      ])
+      return res[0]
+    } catch (err) {
+      throw new InternalServerErrorException(err.message)
+    }
   }
 
   async findUsersByIds(ids: mongoose.Types.ObjectId[]): Promise<UserEntity[]> {
@@ -95,10 +119,10 @@ export class UserService {
     }
   }
 
-  async createUser(user: Partial<UserEntityDTO>) {
+  async createUser(user: Partial<UserEntity>) {
     // 注册后对密码执行加密
     const salt = generateSalt()
-    const userEntity: UserEntityDTO & { salt: string } = {
+    const userEntity = {
       ...DefaultUserEntity,
       ...user,
       salt,
@@ -119,14 +143,14 @@ export class UserService {
    * @returns
    */
   async signup(user: UserSignUpInput): Promise<ApiResponse> {
-    const res = await this.findOneByField({ username: user.username })
-    if (res && res.length) {
+    const res = await this.findUserSchemaByField({ username: user.username })
+    if (res) {
       this.response = getFailResponse('该用户名已被注册', null)
       this.logger.error('/user/signup', `用户${user.username}已注册`)
       return this.response
     }
     try {
-      const userEntity: Partial<UserEntityDTO> = {
+      const userEntity: Partial<UserEntity> = {
         ...user
       }
       await this.createUser(userEntity)
@@ -145,21 +169,19 @@ export class UserService {
    * @returns
    */
   async login(user: UserSignUpInput): Promise<ApiResponse> {
-    const res = await this.findOneByField({ username: user.username }, true)
-    const findIdx = res.findIndex((user) => user.password === user.password)
-    if (!res || !res.length || findIdx === -1) {
+    const res = await this.findUserSchemaByField({ username: user.username })
+    if (!res) {
       this.response = getFailResponse('用户未注册，登录失败', null)
       this.logger.error('/user/login', `${user.username}登录失败，未找到该用户`)
       return this.response
     }
     // 比较密码是否匹配
-    if (!compare(user.password, res[findIdx].password, res[findIdx].salt)) {
+    if (!compare(user.password, res.password, res.salt)) {
       this.response = getFailResponse('密码错误，登录失败', null)
       this.logger.error('/user/login', `${user.username}登录失败，密码不匹配`)
       return this.response
     }
     const token = this.jwtService.sign({
-      username: user.username,
       userId: res[0].userId,
       role: res[0].role,
       timestamp: Date.now()
@@ -179,18 +201,16 @@ export class UserService {
    */
   async getUserInfo(user: UserTokenEntity) {
     try {
-      const res = await this.findOneByField({ _id: new mongoose.Types.ObjectId(user.userId) })
-      if (!res || !res.length) {
-        this.logger.error('/user/getUserInfo', `查询${user.username}的用户信息失败`)
+      const res = await this.findUserByField({ _id: new mongoose.Types.ObjectId(user.userId) })
+      if (!res) {
+        this.logger.error('/user/getUserInfo', `查询${user.userId}的用户信息失败`)
         this.response = getFailResponse('未找到用户', null)
         return this.response
       }
-      this.logger.info('/user/getUserInfo', `查询${user.username}的用户信息成功`)
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { password, ...rest } = res[0]
-      this.response = getSuccessResponse('获取用户信息成功', rest)
+      this.logger.info('/user/getUserInfo', `查询${user.userId}的用户信息成功`)
+      this.response = getSuccessResponse('获取用户信息成功', res)
     } catch (err) {
-      this.logger.error('/user/getUserInfo', `查询${user.username}的用户信息失败`)
+      this.logger.error('/user/getUserInfo', `查询${user.userId}的用户信息失败，失败原因：${err}`)
       this.response = getFailResponse('服务器异常，用户信息查询失败', null)
     }
     return this.response
@@ -217,20 +237,20 @@ export class UserService {
 
       const { matchedCount, modifiedCount } = res
       if (matchedCount >= 1 && modifiedCount === 1) {
-        const res = await this.findOneByField({ username: userInfo.username || user.username })
-
+        const res = await this.findUserByField({ _id: new mongoose.Types.ObjectId(user.userId) })
+        
         const token = this.jwtService.sign({
           ...user,
-          userId: res[0].userId,
-          role: res[0].role,
+          userId: res.userId,
+          role: res.role,
           timestamp: Date.now()
         })
 
-        this.logger.info('/user/updateUserInfo', `${user.username} 更新个人信息成功`)
+        this.logger.info('/user/updateUserInfo', `${user.userId} 更新个人信息成功`)
         this.response = getSuccessResponse('个人信息更新成功', { accessToken: token })
       }
     } catch (err) {
-      this.logger.error('/user/updateUserInfo', `${user.username} 更新个人信息失败，${err}`)
+      this.logger.error('/user/updateUserInfo', `${user.userId} 更新个人信息失败，${err}`)
       this.response = getFailResponse('个人信息更新失败', null)
     }
 
@@ -244,9 +264,9 @@ export class UserService {
    * @returns
    */
   async updateUserAvatar(user: UserTokenEntity, file: Express.Multer.File) {
-    const { userId, username } = user
-    const { fieldname, filename } = file
-    const { storagePath } = genStoragePath(`${username}/${fieldname}/${filename}`)
+    const { userId } = user
+    const { filename } = file
+    const { storagePath } = genStoragePath(`${userId}/${filename}`)
     // const storagePath = `${this.configService.get('NEST_APP_URL')}/static/avatar/${username}/${fieldname}/${filename}`
     try {
       const res = await this.userModel.updateOne(
@@ -259,19 +279,17 @@ export class UserService {
       )
       const { matchedCount, modifiedCount } = res
       if (matchedCount >= 1 && modifiedCount === 1) {
-        const res = await this.findOneByField({ username })
-        if (res.length) {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { password, ...rest } = res[0]
-          this.response = getSuccessResponse('头像更换成功', rest)
+        const res = await this.findUserByField({ _id: new mongoose.Types.ObjectId(userId) })
+        if (res) {
+          this.response = getSuccessResponse('头像更换成功', res)
         } else {
           this.response = getSuccessResponse('头像更换成功', null)
         }
-        this.logger.info('/user/updateUserAvatar', `${username} 更换头像成功`)
+        this.logger.info('/user/updateUserAvatar', `${userId} 更换头像成功`)
       }
     } catch (err) {
       this.response = getFailResponse('头像更换成功', null)
-      this.logger.error('/user/updateUserAvatar', `${username} 更新头像失败，${err}`)
+      this.logger.error('/user/updateUserAvatar', `${userId} 更新头像失败，${err}`)
     }
 
     return this.response
@@ -283,21 +301,21 @@ export class UserService {
    * @param {PasswordsType} passwords
    * @returns
    */
-  async updatePassword(user: UserTokenEntity, passwords: PasswordsType) {
-    const res = await this.findOneByField({ _id: new mongoose.Types.ObjectId(user.userId) }, true)
-    if (!res || !res.length) return
-    const { password, salt } = res[0]
+  async updatePassword(user: UserTokenEntity, passwords: UserUpdatePwdInput) {
+    const res = await this.findUserSchemaByField({ _id: new mongoose.Types.ObjectId(user.userId) })
+    if (!res) return
+    const { password, salt } = res
 
     const { oldPwd, newPwd, confirmPwd } = passwords
     if (!compare(oldPwd, password, salt)) {
       this.response = getFailResponse('原密码错误，请确认后重新提交', null)
-      this.logger.error('/user/updatePassword', `${user.username}提交的原密码有误`)
+      this.logger.error('/user/updatePassword', `${user.userId}提交的原密码有误`)
       return this.response
     }
 
     if (newPwd !== confirmPwd) {
       this.response = getFailResponse('新密码与确认密码不同，请确认后重新提交', null)
-      this.logger.error('/user/updatePassword', `${user.username}提交的新密码和确认密码不匹配`)
+      this.logger.error('/user/updatePassword', `${user.userId}提交的新密码和确认密码不匹配`)
       return this.response
     }
 
@@ -314,11 +332,11 @@ export class UserService {
       const { matchedCount, modifiedCount } = res
       if (matchedCount >= 1 && modifiedCount === 1) {
         this.response = getSuccessResponse('用户密码更新成功', 'ok')
-        this.logger.info('/user/updatePassword', `${user.username} 更新登录密码成功`)
+        this.logger.info('/user/updatePassword', `${user.userId} 更新登录密码成功`)
       }
     } catch (err) {
       this.response = getFailResponse('服务器异常，密码更新失败', null)
-      this.logger.error('/user/updatePassword', `服务器异常，${user.username}更新密码失败`)
+      this.logger.error('/user/updatePassword', `服务器异常，${user.userId}更新密码失败`)
     }
 
     return this.response
@@ -331,11 +349,10 @@ export class UserService {
    */
   async fillPassword(userId: string, password: string) {
     try {
-      const res = await this.findOneByField({ _id: new mongoose.Types.ObjectId(userId) }, true)
-      if (res && res.length) {
-        const { username, role, salt } = res[0]
+      const res = await this.findUserSchemaByField({ _id: new mongoose.Types.ObjectId(userId) })
+      if (res) {
+        const { role, salt } = res
         const userTokenEntity: UserTokenEntity = {
-          username,
           userId,
           role
         }
@@ -347,7 +364,7 @@ export class UserService {
         this.response = getSuccessResponse('密码设置成功', {
           accessToken: token
         })
-        this.logger.info('/user/fillPwd', `${username} 设置密码成功，可以登录`)
+        this.logger.info('/user/fillPwd', `${userId} 设置密码成功，可以登录`)
       }
     } catch (err) {
       this.response = getSuccessResponse('密码设置失败', null)

@@ -1,9 +1,9 @@
 import { Prop, Schema } from '@nestjs/mongoose'
-import { ApiProperty, PickType } from '@nestjs/swagger'
+import { ApiProperty, OmitType, PickType } from '@nestjs/swagger'
 import mongoose, { Document } from 'mongoose'
 import { IsNotEmpty } from 'class-validator'
 import { ChatRoomEntity } from '@/modules/chat-room/dto/chat-room.dto'
-import { UserEntity } from '@/modules/user/dto/user.dto'
+import { UserEntity, UserResponseEntity } from '@/modules/user/dto/user.dto'
 import { PaginationInput } from '@/interface/pagination.interface'
 import { MessageTypeEnum, FileTypeEnum } from '@/constants'
 
@@ -66,6 +66,15 @@ export class ChatMessageEntity extends Document {
     description: '可以看到当前消息的用户ID列表'
   })
   visibleUsers: mongoose.Types.ObjectId[]
+}
+
+@Schema()
+export class ChatMessageResponseEntity extends OmitType(ChatMessageEntity, ['profileId']) {
+  @Prop()
+  @ApiProperty({
+    description: '消息发送者的用户信息'
+  })
+  profile: UserResponseEntity
 }
 
 export class ChatMessageInput extends PickType(ChatMessageEntity, [

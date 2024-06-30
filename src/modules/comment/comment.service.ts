@@ -6,7 +6,7 @@ import { FlattenArray } from '@/utils/format'
 import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
 import { LoggerService } from '@/modules/logger/logger.service'
 import type { ApiResponse } from '@/interface/response.interface'
-import type { UserTokenEntity } from '@/modules/user/interface/user.interface'
+import type { UserTokenEntity } from '@/modules/user/dto/user.dto'
 import { CommentEntity } from './dto/comment.dto'
 
 @Injectable()
@@ -126,13 +126,13 @@ export class CommentService {
 
       this.logger.info(
         '/comment/getCommentsById',
-        `${user.username}查询id为${targetId}的评论时成功`
+        `${user.userId}查询id为${targetId}的评论时成功`
       )
       this.response = getSuccessResponse('评论列表获取成功', result)
     } catch (error) {
       this.logger.error(
         '/comment/getCommentsById',
-        `${user.username}查询id为${targetId}的评论时失败，失败原因：${error}`
+        `${user.userId}查询id为${targetId}的评论时失败，失败原因：${error}`
       )
       this.response = getFailResponse('评论列表获取失败', null)
     }
@@ -141,7 +141,7 @@ export class CommentService {
   }
 
   async addCommentLikes(user: UserTokenEntity, commentId: string, type: 'add' | 'sub') {
-    const { userId, username } = user
+    const { userId } = user
     try {
       await this.commentModel.updateOne(
         { _id: commentId },
@@ -149,10 +149,10 @@ export class CommentService {
           ? { $push: { likes: { user: userId, time: formatToDateTime(new Date()) } } }
           : { $pull: { likes: { user: userId } } }
       )
-      this.logger.info('/comment/addLikes', `${username}评论${commentId} 点赞数 +1`)
+      this.logger.info('/comment/addLikes', `${userId}评论${commentId} 点赞数 +1`)
       this.response = getSuccessResponse('点赞成功', null)
     } catch (error) {
-      this.logger.error('/comment/addLikes', `${username}评论${commentId}点赞失败`)
+      this.logger.error('/comment/addLikes', `${userId}评论${commentId}点赞失败`)
       this.response = getFailResponse('点赞失败', null)
     }
     return this.response

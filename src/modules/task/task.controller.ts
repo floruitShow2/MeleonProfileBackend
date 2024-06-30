@@ -17,7 +17,7 @@ import { formatToDateTime } from '@/utils/time'
 import { genStoragePath } from '@/utils/format'
 import { TaskService } from './task.service'
 import { TaskEntity } from './dto/task.dto'
-import type { UserTokenEntity } from '@/modules/user/interface/user.interface'
+import type { UserTokenEntity } from '@/modules/user/dto/user.dto'
 import type { TaskSearchOptions } from './interface/task.interface'
 
 @Controller('task')
@@ -114,11 +114,9 @@ export class TaskController {
     @Body() data: { taskId: string }
   ) {
     const user: UserTokenEntity = req['user']
-    const { username } = user
-    const { storagePath } = genStoragePath(
-      `${username}/task/${cover.fieldname}/${cover.originalname}`
-    )
-    return this.taskService.handleAddCover(req['user'], data.taskId, { coverImage: storagePath })
+    const { userId } = user
+    const { storagePath } = genStoragePath(`${userId}/${cover.originalname}`)
+    return this.taskService.handleAddCover(user, data.taskId, { coverImage: storagePath })
   }
 
   // 删除封面

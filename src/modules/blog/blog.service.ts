@@ -7,7 +7,7 @@ import { formatToDateTime } from '@/utils/time'
 import { UserEntity } from '@/modules/user/dto/user.dto'
 import { BlogEntity } from './dto/blog.dto'
 import type { ApiResponse } from '@/interface/response.interface'
-import type { UserTokenEntity } from '@/modules/user/interface/user.interface'
+import type { UserTokenEntity } from '@/modules/user/dto/user.dto'
 @Injectable()
 export class BlogService {
   private response: ApiResponse
@@ -146,10 +146,10 @@ export class BlogService {
         .exec()
 
       this.response = getSuccessResponse('查询文章列表成功', res)
-      this.logger.info('/blog/getBlogsList', `${user.username}查询文章列表操作成功`)
+      this.logger.info('/blog/getBlogsList', `${user.userId}查询文章列表操作成功`)
     } catch (err) {
       this.response = getFailResponse('查询文章列表失败', null)
-      this.logger.error('/blog/getBlogsList', `${user.username}查询文章列表操作失败`)
+      this.logger.error('/blog/getBlogsList', `${user.userId}查询文章列表操作失败`)
     }
 
     return this.response
@@ -162,7 +162,7 @@ export class BlogService {
    * @returns 单篇博客的详细信息，包括部分发布者信息
    */
   async findBlogById(user: UserTokenEntity, blogId: string) {
-    const { username, userId } = user
+    const { userId } = user
     try {
       const res = await this.blogModel
         .aggregate([
@@ -284,14 +284,14 @@ export class BlogService {
             ...statistics
           }
         })
-        this.logger.info('/blog/:id', `${username}查询《${res[0].title || ''}》成功`)
+        this.logger.info('/blog/:id', `${userId}查询《${res[0].title || ''}》成功`)
       } else {
         this.response = getFailResponse('未查询到该博客内容', null)
-        this.logger.info('/blog/:id', `${username}查询《${res[0].title || ''}》失败`)
+        this.logger.info('/blog/:id', `${userId}查询《${res[0].title || ''}》失败`)
       }
     } catch (err) {
       this.response = getFailResponse('博客内容查询失败', null)
-      this.logger.info('/blog/:id', `${username}查询博客内容失败`)
+      this.logger.info('/blog/:id', `${userId}查询博客内容失败`)
     }
 
     return this.response

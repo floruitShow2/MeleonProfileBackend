@@ -8,7 +8,7 @@ import { isObjectId, isUndefined } from '@/utils/is'
 import { genFileType } from '@/utils/file'
 import { UserService } from '@/modules/user/user.service'
 import { ChatRoomService } from '@/modules/chat-room/chat-room.service'
-import { ChatMessageEntity, ChatMessageInput, ChatMessagePagingInput } from './dto/chat-message.dto'
+import { ChatMessageEntity, ChatMessageInput, ChatMessagePagingInput, ChatMessageResponseEntity } from './dto/chat-message.dto'
 import { MessageTypeEnum } from '@/constants'
 import { ChatMessageGateway } from './chat-message.gateway'
 import { UserEntity } from '../user/dto/user.dto'
@@ -29,7 +29,7 @@ export class ChatMessageService {
    * @param messageId
    * @returns
    */
-  async findMessageById(messageId: string): Promise<ChatMessageEntity & { profile: UserEntity }> {
+  async findMessageById(messageId: string): Promise<ChatMessageResponseEntity> {
     const targetId = isObjectId(messageId) ? messageId : new mongoose.Types.ObjectId(messageId)
     try {
       const res = await this.chatMessageModel.aggregate([
@@ -167,7 +167,7 @@ export class ChatMessageService {
    * @param chatMessageInput 消息实体的部分内容
    * @returns
    */
-  async createMessage(chatMessageInput: ChatMessageInput): Promise<ChatMessageEntity> {
+  async createMessage(chatMessageInput: ChatMessageInput): Promise<ChatMessageResponseEntity> {
     const { profileId, roomId, createTime, type, content, url } = chatMessageInput
     try {
       const data = {
@@ -194,7 +194,7 @@ export class ChatMessageService {
    * @param userId
    * @param files
    */
-  async createFileMessage(roomId: string, userId: string, files: Express.Multer.File[]): Promise<ChatMessageEntity[]> {
+  async createFileMessage(roomId: string, userId: string, files: Express.Multer.File[]): Promise<ChatMessageResponseEntity[]> {
     const chatMessageInputs = files.map((file) => {
       const { storagePath } = genStoragePath(`${userId}/${file.filename}`)
 

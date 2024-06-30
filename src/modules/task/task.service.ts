@@ -10,7 +10,7 @@ import { LoggerService } from '@/modules/logger/logger.service'
 import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
 import { genStoragePath } from '@/utils/format'
 import { TaskEntity } from './dto/task.dto'
-import type { UserTokenEntity } from '@/modules/user/interface/user.interface'
+import type { UserTokenEntity } from '@/modules/user/dto/user.dto'
 import type { ApiResponse } from '@/interface/response.interface'
 import type { TaskSearchOptions } from './interface/task.interface'
 
@@ -55,12 +55,12 @@ export class TaskService {
       await this.teamService.updateTeamTasks(user, createdTask.teamId, createdTask._id.toString())
 
       this.response = getSuccessResponse('任务创建成功', createdTask.title)
-      this.logger.info('/task/createTask', `${user.username}新建任务：${createdTask.title}`)
+      this.logger.info('/task/createTask', `${user.userId}新建任务：${createdTask.title}`)
     } catch (err) {
       this.response = getFailResponse('任务创建失败', null)
       this.logger.error(
         '/task/createTask',
-        `${user.username}创建任务 ${task.title} 失败, 失败原因：${err}`
+        `${user.userId}创建任务 ${task.title} 失败, 失败原因：${err}`
       )
     }
 
@@ -69,7 +69,7 @@ export class TaskService {
 
   // 获取所有任务
   async getAllTasks(user: UserTokenEntity, options: TaskSearchOptions) {
-    const { userId, username } = user
+    const { userId } = user
 
     const { startDate, endDate } = options
     const dateOptions: Record<string, any> = {}
@@ -82,7 +82,7 @@ export class TaskService {
           // 查询与接口调用用户相关联的任务
           {
             $match: {
-              $or: [{ relatives: { $in: [userId] } }, { creator: username }]
+              $or: [{ relatives: { $in: [userId] } }, { creator: userId }]
             }
           },
           // 筛选条件过滤
@@ -199,7 +199,7 @@ export class TaskService {
           }
         })
       )
-      this.logger.info('/task/getAllTasks', `${username}查询所有他的相关任务`)
+      this.logger.info('/task/getAllTasks', `${userId}查询所有他的相关任务`)
     } catch (error) {
       this.response = getFailResponse('查询任务失败', null)
       this.logger.error('/task/getAllTasks', `查询任务行为失败，失败原因：${error}`)
@@ -222,16 +222,16 @@ export class TaskService {
       const { matchedCount, modifiedCount } = res
       if (matchedCount >= 1 && modifiedCount === 1) {
         this.response = getSuccessResponse('任务信息更新成功', taskId)
-        this.logger.info('/task/updateTask', `${user.username}更新用户信息成功，任务ID: ${taskId}`)
+        this.logger.info('/task/updateTask', `${user.userId}更新用户信息成功，任务ID: ${taskId}`)
       } else {
         this.response = getFailResponse('任务信息更新失败', null)
-        this.logger.info('/task/updateTask', `${user.username}更新任务信息失败，任务ID: ${taskId}`)
+        this.logger.info('/task/updateTask', `${user.userId}更新任务信息失败，任务ID: ${taskId}`)
       }
     } catch (err) {
       this.response = getFailResponse('任务信息更新失败', null)
       this.logger.info(
         '/task/updateTask',
-        `${user.username}更新任务信息失败，任务ID: ${taskId}，失败原因：${err}`
+        `${user.userId}更新任务信息失败，任务ID: ${taskId}，失败原因：${err}`
       )
     }
 
@@ -267,13 +267,13 @@ export class TaskService {
         await this.updateTaskEntity(user, taskId, { coverImage: '' })
 
         this.response = getSuccessResponse('封面删除成功', true)
-        this.logger.info('/file/deleteCover', `${user.username}删除任务${taskId}的封面，执行成功`)
+        this.logger.info('/file/deleteCover', `${user.userId}删除任务${taskId}的封面，执行成功`)
       }
     } catch (err) {
       this.response = getSuccessResponse('封面删除失败', false)
       this.logger.info(
         '/file/deleteCover',
-        `${user.username}删除任务${taskId}的封面，执行失败，失败原因：${err}`
+        `${user.userId}删除任务${taskId}的封面，执行失败，失败原因：${err}`
       )
     }
   }

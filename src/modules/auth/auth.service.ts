@@ -6,7 +6,6 @@ import { LoggerService } from '@/modules/logger/logger.service'
 import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
 import { UserService } from '@/modules/user/user.service'
 import type { ApiResponse } from '@/interface/response.interface'
-import type { UserEntityDTO } from '@/modules/user/interface/user.interface'
 import type { GithubEmailInfo, GithubTokenEntity, GithubUserInfo } from './interface/auth.interface'
 
 @Injectable()
@@ -120,13 +119,12 @@ export class AuthService {
       // 获取 github 账号信息
       const userInfo = await this.genUserInfo(tokenEntity)
       // 根据 userInfo 里的 id 判断是否已有授权用户
-      const findUser = await this.userService.findOneByField({ certification: userInfo.id })
+      const findUser = await this.userService.findUserSchemaByField({ certification: userInfo.id })
       // 用户已创建，直接登录
-      if (findUser && findUser.length) {
+      if (findUser) {
         const token = this.jwtService.sign({
-          username: findUser[0].username,
-          userId: findUser[0].userId,
-          role: findUser[0].role,
+          userId: findUser._id.toString(),
+          role: findUser.role,
           timestamp: Date.now()
         })
         this.response = getSuccessResponse('账号已授权，登录成功', { accessToken: token })
@@ -136,7 +134,7 @@ export class AuthService {
       // 获取 github 邮箱信息
       const emailsInfo = await this.getUserEmail(tokenEntity)
       if (userInfo) userInfo.email = emailsInfo
-      const userEntity: Partial<UserEntityDTO> = {
+      const userEntity = {
         certification: userInfo.id,
         username: userInfo.email,
         introduction: userInfo.bio,

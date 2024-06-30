@@ -9,7 +9,7 @@ import { InjectModel } from '@nestjs/mongoose'
 import { ConfigService } from '@nestjs/config'
 import mongoose, { Model } from 'mongoose'
 import { UserService } from '@/modules/user/user.service'
-import { UserTokenEntity } from '@/modules/user/interface/user.interface'
+import { UserTokenEntity } from '@/modules/user/dto/user.dto'
 import { ApiResponse } from '@/interface/response.interface'
 import { formatToDateTime } from '@/utils/time'
 import { encryptPrivateInfo, decryptPrivateInfo } from '@/utils/encrypt'
@@ -150,11 +150,10 @@ export class ChatRoomService {
    * @returns
    */
   async getDetailsByInviteCode(inviteCode: string) {
-    console.log(inviteCode)
     const [roomId, userId] = decryptPrivateInfo(inviteCode).split('-')
     try {
       const roomDetails = await this.findRoomById(roomId)
-      const userDetails = await this.userService.findOneByField({ _id: new mongoose.Types.ObjectId(userId) })
+      const userDetails = await this.userService.findUserByField({ _id: new mongoose.Types.ObjectId(userId) })
       this.response = getSuccessResponse('查询成功', { room: roomDetails, user: userDetails[0] })
       return this.response
     } catch (err) {

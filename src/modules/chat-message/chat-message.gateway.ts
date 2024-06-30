@@ -9,7 +9,7 @@ import {
   WebSocketServer
 } from '@nestjs/websockets'
 import { Server, Socket } from 'socket.io'
-import { ChatMessageEntity, ChatMessageInput } from './dto/chat-message.dto'
+import { ChatMessageEntity, ChatMessageInput, ChatMessageResponseEntity } from './dto/chat-message.dto'
 import { SocketOnEvents, SocketEmitEvents } from './events/chat-message.events'
 import { ChatMessageService } from './chat-message.service'
 
@@ -28,7 +28,7 @@ export class ChatMessageGateway implements OnGatewayConnection {
     client.join(roomId)
   }
 
-  broadcastMessage(roomId: string, newMessage: ChatMessageEntity[]) {
+  broadcastMessage(roomId: string, newMessage: ChatMessageResponseEntity[]) {
     this.server.to(roomId).emit(SocketOnEvents.MSG_CREATE, newMessage)
   }
 

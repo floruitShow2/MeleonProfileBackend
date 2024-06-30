@@ -16,7 +16,7 @@ import { execSync } from 'child_process'
 import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
 import { genStoragePath, translateUrlToDiskPath } from '@/utils/format'
 import { LoggerService } from '@/modules/logger/logger.service'
-import { UserTokenEntity } from '@/modules/user/interface/user.interface'
+import { UserTokenEntity } from '@/modules/user/dto/user.dto'
 import type { ApiResponse } from '@/interface/response.interface'
 import type { ChunkOptions, GetFrameInput, MergeOptions, VerifyOptions } from './interface/file.interface'
 import { OssService } from '../oss/oss.service'
@@ -28,7 +28,7 @@ export class FileService {
   constructor(private readonly ossService: OssService, private readonly logger: LoggerService) {}
 
   genUploadDir(user: UserTokenEntity) {
-    const uploadDir = join(process.cwd(), `/files/${user.username}/file/`)
+    const uploadDir = join(process.cwd(), `/files/${user.userId}/file/`)
     if (!existsSync(uploadDir)) mkdirSync(uploadDir, { recursive: true })
     return uploadDir
   }
@@ -52,13 +52,13 @@ export class FileService {
    */
   async handleVerify(user: UserTokenEntity, verifyOptions: VerifyOptions) {
     try {
-      const { username } = user
+      const { userId } = user
       const { filename, filehash } = verifyOptions
       const filePath = resolve(this.genUploadDir(user), filename)
 
       if (existsSync(filePath)) {
         this.response = getFailResponse('The file has already been uploaded', null)
-        this.logger.error('/file/uploadFile', `${username}已经上传过${filename}`)
+        this.logger.error('/file/uploadFile', `${userId}已经上传过${filename}`)
       } else {
         this.response = getSuccessResponse('verification succeed, allow to upload', {
           shouldUpload: true,
@@ -66,7 +66,7 @@ export class FileService {
         })
         this.logger.info(
           '/file/uploadFile',
-          `${username}上传${filename}的校验已通过，允许上传文件切片`
+          `${userId}上传${filename}的校验已通过，允许上传文件切片`
         )
       }
     } catch (err) {
@@ -101,7 +101,7 @@ export class FileService {
         this.response = getSuccessResponse('File has already existed in server', filename)
         this.logger.info(
           '/file/uploadFileChunk',
-          `${user.username} 无需上传文件${filename}，文件已存在`
+          `${user.userId} 无需上传文件${filename}，文件已存在`
         )
         return this.response
       }
@@ -114,7 +114,7 @@ export class FileService {
         this.response = getSuccessResponse('Chunk has already been uploaded', hash)
         this.logger.info(
           '/file/uploadFileChunk',
-          `${user.username} 无需上传文件${filename}的切片，切片hash：${hash}`
+          `${user.userId} 无需上传文件${filename}的切片，切片hash：${hash}`
         )
         return this.response
       }
@@ -123,13 +123,13 @@ export class FileService {
       this.response = getSuccessResponse('File Chunk Has Been Received', hash)
       this.logger.info(
         '/file/uploadFileChunk',
-        `${user.username} 上传文件${filename}切片成功，切片hash：${hash}`
+        `${user.userId} 上传文件${filename}切片成功，切片hash：${hash}`
       )
     } catch (error) {
       this.response = getFailResponse('Chunk upload failed', null)
       this.logger.error(
         '/file/uploadFileChunk',
-        `${user.username} 上传文件切片失败，失败原因：${error}`
+        `${user.userId} 上传文件切片失败，失败原因：${error}`
       )
     }
     return this.response
@@ -191,12 +191,12 @@ export class FileService {
     try {
       await this.mergeFileChunk(user, resolve(this.genUploadDir(user), filename), filehash, size)
       this.response = getSuccessResponse('文件合并成功', filename)
-      this.logger.info('/file/merge', `${user.username}上传文件${filename}，执行合并操作成功`)
+      this.logger.info('/file/merge', `${user.userId}上传文件${filename}，执行合并操作成功`)
     } catch (err) {
       this.response = getFailResponse('文件合并失败', null)
       this.logger.error(
         '/file/merge',
-        `${user.username}上传文件${filename}，执行合并操作失败，失败原因：${err}`
+        `${user.userId}上传文件${filename}，执行合并操作失败，失败原因：${err}`
       )
     }
     return this.response
@@ -212,20 +212,19 @@ export class FileService {
     if (!file) {
       throw new HttpException('参数异常，文件未上传', HttpStatus.FORBIDDEN)
     }
-    const username = user?.username ?? 'meleon'
     const filename = file.originalname
     try {
-      const ossUrl = await this.ossService.putOssFile(`/${username}/${filename}`, file.path)
+      const ossUrl = await this.ossService.putOssFile(`/${user.userId}/${filename}`, file.path)
       this.response = getSuccessResponse('文件上传成功', ossUrl)
       this.logger.info(
         '/file/oss/uploadFile',
-        `${username}上传文件[${filename}]至 Aliyun OSS 成功，文件地址为 ${ossUrl}`
+        `${user.userId}上传文件[${filename}]至 Aliyun OSS 成功，文件地址为 ${ossUrl}`
       )
     } catch (err) {
       this.response = getFailResponse('文件上传失败', null)
       this.logger.error(
         '/file/oss/uploadFile',
-        `${username}上传文件[${filename}]失败，失败原因：${err}`
+        `${user.userId}上传文件[${filename}]失败，失败原因：${err}`
       )
     }
 

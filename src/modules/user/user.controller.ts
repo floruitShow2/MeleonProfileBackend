@@ -7,8 +7,7 @@ import { Roles } from '@/decorator/Roles'
 import { Role } from '@/constants/auth'
 import { genStoragePath } from '@/utils/format'
 import { UserService } from './user.service'
-import { UserEntity, UserSignUpInput } from './dto/user.dto'
-import type { PasswordsType } from './interface/user.interface'
+import { UserEntity, UserSignUpInput, UserUpdatePwdInput } from './dto/user.dto'
 
 @Controller('user')
 @ApiTags('User')
@@ -73,7 +72,7 @@ export class UserController {
   @ApiOperation({
     summary: '更新用户密码'
   })
-  async updatePassword(@Req() request: Request, @Body() pwds: PasswordsType) {
+  async updatePassword(@Req() request: Request, @Body() pwds: UserUpdatePwdInput) {
     return this.userService.updatePassword(request['user'], pwds)
   }
 
