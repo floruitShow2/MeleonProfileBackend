@@ -14,7 +14,12 @@ import { diskStorage } from 'multer'
 import { resolve } from 'path'
 import { OssService } from '@/modules/oss/oss.service'
 import { FileService } from './file.service'
-import type { ChunkOptions, MergeOptions, VerifyOptions, GetFrameInput } from './interface/file.interface'
+import type {
+  ChunkOptions,
+  MergeOptions,
+  VerifyOptions,
+  GetFrameInput
+} from './interface/file.interface'
 
 @Controller('file')
 @ApiTags('file')

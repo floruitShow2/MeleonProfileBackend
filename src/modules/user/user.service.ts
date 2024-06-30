@@ -28,7 +28,9 @@ export class UserService {
    * @param UserEntity
    * @returns 查询结果
    */
-  async findUserByField(user: Partial<FilterByValue<UserEntity, string>>): Promise<UserResponseEntity> {
+  async findUserByField(
+    user: Partial<FilterByValue<UserEntity, string>>
+  ): Promise<UserResponseEntity> {
     try {
       const res: UserResponseEntity[] = await this.userModel.aggregate([
         {
@@ -60,7 +62,9 @@ export class UserService {
    * @param UserEntity
    * @returns 查询结果
    */
-  async findUserSchemaByField(user: Partial<FilterByValue<UserEntity, string>>): Promise<UserEntity> {
+  async findUserSchemaByField(
+    user: Partial<FilterByValue<UserEntity, string>>
+  ): Promise<UserEntity> {
     try {
       const res: UserEntity[] = await this.userModel.aggregate([
         {
@@ -238,7 +242,7 @@ export class UserService {
       const { matchedCount, modifiedCount } = res
       if (matchedCount >= 1 && modifiedCount === 1) {
         const res = await this.findUserByField({ _id: new mongoose.Types.ObjectId(user.userId) })
-        
+
         const token = this.jwtService.sign({
           ...user,
           userId: res.userId,

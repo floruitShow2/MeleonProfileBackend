@@ -39,17 +39,17 @@ export const formatUrlAsUTF = (url: string) => {
   const [filename, prefixUrl] = splitFilenameFromUrl(url)
   const buf = Buffer.from(filename, 'binary')
   const decodedName = iconv.decode(buf, 'utf-8')
-  return (`${prefixUrl}/${decodedName}`).replace('%20', ' ')
+  return `${prefixUrl}/${decodedName}`.replace('%20', ' ')
 }
 
 export const translateUrlToDiskPath = (url: string) => {
-    const staticPathIndex = url.indexOf('/static/files/')
+  const staticPathIndex = url.indexOf('/static/files/')
 
-    if (staticPathIndex === -1) {
-      throw new Error('Invalid url')
-    }
+  if (staticPathIndex === -1) {
+    throw new Error('Invalid url')
+  }
 
-    const relativePath = url.slice(staticPathIndex + '/static/files/'.length)
-    const diskPath = join(process.cwd(), `/public/files/${relativePath}`)
-    return diskPath
+  const relativePath = url.slice(staticPathIndex + '/static/files/'.length)
+  const diskPath = join(process.cwd(), `/public/files/${relativePath}`)
+  return diskPath
 }

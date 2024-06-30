@@ -103,15 +103,12 @@ export class UserEntity extends Document {
   readonly certification: string
 }
 
-export class UserResponseEntity extends OmitType(
-  UserEntity, 
-  [
-    '_id',
-    'password',
-    'salt',
-    'certification'
-  ]
-) {
+export class UserResponseEntity extends OmitType(UserEntity, [
+  '_id',
+  'password',
+  'salt',
+  'certification'
+]) {
   @Prop()
   userId: string
 }

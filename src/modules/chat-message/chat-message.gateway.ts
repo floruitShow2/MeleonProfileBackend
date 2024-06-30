@@ -1,4 +1,3 @@
-
 import { Inject, forwardRef } from '@nestjs/common'
 import {
   ConnectedSocket,
@@ -9,7 +8,11 @@ import {
   WebSocketServer
 } from '@nestjs/websockets'
 import { Server, Socket } from 'socket.io'
-import { ChatMessageEntity, ChatMessageInput, ChatMessageResponseEntity } from './dto/chat-message.dto'
+import {
+  ChatMessageEntity,
+  ChatMessageInput,
+  ChatMessageResponseEntity
+} from './dto/chat-message.dto'
 import { SocketOnEvents, SocketEmitEvents } from './events/chat-message.events'
 import { ChatMessageService } from './chat-message.service'
 
@@ -32,6 +35,14 @@ export class ChatMessageGateway implements OnGatewayConnection {
     this.server.to(roomId).emit(SocketOnEvents.MSG_CREATE, newMessage)
   }
 
+  broadcastRecallMessage(
+    roomId: string,
+    recallMesssageId: string,
+    recallMessage: ChatMessageResponseEntity[]
+  ) {
+    this.server.to(roomId).emit(SocketOnEvents.MSG_RECALL, recallMesssageId, recallMessage)
+  }
+
   /**
    * @description 监听创建消息的事件
    * @param data
@@ -47,7 +58,5 @@ export class ChatMessageGateway implements OnGatewayConnection {
   }
 
   @SubscribeMessage(SocketEmitEvents.DELETE_MESSAGE)
-  async handleDeleteMessage() {
-    
-  }
+  async handleDeleteMessage() {}
 }

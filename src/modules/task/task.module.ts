@@ -9,9 +9,7 @@ import { TaskController } from './task.controller'
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: TaskEntity.name, schema: TaskSchema, collection: 'tasks' }
-    ]),
+    MongooseModule.forFeature([{ name: TaskEntity.name, schema: TaskSchema, collection: 'tasks' }]),
     TeamModule
   ],
   providers: [TaskService],

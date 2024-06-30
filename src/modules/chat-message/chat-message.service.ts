@@ -1,4 +1,10 @@
-import { BadRequestException, Inject, Injectable, InternalServerErrorException, forwardRef } from '@nestjs/common'
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  forwardRef
+} from '@nestjs/common'
 import mongoose, { Model, Mongoose } from 'mongoose'
 import { InjectModel } from '@nestjs/mongoose'
 import { formatToDateTime } from '@/utils/time'
@@ -8,7 +14,12 @@ import { isObjectId, isUndefined } from '@/utils/is'
 import { genFileType } from '@/utils/file'
 import { UserService } from '@/modules/user/user.service'
 import { ChatRoomService } from '@/modules/chat-room/chat-room.service'
-import { ChatMessageEntity, ChatMessageInput, ChatMessagePagingInput, ChatMessageResponseEntity } from './dto/chat-message.dto'
+import {
+  ChatMessageEntity,
+  ChatMessageInput,
+  ChatMessagePagingInput,
+  ChatMessageResponseEntity
+} from './dto/chat-message.dto'
 import { MessageTypeEnum } from '@/constants'
 import { ChatMessageGateway } from './chat-message.gateway'
 import { UserEntity } from '../user/dto/user.dto'
@@ -175,7 +186,9 @@ export class ChatMessageService {
         profileId,
         metions: [],
         visibleUsers: await this.chatRoomService.getMemberIds(String(roomId)),
-        createTime: isUndefined(createTime) ? formatToDateTime(new Date()) : formatToDateTime(createTime),
+        createTime: isUndefined(createTime)
+          ? formatToDateTime(new Date())
+          : formatToDateTime(createTime),
         type,
         content,
         url
@@ -194,7 +207,11 @@ export class ChatMessageService {
    * @param userId
    * @param files
    */
-  async createFileMessage(roomId: string, userId: string, files: Express.Multer.File[]): Promise<ChatMessageResponseEntity[]> {
+  async createFileMessage(
+    roomId: string,
+    userId: string,
+    files: Express.Multer.File[]
+  ): Promise<ChatMessageResponseEntity[]> {
     const chatMessageInputs = files.map((file) => {
       const { storagePath } = genStoragePath(`${userId}/${file.filename}`)
 
@@ -209,7 +226,7 @@ export class ChatMessageService {
     })
 
     try {
-      const res = await Promise.all(chatMessageInputs.map(msg => this.createMessage(msg)))
+      const res = await Promise.all(chatMessageInputs.map((msg) => this.createMessage(msg)))
       return res
     } catch (err) {
       throw new InternalServerErrorException(err)
@@ -245,27 +262,35 @@ export class ChatMessageService {
           content: `${user[0].username} 撤回了一条消息`,
           url: ''
         })
-        this.chatMessageGateway.broadcastMessage(message.roomId.toString(), [newRecallMsg])
+        this.chatMessageGateway.broadcastRecallMessage(message.roomId.toString(), messageId, [
+          newRecallMsg
+        ])
 
         return getSuccessResponse('撤回消息成功', message._id)
       } else {
         return getFailResponse('消息撤回失败', message._id)
       }
-      
     } catch (err) {
       throw new InternalServerErrorException(err.message)
-    } 
+    }
   }
   /**
    * @description 删除消息，
-   * @param messageId 
+   * @param messageId
    */
   deleteMessage(messageId: string[]) {}
 
   /**
-   * @description 
-   * @param userId 
-   * @param roomId 
+   * @description
+   * @param userId
+   * @param roomId
    */
-  clearMessagesRecord(userId: string, roomId: string) {}
+  async clearMessagesRecord(userId: string, roomId: string) {
+    try {
+      await this.chatMessageModel.updateMany({ roomId }, { $pull: { visibleUsers: userId } })
+      return getSuccessResponse('聊天记录已清除', null)
+    } catch (err) {
+      throw new InternalServerErrorException(err.message)
+    }
+  }
 }

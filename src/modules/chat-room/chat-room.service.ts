@@ -153,7 +153,9 @@ export class ChatRoomService {
     const [roomId, userId] = decryptPrivateInfo(inviteCode).split('-')
     try {
       const roomDetails = await this.findRoomById(roomId)
-      const userDetails = await this.userService.findUserByField({ _id: new mongoose.Types.ObjectId(userId) })
+      const userDetails = await this.userService.findUserByField({
+        _id: new mongoose.Types.ObjectId(userId)
+      })
       this.response = getSuccessResponse('查询成功', { room: roomDetails, user: userDetails[0] })
       return this.response
     } catch (err) {

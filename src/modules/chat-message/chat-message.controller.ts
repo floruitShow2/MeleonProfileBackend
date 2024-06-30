@@ -52,7 +52,11 @@ export class ChatMessageController {
     @UploadedFiles() files: Express.Multer.File[],
     @Body('roomId') roomId: string
   ) {
-    const newMessages = await this.chatMessageService.createFileMessage(roomId, req.user.userId, files)
+    const newMessages = await this.chatMessageService.createFileMessage(
+      roomId,
+      req.user.userId,
+      files
+    )
     this.chatMessageGateway.broadcastMessage(roomId, newMessages)
     return getSuccessResponse('消息已发布', newMessages)
   }
@@ -60,5 +64,10 @@ export class ChatMessageController {
   @Post('/recall')
   async recallMessage(@Req() req: Request, @Body('messageId') messageId: string) {
     return await this.chatMessageService.recallMessage(req.user.userId, messageId)
+  }
+
+  @Post('/clear')
+  async clearRecords(@Req() req: Request, @Body('roomId') roomId: string) {
+    return await this.chatMessageService.clearMessagesRecord(req.user.userId, roomId)
   }
 }

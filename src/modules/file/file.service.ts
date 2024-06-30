@@ -1,4 +1,10 @@
-import { HttpException, HttpStatus, Injectable, InternalServerErrorException, StreamableFile } from '@nestjs/common'
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  InternalServerErrorException,
+  StreamableFile
+} from '@nestjs/common'
 import path, { join, resolve } from 'path'
 import {
   WriteStream,
@@ -18,7 +24,12 @@ import { genStoragePath, translateUrlToDiskPath } from '@/utils/format'
 import { LoggerService } from '@/modules/logger/logger.service'
 import { UserTokenEntity } from '@/modules/user/dto/user.dto'
 import type { ApiResponse } from '@/interface/response.interface'
-import type { ChunkOptions, GetFrameInput, MergeOptions, VerifyOptions } from './interface/file.interface'
+import type {
+  ChunkOptions,
+  GetFrameInput,
+  MergeOptions,
+  VerifyOptions
+} from './interface/file.interface'
 import { OssService } from '../oss/oss.service'
 
 @Injectable()
@@ -267,17 +278,18 @@ export class FileService {
     const outputPath = join(__dirname, './tmp')
 
     if (!existsSync(outputPath)) mkdirSync(outputPath, { recursive: true })
-    
+
     const fullOutputPath = join(outputPath, `${Date.now()}.png`)
 
     try {
-      execSync(
-        `ffmpeg -ss ${seconds} -i ${diskPath} -vframes 1 -f image2 ${fullOutputPath}`,
-        { stdio: 'inherit' }
-      )
+      execSync(`ffmpeg -ss ${seconds} -i ${diskPath} -vframes 1 -f image2 ${fullOutputPath}`, {
+        stdio: 'inherit'
+      })
       const screenshotData = await readFileSync(fullOutputPath)
-      return getSuccessResponse('获取视频帧成功', `data:image/png;base64,${screenshotData.toString('base64')}`)
-
+      return getSuccessResponse(
+        '获取视频帧成功',
+        `data:image/png;base64,${screenshotData.toString('base64')}`
+      )
     } catch (err) {
       throw new InternalServerErrorException(err)
     } finally {

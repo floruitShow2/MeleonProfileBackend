@@ -8,7 +8,7 @@ export function isDev() {
   return mode === 'development'
 }
 export function isObjectId(obj: any): obj is mongoose.Types.ObjectId {
-  return mongoose.Types.ObjectId.isValid(obj) && obj instanceof mongoose.Types.ObjectId 
+  return mongoose.Types.ObjectId.isValid(obj) && obj instanceof mongoose.Types.ObjectId
 }
 export function isUndefined(obj: any): obj is undefined {
   return obj === undefined
