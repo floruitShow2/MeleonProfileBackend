@@ -17,12 +17,12 @@ import { ChatRoomService } from '@/modules/chat-room/chat-room.service'
 import {
   ChatMessageEntity,
   ChatMessageInput,
+  ChatMessageLocatedInput,
   ChatMessagePagingInput,
   ChatMessageResponseEntity
 } from './dto/chat-message.dto'
 import { MessageTypeEnum } from '@/constants'
 import { ChatMessageGateway } from './chat-message.gateway'
-import { UserEntity } from '../user/dto/user.dto'
 
 @Injectable()
 export class ChatMessageService {
@@ -40,7 +40,9 @@ export class ChatMessageService {
    * @param messageId
    * @returns
    */
-  async findMessageById(messageId: string): Promise<ChatMessageResponseEntity> {
+  async findMessageById(
+    messageId: string | mongoose.Types.ObjectId
+  ): Promise<ChatMessageResponseEntity> {
     const targetId = isObjectId(messageId) ? messageId : new mongoose.Types.ObjectId(messageId)
     try {
       const res = await this.chatMessageModel.aggregate([
@@ -107,10 +109,10 @@ export class ChatMessageService {
     const limit = pageSize
 
     try {
-      const messages = await this.chatMessageModel.aggregate([
+      const messages: ChatMessageResponseEntity[] = await this.chatMessageModel.aggregate([
         {
           $match: {
-            roomId,
+            roomId: isObjectId(roomId) ? roomId : new mongoose.Types.ObjectId(roomId),
             visibleUsers: {
               $in: [new mongoose.Types.ObjectId(userId)]
             }
@@ -167,7 +169,62 @@ export class ChatMessageService {
           }
         }
       ])
-      return getSuccessResponse<ChatMessageEntity[]>('消息查询成功', messages)
+
+      const newMessages = await Promise.all(
+        messages.map(async (msg) => {
+          const targetReplyMsg = msg.replyId ? await this.findMessageById(msg.replyId) : null
+          msg.replyMessage = targetReplyMsg
+          
+          if (targetReplyMsg) {
+            const isVisible = targetReplyMsg.visibleUsers.some(id => id.toString() === userId)
+            msg.replyMessage.content = isVisible ? targetReplyMsg.content : '已撤回'
+          }
+          
+          delete msg.replyId
+          return msg
+        })
+      )
+      return getSuccessResponse('消息查询成功', newMessages)
+    } catch (err) {
+      throw new InternalServerErrorException(err.message)
+    }
+  }
+
+  async findMessageLocatedPage(locatedInput: ChatMessageLocatedInput) {
+    const { roomId, messageId, pageSize } = locatedInput
+    try {
+      const targetMessage = await this.findMessageById(messageId)
+      const { createTime } = targetMessage
+      const newMessagesCount = await this.chatMessageModel
+        .countDocuments({
+          roomId,
+          createTime: { $gt: createTime }
+        })
+        .exec()
+      return getSuccessResponse('获取消息分页成功', Math.floor(newMessagesCount / pageSize) + 1)
+    } catch (err) {
+      throw new InternalServerErrorException(err.message)
+    }
+  }
+
+  /**
+   * @description 递归向前查询，某条消息的完整的回复链路
+   * @param messageId
+   * @returns
+   */
+  async findReplyMessageChain(userId: string, messageId: string) {
+    try {
+      const targetMessage = await this.findMessageById(messageId)
+      const messagesgsChain: ChatMessageResponseEntity[] = [targetMessage]
+
+      while (messagesgsChain[0] && messagesgsChain[0].replyId) {
+        const replyMessage = await this.findMessageById(messagesgsChain[0].replyId)
+        const isVisible = replyMessage.visibleUsers.some(id => id.toString() === userId)
+        if (!isVisible) break
+        messagesgsChain.unshift(replyMessage)
+      }
+
+      return getSuccessResponse('回复列表查询成功', messagesgsChain)
     } catch (err) {
       throw new InternalServerErrorException(err.message)
     }
@@ -179,11 +236,18 @@ export class ChatMessageService {
    * @returns
    */
   async createMessage(chatMessageInput: ChatMessageInput): Promise<ChatMessageResponseEntity> {
-    const { profileId, roomId, createTime, type, content, url } = chatMessageInput
+    const { profileId, roomId, replyId, createTime, type, content, url } = chatMessageInput
     try {
+      if (!roomId || !profileId) {
+        throw new BadRequestException('roomId和profileId不能为空')
+      }
+      const finalReplyId =
+        isObjectId(replyId) || !replyId ? replyId : new mongoose.Types.ObjectId(replyId)
+
       const data = {
-        roomId,
-        profileId,
+        roomId: isObjectId(roomId) ? roomId : new mongoose.Types.ObjectId(roomId),
+        profileId: isObjectId(profileId) ? profileId : new mongoose.Types.ObjectId(profileId),
+        replyId: finalReplyId,
         metions: [],
         visibleUsers: await this.chatRoomService.getMemberIds(String(roomId)),
         createTime: isUndefined(createTime)
@@ -195,9 +259,24 @@ export class ChatMessageService {
       }
       const res = await this.chatMessageModel.create(data)
       const saveRes = await res.save()
-      return await this.findMessageById(saveRes._id)
+      const resultMsg = await this.findMessageById(saveRes._id)
+      resultMsg.replyMessage = resultMsg.replyId
+        ? await this.findMessageById(resultMsg.replyId)
+        : null
+      delete resultMsg.replyId
+      return resultMsg
     } catch (err) {
       throw new InternalServerErrorException(err)
+    }
+  }
+
+  async handleCreateMessage(chatMessageInput: ChatMessageInput) {
+    try {
+      const newMessage = await this.createMessage(chatMessageInput)
+      this.chatMessageGateway.broadcastMessage(chatMessageInput.roomId.toString(), [newMessage])
+      return getSuccessResponse('消息发送成功', newMessage)
+    } catch (err) {
+      throw new InternalServerErrorException(err.message)
     }
   }
 
@@ -274,6 +353,7 @@ export class ChatMessageService {
       throw new InternalServerErrorException(err.message)
     }
   }
+
   /**
    * @description 删除消息，
    * @param messageId

@@ -64,7 +64,6 @@ export class UserController {
     summary: '更新用户信息'
   })
   async updateUserInfo(@Req() request: Request, @Body() userInfo: UserEntity) {
-    console.log(userInfo)
     return this.userService.updateUserInfo(request['user'], userInfo)
   }
 

@@ -69,17 +69,6 @@ export class UserService {
       const res: UserEntity[] = await this.userModel.aggregate([
         {
           $match: user
-        },
-        {
-          $addFields: {
-            userId: { $toString: '$_id' }
-          }
-        },
-        {
-          $project: {
-            _id: 0,
-            __v: 0
-          }
         }
       ])
       return res[0]
@@ -185,9 +174,10 @@ export class UserService {
       this.logger.error('/user/login', `${user.username}登录失败，密码不匹配`)
       return this.response
     }
+    console.log(res)
     const token = this.jwtService.sign({
-      userId: res[0].userId,
-      role: res[0].role,
+      userId: String(res._id),
+      role: res.role,
       timestamp: Date.now()
     })
     this.response = getSuccessResponse('登录成功', {

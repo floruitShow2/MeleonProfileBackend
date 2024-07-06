@@ -9,7 +9,6 @@ import {
 } from '@nestjs/websockets'
 import { Server, Socket } from 'socket.io'
 import {
-  ChatMessageEntity,
   ChatMessageInput,
   ChatMessageResponseEntity
 } from './dto/chat-message.dto'
@@ -41,20 +40,6 @@ export class ChatMessageGateway implements OnGatewayConnection {
     recallMessage: ChatMessageResponseEntity[]
   ) {
     this.server.to(roomId).emit(SocketOnEvents.MSG_RECALL, recallMesssageId, recallMessage)
-  }
-
-  /**
-   * @description 监听创建消息的事件
-   * @param data
-   * @param client
-   */
-  @SubscribeMessage(SocketEmitEvents.CREATE_MESSAGE)
-  async handleCreateMessage(
-    @MessageBody() data: ChatMessageInput,
-    @ConnectedSocket() client: Socket
-  ) {
-    const newMessage = await this.chatMessageService.createMessage(data)
-    this.broadcastMessage(data.roomId.toString(), [newMessage])
   }
 
   @SubscribeMessage(SocketEmitEvents.DELETE_MESSAGE)

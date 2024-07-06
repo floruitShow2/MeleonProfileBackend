@@ -1,22 +1,23 @@
 import { Prop, Schema } from '@nestjs/mongoose'
 import { ApiProperty, OmitType, PickType } from '@nestjs/swagger'
 import mongoose, { Document } from 'mongoose'
-import { IsNotEmpty } from 'class-validator'
+import { IsInt, IsNotEmpty, Min } from 'class-validator'
 import { ChatRoomEntity } from '@/modules/chat-room/dto/chat-room.dto'
 import { UserEntity, UserResponseEntity } from '@/modules/user/dto/user.dto'
 import { PaginationInput } from '@/interface/pagination.interface'
 import { MessageTypeEnum, FileTypeEnum } from '@/constants'
+import { Transform } from 'class-transformer'
 
 @Schema()
 export class ChatMessageEntity extends Document {
   @Prop()
   messageId: mongoose.Types.ObjectId
 
-  @Prop()
+  @Prop({ type: mongoose.Types.ObjectId, ref: ChatMessageEntity.name })
   @ApiProperty({
     description: '回复操作里, 目标消息的ID'
   })
-  replyId: mongoose.Types.ObjectId
+  replyId?: mongoose.Types.ObjectId
 
   @Prop({ type: mongoose.Types.ObjectId, ref: ChatRoomEntity.name })
   @ApiProperty({
@@ -75,10 +76,17 @@ export class ChatMessageResponseEntity extends OmitType(ChatMessageEntity, ['pro
     description: '消息发送者的用户信息'
   })
   profile: UserResponseEntity
+
+  @Prop()
+  @ApiProperty({
+    description: '回复的目标消息'
+  })
+  replyMessage: ChatMessageResponseEntity
 }
 
 export class ChatMessageInput extends PickType(ChatMessageEntity, [
   'roomId',
+  'replyId',
   'profileId',
   'createTime',
   'type',
@@ -89,4 +97,18 @@ export class ChatMessageInput extends PickType(ChatMessageEntity, [
 export class ChatMessagePagingInput extends PaginationInput {
   @IsNotEmpty()
   roomId: string
+}
+
+export class ChatMessageLocatedInput {
+  @IsNotEmpty()
+  roomId: string
+
+  @IsNotEmpty()
+  messageId: string
+
+  @IsNotEmpty()
+  @IsInt()
+  @Min(10)
+  @Transform(({ value }) => parseInt(value, 10), { toClassOnly: true })
+  pageSize: number
 }

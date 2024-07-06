@@ -14,7 +14,7 @@ import { diskStorage } from 'multer'
 import * as iconv from 'iconv-lite'
 import { genStoragePath } from '@/utils/format'
 import { getSuccessResponse } from '@/utils/service/response'
-import { ChatMessagePagingInput } from './dto/chat-message.dto'
+import { ChatMessageInput, ChatMessageLocatedInput, ChatMessagePagingInput } from './dto/chat-message.dto'
 import { ChatMessageService } from './chat-message.service'
 import { ChatMessageGateway } from './chat-message.gateway'
 
@@ -25,9 +25,30 @@ export class ChatMessageController {
     private readonly chatMessageGateway: ChatMessageGateway
   ) {}
 
+  @Post('/createMessage')
+  async handleCreateMessage(@Body() chatMessageInput: ChatMessageInput) {
+    return await this.chatMessageService.handleCreateMessage(chatMessageInput)
+  }
+
   @Get('/getMessagesList')
-  findMessagesByPages(@Req() req: Request, @Query() pagingInput: ChatMessagePagingInput) {
-    return this.chatMessageService.findMessagesByPages(req.user.userId, pagingInput)
+  async findMessagesByPages(@Req() req: Request, @Query() pagingInput: ChatMessagePagingInput) {
+    return await this.chatMessageService.findMessagesByPages(req.user.userId, pagingInput)
+  }
+
+  @Get('/getMessageById')
+  async findMessagesById(@Query('messageId') id: string) {
+    const res = await this.chatMessageService.findMessageById(id)
+    return getSuccessResponse('消息查询成功', res)
+  }
+
+  @Get('/getReplyChain')
+  async findReplyMessageChain(@Req() req: Request, @Query('messageId') id: string) {
+    return await this.chatMessageService.findReplyMessageChain(req['user'].userId, id)
+  }
+
+  @Get('/getLocatedPage')
+  async findMessageLocatedPage(@Query() query: ChatMessageLocatedInput) {
+    return await this.chatMessageService.findMessageLocatedPage(query)
   }
 
   @Post('/createFileMessage')
@@ -41,7 +62,6 @@ export class ChatMessageController {
         filename: function (req, res, cb) {
           const buf = Buffer.from(res.originalname, 'binary')
           const decodedName = iconv.decode(buf, 'utf-8').replace(/[\s%20]+/g, '')
-          console.log(decodedName)
           cb(null, decodedName)
         }
       })
