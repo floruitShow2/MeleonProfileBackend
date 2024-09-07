@@ -1,10 +1,13 @@
 import {
+  BadRequestException,
   HttpException,
   HttpStatus,
   Injectable,
   InternalServerErrorException,
   StreamableFile
 } from '@nestjs/common'
+import { InjectModel } from '@nestjs/mongoose'
+import { Model } from 'mongoose'
 import path, { join, resolve } from 'path'
 import {
   WriteStream,
@@ -24,19 +27,25 @@ import { genStoragePath, translateUrlToDiskPath } from '@/utils/format'
 import { LoggerService } from '@/modules/logger/logger.service'
 import { UserTokenEntity } from '@/modules/user/dto/user.dto'
 import type { ApiResponse } from '@/interface/response.interface'
-import type {
+import {
   ChunkOptions,
+  FileEntity,
   GetFrameInput,
   MergeOptions,
   VerifyOptions
-} from './interface/file.interface'
+} from './dto/file.dto'
 import { OssService } from '../oss/oss.service'
+import { formatToDateTime } from '@/utils/time'
 
 @Injectable()
 export class FileService {
   response: ApiResponse
 
-  constructor(private readonly ossService: OssService, private readonly logger: LoggerService) {}
+  constructor(
+    @InjectModel(FileEntity.name) private readonly fileModel: Model<FileEntity>,
+    private readonly ossService: OssService,
+    private readonly logger: LoggerService
+  ) {}
 
   genUploadDir(user: UserTokenEntity) {
     const uploadDir = join(process.cwd(), `/files/${user.userId}/file/`)
@@ -272,6 +281,12 @@ export class FileService {
       return '失败了'
     }
   }
+
+  /**
+   * @description 获取视频文件的帧切片
+   * @param params
+   * @returns
+   */
   async getVideoFrame(params: GetFrameInput) {
     const { url, seconds } = params
     const diskPath = translateUrlToDiskPath(url)
@@ -294,6 +309,64 @@ export class FileService {
       throw new InternalServerErrorException(err)
     } finally {
       unlinkSync(fullOutputPath)
+    }
+  }
+
+  /**
+   * @description 保存文件信息
+   * @param user
+   * @param file
+   */
+  async saveFileInfo(user: UserTokenEntity, file: Express.Multer.File) {
+    try {
+      const { storagePath } = genStoragePath(`${user.userId}/${file.originalname}`)
+
+      const newFile: Record<string, any> = {
+        fileName: file.originalname,
+        fileSize: file.size,
+        fileSrc: storagePath,
+        fileType: file.mimetype,
+        createTime: formatToDateTime(),
+        createdBy: user.userId
+      }
+
+      const res = await this.fileModel.create(newFile)
+      await res.save()
+
+      res.fileId = res._id
+      delete res._id
+      delete res.__v
+
+      return getSuccessResponse('文件信息保存成功', res)
+    } catch (err) {
+      console.log(err)
+      return new InternalServerErrorException(err.message)
+    }
+  }
+
+  async downloadFile(fileId: string) {
+    try {
+      if (!fileId) {
+        return new BadRequestException('缺少文件')
+      }
+      const res = await this.fileModel.findById(fileId)
+      const { fileName, createdBy } = res
+      const { diskPath } = genStoragePath(`${createdBy}/${fileName}`)
+      if (res && existsSync(diskPath)) {
+        const readStream = createReadStream(diskPath)
+        const streamableFile = new StreamableFile(readStream)
+
+        readStream.on('error', (err) => {
+          throw new InternalServerErrorException(err)
+        })
+
+        return streamableFile
+      } else {
+        return getFailResponse('文件不存在', null)
+      }
+    } catch (err) {
+      console.log(err)
+      return new InternalServerErrorException(err.message)
     }
   }
 }

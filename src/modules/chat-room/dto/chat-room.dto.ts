@@ -1,17 +1,41 @@
 import { Prop, Schema } from '@nestjs/mongoose'
 import { ApiProperty, PickType } from '@nestjs/swagger'
-import { IsNotEmpty } from 'class-validator'
 import mongoose, { Document } from 'mongoose'
+import { IsEnum, IsNotEmpty } from 'class-validator'
 import { UserEntity } from '@/modules/user/dto/user.dto'
+
+enum ChatRoomTypeEnum {
+  // 普通群聊
+  NORMAL = '1',
+  // 团队群聊
+  GROUP = '2',
+  // 项目群聊
+  PROJECT = '3'
+}
 
 @Schema()
 export class ChatRoomEntity extends Document {
+  // 基础信息
   @Prop()
   @ApiProperty({
     description: '房间名'
   })
   @IsNotEmpty()
   roomName: string
+
+  @Prop()
+  @ApiProperty({
+    description: '房间描述'
+  })
+  roomDescription: string
+
+  @Prop()
+  @ApiProperty({
+    description: '房间类型'
+  })
+  @IsNotEmpty()
+  @IsEnum(ChatRoomTypeEnum)
+  roomType: ChatRoomTypeEnum
 
   @Prop()
   @ApiProperty({
@@ -38,7 +62,7 @@ export class ChatRoomEntity extends Document {
   })
   noDisturbing: boolean
 
-  // 配置项
+  // 创建相关
   @Prop()
   @ApiProperty({
     description: '创建时间'
@@ -52,7 +76,13 @@ export class ChatRoomEntity extends Document {
   creator: mongoose.Types.ObjectId
 }
 
-export class ChatRoomInput extends PickType(ChatRoomEntity, ['roomName', 'roomCover']) {}
+export class ChatRoomInput extends PickType(ChatRoomEntity, [
+  'roomName',
+  'roomDescription',
+  'members',
+  'roomCover',
+  'roomType'
+]) {}
 
 export class RemoveMemberInput {
   @IsNotEmpty()

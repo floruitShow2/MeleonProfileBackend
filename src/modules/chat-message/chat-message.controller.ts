@@ -14,7 +14,11 @@ import { diskStorage } from 'multer'
 import * as iconv from 'iconv-lite'
 import { genStoragePath } from '@/utils/format'
 import { getSuccessResponse } from '@/utils/service/response'
-import { ChatMessageInput, ChatMessageLocatedInput, ChatMessagePagingInput } from './dto/chat-message.dto'
+import {
+  ChatMessageInput,
+  ChatMessageLocatedInput,
+  ChatMessagePagingInput
+} from './dto/chat-message.dto'
 import { ChatMessageService } from './chat-message.service'
 import { ChatMessageGateway } from './chat-message.gateway'
 

@@ -33,12 +33,16 @@ export class ChatRoomService {
     try {
       const res = await this.chatRoomModel.create({
         roomName: chatRoomInput.roomName,
+        roomDescription: chatRoomInput.roomDescription,
         roomCover:
           chatRoomInput.roomCover ??
           `${this.configService.get('NEST_APP_URL')}/static/avatar/avatar_${
             Math.floor(Math.random() * 5) + 1
           }.png`,
-        members: [userId],
+        roomType: chatRoomInput.roomType,
+        members: [userId, ...chatRoomInput.members.filter((id) => !!id)].map(
+          (id) => new mongoose.Types.ObjectId(id)
+        ),
         isPinned: false,
         noDisturbing: false,
         creator: new mongoose.Types.ObjectId(userId),
@@ -49,6 +53,7 @@ export class ChatRoomService {
       this.response = getSuccessResponse('房间创建成功', res._id.toString())
       return this.response
     } catch (err) {
+      console.log(err)
       throw new InternalServerErrorException()
     }
   }

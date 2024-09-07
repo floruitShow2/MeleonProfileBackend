@@ -9,5 +9,8 @@ export * from './tag/tag.module'
 export * from './redis/redis.module'
 export * from './file/file.module'
 export * from './team/team.module'
+// 聊天室
 export * from './chat-room/chat-room.module'
 export * from './chat-message/chat-message.module'
+
+export * from './question/question.module'

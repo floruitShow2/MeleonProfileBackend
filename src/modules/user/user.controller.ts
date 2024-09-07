@@ -1,8 +1,18 @@
-import { Controller, Post, Get, Body, Req, UseInterceptors, UploadedFile } from '@nestjs/common'
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Req,
+  UseInterceptors,
+  UploadedFile,
+  Query
+} from '@nestjs/common'
 import { ApiTags, ApiOperation } from '@nestjs/swagger'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { join } from 'path'
 import { diskStorage } from 'multer'
+import type { Request } from 'express'
 import { Roles } from '@/decorator/Roles'
 import { Role } from '@/constants/auth'
 import { genStoragePath } from '@/utils/format'
@@ -81,6 +91,12 @@ export class UserController {
   })
   async fillPassword(@Body() data: { userId: string; password: string }) {
     return this.userService.fillPassword(data.userId, data.password)
+  }
+
+  @Get('search')
+  async searchUsers(@Req() req: Request, @Query('query') query: string) {
+    console.log(query, req.user)
+    return await this.userService.searchUsers(req.user.userId, query)
   }
 
   // 该接口仅对权限为 admin 的用户开发，测试 Guards 能否拦截权限不符合的用户发来的请求

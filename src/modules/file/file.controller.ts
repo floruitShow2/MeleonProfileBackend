@@ -13,18 +13,37 @@ import { ApiTags } from '@nestjs/swagger'
 import { diskStorage } from 'multer'
 import { resolve } from 'path'
 import { OssService } from '@/modules/oss/oss.service'
+import { genStoragePath } from '@/utils/format'
 import { FileService } from './file.service'
-import type {
-  ChunkOptions,
-  MergeOptions,
-  VerifyOptions,
-  GetFrameInput
-} from './interface/file.interface'
+import type { ChunkOptions, MergeOptions, VerifyOptions, GetFrameInput } from './dto/file.dto'
 
 @Controller('file')
 @ApiTags('file')
 export class FileController {
   constructor(private readonly fileService: FileService, private readonly ossService: OssService) {}
+
+  @Post('/upload')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: (req, res, cb) => {
+          const { diskPath } = genStoragePath(`${req?.user?.userId}`)
+          cb(null, diskPath)
+        },
+        filename: (req, res, cb) => {
+          cb(null, res?.originalname)
+        }
+      })
+    })
+  )
+  handleUpload(@Req() req: Request, @UploadedFile() file: Express.Multer.File) {
+    return this.fileService.saveFileInfo(req['user'], file)
+  }
+
+  @Get('/download')
+  handleDownload(@Query('id') id: string) {
+    return this.fileService.downloadFile(id)
+  }
 
   @Post('/verify')
   handleVerify(@Req() req: Request, @Body() verifyOptions: VerifyOptions) {

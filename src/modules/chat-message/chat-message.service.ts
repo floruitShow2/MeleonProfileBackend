@@ -174,12 +174,12 @@ export class ChatMessageService {
         messages.map(async (msg) => {
           const targetReplyMsg = msg.replyId ? await this.findMessageById(msg.replyId) : null
           msg.replyMessage = targetReplyMsg
-          
+
           if (targetReplyMsg) {
-            const isVisible = targetReplyMsg.visibleUsers.some(id => id.toString() === userId)
+            const isVisible = targetReplyMsg.visibleUsers.some((id) => id.toString() === userId)
             msg.replyMessage.content = isVisible ? targetReplyMsg.content : '已撤回'
           }
-          
+
           delete msg.replyId
           return msg
         })
@@ -197,7 +197,7 @@ export class ChatMessageService {
       const { createTime } = targetMessage
       const newMessagesCount = await this.chatMessageModel
         .countDocuments({
-          roomId,
+          roomId: new mongoose.Types.ObjectId(roomId),
           createTime: { $gt: createTime }
         })
         .exec()
@@ -219,7 +219,7 @@ export class ChatMessageService {
 
       while (messagesgsChain[0] && messagesgsChain[0].replyId) {
         const replyMessage = await this.findMessageById(messagesgsChain[0].replyId)
-        const isVisible = replyMessage.visibleUsers.some(id => id.toString() === userId)
+        const isVisible = replyMessage.visibleUsers.some((id) => id.toString() === userId)
         if (!isVisible) break
         messagesgsChain.unshift(replyMessage)
       }

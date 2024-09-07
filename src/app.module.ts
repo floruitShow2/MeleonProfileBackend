@@ -21,7 +21,8 @@ import {
   FileModule,
   TeamModule,
   ChatRoomModule,
-  ChatMessageModule
+  ChatMessageModule,
+  QuestionModule
 } from './modules'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
@@ -76,7 +77,8 @@ const envFilePath = isDev() ? ['.env.development'] : ['.env.production']
     TeamModule,
     // 聊天室模块
     ChatRoomModule,
-    ChatMessageModule
+    ChatMessageModule,
+    QuestionModule
   ],
   controllers: [AppController],
   providers: [

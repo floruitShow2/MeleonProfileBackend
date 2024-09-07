@@ -8,10 +8,7 @@ import {
   WebSocketServer
 } from '@nestjs/websockets'
 import { Server, Socket } from 'socket.io'
-import {
-  ChatMessageInput,
-  ChatMessageResponseEntity
-} from './dto/chat-message.dto'
+import { ChatMessageInput, ChatMessageResponseEntity } from './dto/chat-message.dto'
 import { SocketOnEvents, SocketEmitEvents } from './events/chat-message.events'
 import { ChatMessageService } from './chat-message.service'
 

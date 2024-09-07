@@ -131,6 +131,58 @@ export class UserService {
   }
 
   /**
+   * @description 根据账号、邮箱进行搜索，返回用户信息
+   */
+  async searchUsers(userId: string, query: string) {
+    try {
+      const res = await this.userModel.aggregate([
+        {
+          $match: {
+            $and: [
+              {
+                _id: { $ne: new mongoose.Types.ObjectId(userId) }
+              },
+              {
+                $or: [
+                  {
+                    username: {
+                      $regex: query,
+                      $options: 'i'
+                    }
+                  },
+                  {
+                    email: {
+                      $regex: query,
+                      $options: 'i'
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          $addFields: {
+            userId: { $toString: '$_id' }
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            __v: 0,
+            salt: 0,
+            password: 0,
+            certification: 0
+          }
+        }
+      ])
+      return getSuccessResponse('查询成功', res)
+    } catch (err) {
+      throw new InternalServerErrorException(err.message)
+    }
+  }
+
+  /**
    * @description 用户注册接口
    * @param user
    * @returns
