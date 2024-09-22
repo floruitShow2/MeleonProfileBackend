@@ -1,17 +1,18 @@
 import mongoose, { Model } from 'mongoose'
-import { InjectModel } from '@nestjs/mongoose'
-import { Injectable, InternalServerErrorException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
-import { LoggerService } from '@/modules/logger/logger.service'
-import { UserSignUpInput, UserEntity, UserUpdatePwdInput, UserResponseEntity } from './dto/user.dto'
-import { DefaultUserEntity } from './constant/user.constant'
-import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
-import { generateSalt, encrypt, compare } from '@/utils/encrypt'
+import { InjectModel } from '@nestjs/mongoose'
 import { ConfigService } from '@nestjs/config'
+import { Injectable, InternalServerErrorException } from '@nestjs/common'
+import { isObjectId, toObjectId } from '@/utils/is'
 import { genStoragePath } from '@/utils/format'
+import { generateSalt, encrypt, compare } from '@/utils/encrypt'
+import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
 import type { FilterByValue } from '@/interface/util.interface'
 import type { ApiResponse } from '@/interface/response.interface'
+import { LoggerService } from '@/modules/logger/logger.service'
+import { DefaultUserEntity } from './constant/user.constant'
 import type { UserTokenEntity } from './dto/user.dto'
+import { UserSignUpInput, UserEntity, UserUpdatePwdInput, UserResponseEntity } from './dto/user.dto'
 
 @Injectable()
 export class UserService {
@@ -24,17 +25,18 @@ export class UserService {
   ) {}
 
   /**
-   * @description 查找数据库中符合筛选条件的用户，返回处理后的数据
-   * @param UserEntity
-   * @returns 查询结果
+   * @description 根据 userId 查找数据库中的用户，并返回处理后的数据
+   * @param {string} userId
+   * @returns UserEntity
    */
-  async findUserByField(
-    user: Partial<FilterByValue<UserEntity, string>>
-  ): Promise<UserResponseEntity> {
+  async findUserById(id: string): Promise<UserResponseEntity> {
+    const userId = isObjectId(id) ? id : new mongoose.Types.ObjectId(id)
     try {
       const res: UserResponseEntity[] = await this.userModel.aggregate([
         {
-          $match: user
+          $match: {
+            _id: userId
+          }
         },
         {
           $addFields: {
@@ -247,7 +249,7 @@ export class UserService {
    */
   async getUserInfo(user: UserTokenEntity) {
     try {
-      const res = await this.findUserByField({ _id: new mongoose.Types.ObjectId(user.userId) })
+      const res = await this.findUserById(user.userId)
       if (!res) {
         this.logger.error('/user/getUserInfo', `查询${user.userId}的用户信息失败`)
         this.response = getFailResponse('未找到用户', null)
@@ -271,10 +273,11 @@ export class UserService {
   async updateUserInfo(user: UserTokenEntity, userInfo: Partial<UserEntity>): Promise<ApiResponse> {
     // 更新前移除 userId 等基于数据库文档生成的字段
     // delete userInfo.userId
+    console.log(userInfo, user.userId)
     try {
       const res = await this.userModel.updateOne(
         {
-          _id: user.userId
+          _id: toObjectId(user.userId)
         },
         {
           $set: userInfo
@@ -283,7 +286,7 @@ export class UserService {
 
       const { matchedCount, modifiedCount } = res
       if (matchedCount >= 1 && modifiedCount === 1) {
-        const res = await this.findUserByField({ _id: new mongoose.Types.ObjectId(user.userId) })
+        const res = await this.findUserById(user.userId)
 
         const token = this.jwtService.sign({
           ...user,
@@ -313,7 +316,6 @@ export class UserService {
     const { userId } = user
     const { filename } = file
     const { storagePath } = genStoragePath(`${userId}/${filename}`)
-    // const storagePath = `${this.configService.get('NEST_APP_URL')}/static/avatar/${username}/${fieldname}/${filename}`
     try {
       const res = await this.userModel.updateOne(
         {
@@ -325,7 +327,7 @@ export class UserService {
       )
       const { matchedCount, modifiedCount } = res
       if (matchedCount >= 1 && modifiedCount === 1) {
-        const res = await this.findUserByField({ _id: new mongoose.Types.ObjectId(userId) })
+        const res = await this.findUserById(userId)
         if (res) {
           this.response = getSuccessResponse('头像更换成功', res)
         } else {

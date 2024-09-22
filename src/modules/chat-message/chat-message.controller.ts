@@ -17,7 +17,8 @@ import { getSuccessResponse } from '@/utils/service/response'
 import {
   ChatMessageInput,
   ChatMessageLocatedInput,
-  ChatMessagePagingInput
+  ChatMessagePagingInput,
+  UpdateChatMessageInput
 } from './dto/chat-message.dto'
 import { ChatMessageService } from './chat-message.service'
 import { ChatMessageGateway } from './chat-message.gateway'
@@ -37,6 +38,11 @@ export class ChatMessageController {
   @Get('/getMessagesList')
   async findMessagesByPages(@Req() req: Request, @Query() pagingInput: ChatMessagePagingInput) {
     return await this.chatMessageService.findMessagesByPages(req.user.userId, pagingInput)
+  }
+
+  @Post('/updateMessage')
+  async updateMessage(@Body() chatMessageInput: UpdateChatMessageInput) {
+    return await this.chatMessageService.updateMessage(chatMessageInput)
   }
 
   @Get('/getMessageById')

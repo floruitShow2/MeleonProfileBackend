@@ -53,7 +53,7 @@ export class UserController {
     FileInterceptor('avatar', {
       storage: diskStorage({
         destination: function (req, res, cb) {
-          const { diskPath } = genStoragePath(join(`${req['user'].username}/${res.fieldname}`))
+          const { diskPath } = genStoragePath(req['user'].userId)
           cb(null, diskPath)
         },
         filename: function (req, res, cb) {
@@ -73,7 +73,7 @@ export class UserController {
   @ApiOperation({
     summary: '更新用户信息'
   })
-  async updateUserInfo(@Req() request: Request, @Body() userInfo: UserEntity) {
+  async updateUserInfo(@Req() request: Request, @Body() userInfo: any) {
     return this.userService.updateUserInfo(request['user'], userInfo)
   }
 

@@ -8,6 +8,17 @@ import { PaginationInput } from '@/interface/pagination.interface'
 import { MessageTypeEnum, FileTypeEnum } from '@/constants'
 import { Transform } from 'class-transformer'
 
+export interface ChatMessageMention {
+  username: string
+  userId: string
+  avatar: string
+  offset: number
+}
+export interface ChatMessageEmoji {
+  url: string
+  offset: number
+}
+
 @Schema()
 export class ChatMessageEntity extends Document {
   @Prop()
@@ -30,13 +41,20 @@ export class ChatMessageEntity extends Document {
   @ApiProperty({
     description: '发布人ID'
   })
+  @IsNotEmpty()
   profileId: mongoose.Types.ObjectId
 
-  @Prop({ type: [{ type: mongoose.Types.ObjectId, ref: UserEntity.name }] })
+  @Prop()
   @ApiProperty({
     description: '消息提及的用户'
   })
-  metions: mongoose.Types.ObjectId[]
+  mentions: ChatMessageMention[]
+
+  @Prop()
+  @ApiProperty({
+    description: '消息涉及的 emoji 图片'
+  })
+  emojis: ChatMessageEmoji[]
 
   @Prop()
   @ApiProperty({
@@ -91,6 +109,8 @@ export class ChatMessageInput extends PickType(ChatMessageEntity, [
   'createTime',
   'type',
   'content',
+  'mentions',
+  'emojis',
   'url'
 ]) {}
 
@@ -112,3 +132,6 @@ export class ChatMessageLocatedInput {
   @Transform(({ value }) => parseInt(value, 10), { toClassOnly: true })
   pageSize: number
 }
+
+
+export class UpdateChatMessageInput extends PickType(ChatMessageEntity, ['messageId', 'content', 'type']) {}

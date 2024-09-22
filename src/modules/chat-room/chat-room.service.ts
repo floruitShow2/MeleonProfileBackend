@@ -69,6 +69,31 @@ export class ChatRoomService {
           }
         },
         {
+          $lookup: {
+            from: 'users',
+            foreignField: '_id',
+            localField: 'members',
+            as: 'members',
+            pipeline: [
+              {
+                $addFields: {
+                  userId: '$_id'
+                }
+              },
+              {
+                $project: {
+                  password: 0,
+                  salt: 0,
+                  certification: 0,
+                  role: 0,
+                  _id: 0,
+                  __v: 0
+                }
+              }
+            ]
+          }
+        },
+        {
           $addFields: {
             roomId: '$_id'
           }
@@ -84,7 +109,8 @@ export class ChatRoomService {
       this.response = getSuccessResponse('房间查询成功', res)
       return this.response
     } catch (err) {
-      throw new InternalServerErrorException()
+      console.log(err)
+      throw new InternalServerErrorException(err.message)
     }
   }
 
@@ -158,9 +184,7 @@ export class ChatRoomService {
     const [roomId, userId] = decryptPrivateInfo(inviteCode).split('-')
     try {
       const roomDetails = await this.findRoomById(roomId)
-      const userDetails = await this.userService.findUserByField({
-        _id: new mongoose.Types.ObjectId(userId)
-      })
+      const userDetails = await this.userService.findUserById(userId)
       this.response = getSuccessResponse('查询成功', { room: roomDetails, user: userDetails[0] })
       return this.response
     } catch (err) {

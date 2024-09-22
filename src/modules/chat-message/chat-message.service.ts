@@ -10,7 +10,7 @@ import { InjectModel } from '@nestjs/mongoose'
 import { formatToDateTime } from '@/utils/time'
 import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
 import { genStoragePath } from '@/utils/format'
-import { isObjectId, isUndefined } from '@/utils/is'
+import { isObjectId, isUndefined, toObjectId } from '@/utils/is'
 import { genFileType } from '@/utils/file'
 import { UserService } from '@/modules/user/user.service'
 import { ChatRoomService } from '@/modules/chat-room/chat-room.service'
@@ -19,7 +19,8 @@ import {
   ChatMessageInput,
   ChatMessageLocatedInput,
   ChatMessagePagingInput,
-  ChatMessageResponseEntity
+  ChatMessageResponseEntity,
+  UpdateChatMessageInput
 } from './dto/chat-message.dto'
 import { MessageTypeEnum } from '@/constants'
 import { ChatMessageGateway } from './chat-message.gateway'
@@ -236,7 +237,7 @@ export class ChatMessageService {
    * @returns
    */
   async createMessage(chatMessageInput: ChatMessageInput): Promise<ChatMessageResponseEntity> {
-    const { profileId, roomId, replyId, createTime, type, content, url } = chatMessageInput
+    const { profileId, roomId, replyId, createTime, type, content, mentions, emojis, url } = chatMessageInput
     try {
       if (!roomId || !profileId) {
         throw new BadRequestException('roomId和profileId不能为空')
@@ -245,10 +246,11 @@ export class ChatMessageService {
         isObjectId(replyId) || !replyId ? replyId : new mongoose.Types.ObjectId(replyId)
 
       const data = {
-        roomId: isObjectId(roomId) ? roomId : new mongoose.Types.ObjectId(roomId),
-        profileId: isObjectId(profileId) ? profileId : new mongoose.Types.ObjectId(profileId),
+        roomId: toObjectId(roomId),
+        profileId: toObjectId(profileId),
         replyId: finalReplyId,
-        metions: [],
+        mentions,
+        emojis,
         visibleUsers: await this.chatRoomService.getMemberIds(String(roomId)),
         createTime: isUndefined(createTime)
           ? formatToDateTime(new Date())
@@ -267,6 +269,30 @@ export class ChatMessageService {
       return resultMsg
     } catch (err) {
       throw new InternalServerErrorException(err)
+    }
+  }
+
+  async updateMessage(chatMessageInput: UpdateChatMessageInput) {
+    const { messageId, type, content } = chatMessageInput
+    try {
+      if (!messageId) {
+        throw new BadRequestException('messageId 不能为空')
+      }
+
+      const updatedMessage = await this.chatMessageModel.findByIdAndUpdate(
+        messageId,
+        { type, content },
+        { new: true }
+      ).exec()
+
+      if (!updatedMessage) {
+        throw new BadRequestException('未找到指定的消息');
+      }
+
+      return getSuccessResponse('消息更新成功', updatedMessage)
+    } catch (err) {
+      console.log(err)
+      throw new InternalServerErrorException(err.message)
     }
   }
 
@@ -300,6 +326,8 @@ export class ChatMessageService {
         createTime: undefined,
         type: genFileType(file),
         content: file.filename,
+        emojis: [],
+        mentions: [],
         url: storagePath
       }
     })
@@ -339,6 +367,8 @@ export class ChatMessageService {
           createTime: message.createTime,
           type: MessageTypeEnum.ACTION,
           content: `${user[0].username} 撤回了一条消息`,
+          mentions: [],
+          emojis: [],
           url: ''
         })
         this.chatMessageGateway.broadcastRecallMessage(message.roomId.toString(), messageId, [
