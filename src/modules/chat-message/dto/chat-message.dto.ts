@@ -133,5 +133,8 @@ export class ChatMessageLocatedInput {
   pageSize: number
 }
 
-
-export class UpdateChatMessageInput extends PickType(ChatMessageEntity, ['messageId', 'content', 'type']) {}
+export class UpdateChatMessageInput extends PickType(ChatMessageEntity, [
+  'messageId',
+  'content',
+  'type'
+]) {}

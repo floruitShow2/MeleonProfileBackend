@@ -237,7 +237,8 @@ export class ChatMessageService {
    * @returns
    */
   async createMessage(chatMessageInput: ChatMessageInput): Promise<ChatMessageResponseEntity> {
-    const { profileId, roomId, replyId, createTime, type, content, mentions, emojis, url } = chatMessageInput
+    const { profileId, roomId, replyId, createTime, type, content, mentions, emojis, url } =
+      chatMessageInput
     try {
       if (!roomId || !profileId) {
         throw new BadRequestException('roomId和profileId不能为空')
@@ -279,14 +280,12 @@ export class ChatMessageService {
         throw new BadRequestException('messageId 不能为空')
       }
 
-      const updatedMessage = await this.chatMessageModel.findByIdAndUpdate(
-        messageId,
-        { type, content },
-        { new: true }
-      ).exec()
+      const updatedMessage = await this.chatMessageModel
+        .findByIdAndUpdate(messageId, { type, content }, { new: true })
+        .exec()
 
       if (!updatedMessage) {
-        throw new BadRequestException('未找到指定的消息');
+        throw new BadRequestException('未找到指定的消息')
       }
 
       return getSuccessResponse('消息更新成功', updatedMessage)

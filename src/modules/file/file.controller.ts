@@ -15,7 +15,13 @@ import { resolve } from 'path'
 import { OssService } from '@/modules/oss/oss.service'
 import { genStoragePath } from '@/utils/format'
 import { FileService } from './file.service'
-import type { ChunkOptions, MergeOptions, VerifyOptions, GetFrameInput } from './dto/file.dto'
+import type {
+  ChunkOptions,
+  MergeOptions,
+  VerifyOptions,
+  GetFrameInput,
+  DataUrlUploadInput
+} from './dto/file.dto'
 
 @Controller('file')
 @ApiTags('file')
@@ -38,6 +44,17 @@ export class FileController {
   )
   handleUpload(@Req() req: Request, @UploadedFile() file: Express.Multer.File) {
     return this.fileService.saveFileInfo(req['user'], file)
+  }
+
+  @Post('/upload/dataUrl')
+  @UseInterceptors(FileInterceptor('file'))
+  handleDataUrlUpload(
+    @Req() req: Request,
+    // @UploadedFile() file: Express.Multer.File,
+    @Body() data: DataUrlUploadInput
+  ) {
+    console.log(data.fileName)
+    return this.fileService.saveDataUrl(req['user'], data)
   }
 
   @Get('/download')

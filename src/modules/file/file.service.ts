@@ -19,6 +19,7 @@ import {
   readdirSync,
   rmdirSync,
   unlinkSync,
+  writeFile,
   writeFileSync
 } from 'fs'
 import { execSync } from 'child_process'
@@ -29,6 +30,7 @@ import { UserTokenEntity } from '@/modules/user/dto/user.dto'
 import type { ApiResponse } from '@/interface/response.interface'
 import {
   ChunkOptions,
+  DataUrlUploadInput,
   FileEntity,
   GetFrameInput,
   MergeOptions,
@@ -36,6 +38,7 @@ import {
 } from './dto/file.dto'
 import { OssService } from '../oss/oss.service'
 import { formatToDateTime } from '@/utils/time'
+import { getBase64FileSize, getMimeTypeFromBase64 } from '@/utils/file'
 
 @Injectable()
 export class FileService {
@@ -342,6 +345,42 @@ export class FileService {
       console.log(err)
       return new InternalServerErrorException(err.message)
     }
+  }
+
+  async saveDataUrl(user: UserTokenEntity, dataUrlFile: DataUrlUploadInput) {
+    return new Promise((resolve, reject) => {
+      const { userId } = user
+      const { dataUrl, fileName } = dataUrlFile
+      const base64Data = dataUrl.replace(/^data:image\/\w+;base64,/, '')
+      const buffer = Buffer.from(base64Data, 'base64')
+
+      const { diskPath } = genStoragePath(userId)
+
+      writeFile(join(diskPath, fileName), buffer, async (err) => {
+        if (err) {
+          console.error('Error saving image:', err)
+          reject(err)
+        }
+
+        const { storagePath } = genStoragePath(`${userId}/${fileName}`)
+        const newFile: Record<string, any> = {
+          fileName,
+          fileSize: getBase64FileSize(dataUrl),
+          fileSrc: storagePath,
+          fileType: getMimeTypeFromBase64(dataUrl),
+          createTime: formatToDateTime(),
+          createdBy: user.userId
+        }
+        const res = await this.fileModel.create(newFile)
+        await res.save()
+
+        res.fileId = res._id
+        delete res._id
+        delete res.__v
+
+        resolve(getSuccessResponse('文件信息保存成功', res))
+      })
+    })
   }
 
   async downloadFile(fileId: string) {

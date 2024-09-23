@@ -26,14 +26,6 @@ export interface MergeOptions {
   filehash: string
 }
 
-export class GetFrameInput {
-  @IsNotEmpty()
-  url: string
-
-  @IsNumber()
-  seconds: number
-}
-
 @Schema()
 export class FileEntity extends Document {
   @Prop()
@@ -78,4 +70,20 @@ export class FileEntity extends Document {
     description: '文件类型'
   })
   fileType: string
+}
+
+export class GetFrameInput {
+  @IsNotEmpty()
+  url: string
+
+  @IsNumber()
+  seconds: number
+}
+
+export class DataUrlUploadInput {
+  @IsNotEmpty()
+  dataUrl: string
+
+  @IsNotEmpty()
+  fileName: string
 }
