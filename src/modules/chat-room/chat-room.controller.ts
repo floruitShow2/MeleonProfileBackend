@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Post, Query, Req, UseGuards } from '@nestjs/common'
 import type { Request } from 'express'
 import { AuthGuard } from '@/guards/auth.guard'
-import { ChatRoomInput, RemoveMemberInput } from './dto/chat-room.dto'
+import { CreateRoomInput, InviteMemberInput, RemoveMemberInput } from './dto/chat-room.dto'
 import { ChatRoomService } from './chat-room.service'
 
 @UseGuards(AuthGuard)
@@ -10,7 +10,7 @@ export class ChatRoomController {
   constructor(private readonly chatRoomService: ChatRoomService) {}
 
   @Post('/createRoom')
-  createRoom(@Req() req: Request, @Body() chatRoomInput: ChatRoomInput) {
+  createRoom(@Req() req: Request, @Body() chatRoomInput: CreateRoomInput) {
     return this.chatRoomService.createRoom(req.user, chatRoomInput)
   }
 
@@ -34,9 +34,14 @@ export class ChatRoomController {
     return this.chatRoomService.getDetailsByInviteCode(inviteCode)
   }
 
+  @Post('/inviteMemberByUserId')
+  inviteMemberByUserId(@Req() req: Request, @Body() data: InviteMemberInput) {
+    return this.chatRoomService.inviteMemberByUserId(req['user'], data)
+  }
+  
   @Post('/inviteMember')
   inviteMember(@Req() req: Request, @Body('inviteCode') inviteCode: string) {
-    return this.chatRoomService.inviteMember(req.user, inviteCode)
+    return this.chatRoomService.inviteMemberByCode(req.user, inviteCode)
   }
 
   @Post('/removeMember')

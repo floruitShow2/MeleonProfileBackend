@@ -1,14 +1,12 @@
 import { Inject, forwardRef } from '@nestjs/common'
 import {
-  ConnectedSocket,
-  MessageBody,
   OnGatewayConnection,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer
 } from '@nestjs/websockets'
 import { Server, Socket } from 'socket.io'
-import { ChatMessageInput, ChatMessageResponseEntity } from './dto/chat-message.dto'
+import { ChatMessageResponseEntity } from './dto/chat-message.dto'
 import { SocketOnEvents, SocketEmitEvents } from './events/chat-message.events'
 import { ChatMessageService } from './chat-message.service'
 

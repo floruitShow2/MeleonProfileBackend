@@ -12,9 +12,11 @@ import { UserService } from '@/modules/user/user.service'
 import { UserTokenEntity } from '@/modules/user/dto/user.dto'
 import { ApiResponse } from '@/interface/response.interface'
 import { formatToDateTime } from '@/utils/time'
+import { isString, toObjectId } from '@/utils/is'
+import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
 import { encryptPrivateInfo, decryptPrivateInfo } from '@/utils/encrypt'
-import { getSuccessResponse } from '@/utils/service/response'
-import { ChatRoomEntity, ChatRoomInput } from './dto/chat-room.dto'
+import { ChatRoomEntity, CreateRoomInput, InviteMemberInput } from './dto/chat-room.dto'
+import { LoggerService } from '../logger/logger.service'
 
 @Injectable()
 export class ChatRoomService {
@@ -23,12 +25,14 @@ export class ChatRoomService {
   constructor(
     @InjectModel(ChatRoomEntity.name) private chatRoomModel: Model<ChatRoomEntity>,
     private readonly userService: UserService,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
+    private readonly logger: LoggerService
   ) {}
 
-  async createRoom(user: UserTokenEntity, chatRoomInput: ChatRoomInput) {
+  async createRoom(user: UserTokenEntity, chatRoomInput: CreateRoomInput) {
     const { userId } = user
     const createTime = formatToDateTime(new Date())
+    console.log(chatRoomInput.members)
 
     try {
       const res = await this.chatRoomModel.create({
@@ -41,7 +45,7 @@ export class ChatRoomService {
           }.png`,
         roomType: chatRoomInput.roomType,
         members: [userId, ...chatRoomInput.members.filter((id) => !!id)].map(
-          (id) => new mongoose.Types.ObjectId(id)
+          (id) => toObjectId(id)
         ),
         isPinned: false,
         noDisturbing: false,
@@ -119,7 +123,7 @@ export class ChatRoomService {
       const findRoom = await this.chatRoomModel.aggregate([
         {
           $match: {
-            _id: new mongoose.Types.ObjectId(roomId)
+            _id: toObjectId(roomId)
           }
         },
         {
@@ -201,18 +205,53 @@ export class ChatRoomService {
   async isAlreadyInRoom(userId: string, roomId: string) {
     try {
       const findRoom = await this.findRoomById(roomId)
-      return findRoom.members.includes(new mongoose.Types.ObjectId(userId))
+      return findRoom.members.some(memberId => memberId.equals(toObjectId(userId)))
     } catch (err) {
       return new InternalServerErrorException(err)
     }
   }
 
+  async inviteMemberByUserId(user: UserTokenEntity, data: InviteMemberInput) {
+    try {
+      const { userId } = user
+      const { roomId, userIds } = data
+      
+      const isInRoom = await this.isAlreadyInRoom(userId, roomId)
+      if (!isInRoom) {
+        throw new BadRequestException('您尚未加入该群聊，无法邀请该用户')
+      }
+      
+      const alreadyInMembers = await this.getMemberIds(roomId)
+      const ids = alreadyInMembers.map(item => item.toString())
+      const finalIds = (isString(userIds) ? [userIds] : userIds).filter(id => ids.indexOf(id) === -1).map(id => toObjectId(id))
+
+      if (finalIds.length === 0) {
+        return getFailResponse('用户已加入群聊', null)
+      }
+      await this.chatRoomModel.updateOne(
+        { _id: toObjectId(roomId) },
+        {
+          $push: {
+            members: {
+              $each: finalIds
+            }
+          }
+        }
+      )
+      this.logger.info('/chat/inviteMemberByUserId', `${userId} 邀请${finalIds}加入群聊${roomId}`)
+      return getSuccessResponse('成员已加入群聊', 'ok')
+
+    } catch (err) {
+      throw new InternalServerErrorException(err.message)
+    }
+  }
+  
   /**
-   *
+   * @description 通过邀请码的形式邀请成员
    * @param user 被邀请人
    * @param inviteCode 邀请码，由 房间ID 和 邀请人ID 加密构成
    */
-  async inviteMember(user: UserTokenEntity, inviteCode: string) {
+  async inviteMemberByCode(user: UserTokenEntity, inviteCode: string) {
     const [roomId] = decryptPrivateInfo(inviteCode).split('-')
     if (await this.isAlreadyInRoom(user.userId, roomId)) {
       throw new BadRequestException('您已经在群聊中了，无需重新加入群聊')

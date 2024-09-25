@@ -218,7 +218,7 @@ export class UserService {
   async login(user: UserSignUpInput): Promise<ApiResponse> {
     const res = await this.findUserSchemaByField({ username: user.username })
     if (!res) {
-      this.response = getFailResponse('用户未注册，登录失败', null)
+      this.response = getFailResponse('用户未注册', null)
       this.logger.error('/user/login', `${user.username}登录失败，未找到该用户`)
       return this.response
     }
@@ -228,7 +228,6 @@ export class UserService {
       this.logger.error('/user/login', `${user.username}登录失败，密码不匹配`)
       return this.response
     }
-    console.log(res)
     const token = this.jwtService.sign({
       userId: String(res._id),
       role: res.role,

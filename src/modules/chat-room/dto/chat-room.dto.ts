@@ -76,7 +76,7 @@ export class ChatRoomEntity extends Document {
   creator: mongoose.Types.ObjectId
 }
 
-export class ChatRoomInput extends PickType(ChatRoomEntity, [
+export class CreateRoomInput extends PickType(ChatRoomEntity, [
   'roomName',
   'roomDescription',
   'members',
@@ -90,4 +90,12 @@ export class RemoveMemberInput {
 
   @IsNotEmpty()
   roomId: string
+}
+
+export class InviteMemberInput {
+  @IsNotEmpty()
+  roomId: string
+
+  @IsNotEmpty()
+  userIds: string[] | string
 }
