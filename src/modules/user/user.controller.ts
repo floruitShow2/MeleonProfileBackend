@@ -6,18 +6,18 @@ import {
   Req,
   UseInterceptors,
   UploadedFile,
-  Query
+  Query,
+  BadRequestException
 } from '@nestjs/common'
 import { ApiTags, ApiOperation } from '@nestjs/swagger'
 import { FileInterceptor } from '@nestjs/platform-express'
-import { join } from 'path'
 import { diskStorage } from 'multer'
 import type { Request } from 'express'
 import { Roles } from '@/decorator/Roles'
 import { Role } from '@/constants/auth'
 import { genStoragePath } from '@/utils/format'
 import { UserService } from './user.service'
-import { UserEntity, UserSignUpInput, UserUpdatePwdInput } from './dto/user.dto'
+import { UserSignUpInput, UserUpdatePwdInput } from './dto/user.dto'
 
 @Controller('user')
 @ApiTags('User')
@@ -44,8 +44,10 @@ export class UserController {
   @ApiOperation({
     summary: '获取用户信息'
   })
-  async getUserInfo(@Req() request: Request) {
-    return this.userService.getUserInfo(request['user'])
+  async getUserInfo(@Req() request: Request, @Query('userId') userId: string) {
+    const userInfo = request['user']
+    if (!userId && !userInfo?.userId) return new BadRequestException('no userId')
+    return this.userService.getUserInfo(userId || userInfo?.userId)
   }
 
   @Post('updateUserAvatar')

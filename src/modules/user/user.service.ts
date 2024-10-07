@@ -246,18 +246,18 @@ export class UserService {
    * @param user 用户的部分信息
    * @returns
    */
-  async getUserInfo(user: UserTokenEntity) {
+  async getUserInfo(userId: string) {
     try {
-      const res = await this.findUserById(user.userId)
+      const res = await this.findUserById(userId)
       if (!res) {
-        this.logger.error('/user/getUserInfo', `查询${user.userId}的用户信息失败`)
+        this.logger.error('/user/getUserInfo', `查询${userId}的用户信息失败`)
         this.response = getFailResponse('未找到用户', null)
         return this.response
       }
-      this.logger.info('/user/getUserInfo', `查询${user.userId}的用户信息成功`)
+      this.logger.info('/user/getUserInfo', `查询${userId}的用户信息成功`)
       this.response = getSuccessResponse('获取用户信息成功', res)
     } catch (err) {
-      this.logger.error('/user/getUserInfo', `查询${user.userId}的用户信息失败，失败原因：${err}`)
+      this.logger.error('/user/getUserInfo', `查询${userId}的用户信息失败，失败原因：${err}`)
       this.response = getFailResponse('服务器异常，用户信息查询失败', null)
     }
     return this.response

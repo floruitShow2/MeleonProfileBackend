@@ -32,7 +32,6 @@ export class ChatRoomService {
   async createRoom(user: UserTokenEntity, chatRoomInput: CreateRoomInput) {
     const { userId } = user
     const createTime = formatToDateTime(new Date())
-    console.log(chatRoomInput.members)
 
     try {
       const res = await this.chatRoomModel.create({
@@ -44,8 +43,8 @@ export class ChatRoomService {
             Math.floor(Math.random() * 5) + 1
           }.png`,
         roomType: chatRoomInput.roomType,
-        members: [userId, ...chatRoomInput.members.filter((id) => !!id)].map(
-          (id) => toObjectId(id)
+        members: [userId, ...chatRoomInput.members.filter((id) => !!id)].map((id) =>
+          toObjectId(id)
         ),
         isPinned: false,
         noDisturbing: false,
@@ -114,6 +113,36 @@ export class ChatRoomService {
       return this.response
     } catch (err) {
       console.log(err)
+      throw new InternalServerErrorException(err.message)
+    }
+  }
+
+  async searchRoomsByQuery(query: string) {
+    try {
+      const res = await this.chatRoomModel.aggregate([
+        {
+          $match: {
+            roomName: {
+              $regex: query,
+              $options: 'i'
+            }
+          }
+        },
+        {
+          $addFields: {
+            roomId: '$_id'
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            __v: 0
+          }
+        }
+      ])
+
+      return getSuccessResponse('聊天室查询成功', res)
+    } catch (err) {
       throw new InternalServerErrorException(err.message)
     }
   }
@@ -205,7 +234,7 @@ export class ChatRoomService {
   async isAlreadyInRoom(userId: string, roomId: string) {
     try {
       const findRoom = await this.findRoomById(roomId)
-      return findRoom.members.some(memberId => memberId.equals(toObjectId(userId)))
+      return findRoom.members.some((memberId) => memberId.equals(toObjectId(userId)))
     } catch (err) {
       return new InternalServerErrorException(err)
     }
@@ -215,15 +244,17 @@ export class ChatRoomService {
     try {
       const { userId } = user
       const { roomId, userIds } = data
-      
+
       const isInRoom = await this.isAlreadyInRoom(userId, roomId)
       if (!isInRoom) {
         throw new BadRequestException('您尚未加入该群聊，无法邀请该用户')
       }
-      
+
       const alreadyInMembers = await this.getMemberIds(roomId)
-      const ids = alreadyInMembers.map(item => item.toString())
-      const finalIds = (isString(userIds) ? [userIds] : userIds).filter(id => ids.indexOf(id) === -1).map(id => toObjectId(id))
+      const ids = alreadyInMembers.map((item) => item.toString())
+      const finalIds = (isString(userIds) ? [userIds] : userIds)
+        .filter((id) => ids.indexOf(id) === -1)
+        .map((id) => toObjectId(id))
 
       if (finalIds.length === 0) {
         return getFailResponse('用户已加入群聊', null)
@@ -240,12 +271,11 @@ export class ChatRoomService {
       )
       this.logger.info('/chat/inviteMemberByUserId', `${userId} 邀请${finalIds}加入群聊${roomId}`)
       return getSuccessResponse('成员已加入群聊', 'ok')
-
     } catch (err) {
       throw new InternalServerErrorException(err.message)
     }
   }
-  
+
   /**
    * @description 通过邀请码的形式邀请成员
    * @param user 被邀请人

@@ -12,5 +12,7 @@ export * from './team/team.module'
 // 聊天室
 export * from './chat-room/chat-room.module'
 export * from './chat-message/chat-message.module'
+// 消息中心
+export * from './message/message.module'
 
 export * from './question/question.module'

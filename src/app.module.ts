@@ -20,8 +20,11 @@ import {
   RedisModule,
   FileModule,
   TeamModule,
+  // 聊天室
   ChatRoomModule,
   ChatMessageModule,
+  // 消息中心
+  MessageModule,
   QuestionModule
 } from './modules'
 import { AppController } from './app.controller'
@@ -78,6 +81,8 @@ const envFilePath = isDev() ? ['.env.development'] : ['.env.production']
     // 聊天室模块
     ChatRoomModule,
     ChatMessageModule,
+    // 消息中心模块
+    MessageModule,
     QuestionModule
   ],
   controllers: [AppController],

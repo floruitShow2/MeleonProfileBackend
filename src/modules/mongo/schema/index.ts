@@ -1,6 +1,7 @@
 // 功能基建
 export * from './user.schema'
 export * from './file.schema'
+export * from './message.schema'
 // 功能模块
 export * from './blog.schema'
 export * from './task.schema'

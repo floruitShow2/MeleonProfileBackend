@@ -19,6 +19,11 @@ export class ChatRoomController {
     return this.chatRoomService.getRoomsByUserId(req.user?.userId)
   }
 
+  @Post('/searchRooms')
+  searchRooms(@Body('query') query: string) {
+    return this.chatRoomService.searchRoomsByQuery(query)
+  }
+
   @Post('/deleteRoom')
   deleteRoomById(@Req() req: Request, @Body('roomId') roomId: string) {
     return this.chatRoomService.deleteRoom(req.user, roomId)
@@ -38,7 +43,7 @@ export class ChatRoomController {
   inviteMemberByUserId(@Req() req: Request, @Body() data: InviteMemberInput) {
     return this.chatRoomService.inviteMemberByUserId(req['user'], data)
   }
-  
+
   @Post('/inviteMember')
   inviteMember(@Req() req: Request, @Body('inviteCode') inviteCode: string) {
     return this.chatRoomService.inviteMemberByCode(req.user, inviteCode)
