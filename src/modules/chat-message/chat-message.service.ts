@@ -113,7 +113,7 @@ export class ChatMessageService {
       const messages: ChatMessageResponseEntity[] = await this.chatMessageModel.aggregate([
         {
           $match: {
-            roomId: isObjectId(roomId) ? roomId : new mongoose.Types.ObjectId(roomId),
+            roomId: toObjectId(roomId),
             visibleUsers: {
               $in: [new mongoose.Types.ObjectId(userId)]
             }
@@ -173,6 +173,13 @@ export class ChatMessageService {
 
       const newMessages = await Promise.all(
         messages.map(async (msg) => {
+          if ((msg.readUsers || []).indexOf(toObjectId(userId)) === -1) {
+            // 更新已读用户列表
+            await this.chatMessageModel.findByIdAndUpdate(msg.messageId, {
+              $addToSet: { readUsers: toObjectId(userId) }
+            })
+          }
+          
           const targetReplyMsg = msg.replyId ? await this.findMessageById(msg.replyId) : null
           msg.replyMessage = targetReplyMsg
 
@@ -253,6 +260,7 @@ export class ChatMessageService {
         mentions,
         emojis,
         visibleUsers: await this.chatRoomService.getMemberIds(String(roomId)),
+        readUsers: [toObjectId(profileId)],
         createTime: isUndefined(createTime)
           ? formatToDateTime(new Date())
           : formatToDateTime(createTime),

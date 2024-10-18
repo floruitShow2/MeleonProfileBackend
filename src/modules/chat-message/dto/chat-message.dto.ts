@@ -85,6 +85,12 @@ export class ChatMessageEntity extends Document {
     description: '可以看到当前消息的用户ID列表'
   })
   visibleUsers: mongoose.Types.ObjectId[]
+
+  @Prop()
+  @ApiProperty({
+    description: '当前消息被哪些用户已读'
+  })
+  readUsers: mongoose.Types.ObjectId[]
 }
 
 @Schema()

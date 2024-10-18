@@ -71,6 +71,7 @@ export class ChatRoomService {
             }
           }
         },
+        // 查询房间成员
         {
           $lookup: {
             from: 'users',
@@ -101,10 +102,75 @@ export class ChatRoomService {
             roomId: '$_id'
           }
         },
+        // 查询最近消息
+        {
+          $lookup: {
+            from: 'chatMessages',
+            foreignField: 'roomId',
+            localField: 'roomId',
+            as: 'messages',
+            pipeline: [
+              {
+                $sort: {
+                  createTime: -1
+                }
+              },
+              {
+                $limit: 1
+              }
+            ]
+          }
+        },
+        {
+          $lookup: {
+            from: 'chatMessages',
+            foreignField: 'roomId',
+            localField: 'roomId',
+            as: 'unreadMessages',
+            pipeline: [
+              {
+                $match: {
+                  readUsers: {
+                    $nin: [new mongoose.Types.ObjectId(userId)]
+                  }
+                }
+              },
+              {
+                $sort: {
+                  createTime: -1
+                }
+              }
+            ]
+          }
+        },
+        {
+          $addFields: {
+            lastMessage: {
+              $arrayElemAt: ['$messages', 0]
+            },
+            unreadMessageCount: {
+              $size: {
+                $filter: {
+                  input: '$unreadMessages',
+                  as: 'message',
+                  cond: {
+                    $not: {
+                      $in: [userId, '$$message.readUsers']
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         {
           $project: {
             _id: 0,
-            __v: 0
+            __v: 0,
+            messages: 0,
+            unreadMessages: 0,
+            'lastMessage._id': 0,
+            'lastMessage.__v': 0
           }
         }
       ])
