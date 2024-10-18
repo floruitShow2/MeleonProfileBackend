@@ -51,5 +51,5 @@ export class TeamEntity extends Document {
   @ApiProperty({
     description: '创建时间'
   })
-  createTime: string
+  createTime: number
 }

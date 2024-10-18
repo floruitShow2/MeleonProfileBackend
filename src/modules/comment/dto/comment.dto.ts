@@ -28,7 +28,7 @@ export class CommentEntity extends Document {
   @ApiProperty({
     description: '发布时间'
   })
-  publishTime: string
+  publishTime: number
 
   @Prop()
   @ApiProperty({

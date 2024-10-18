@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { Model } from 'mongoose'
 import { InjectModel } from '@nestjs/mongoose'
-import { formatToDateTime } from '@/utils/time'
 import { FlattenArray } from '@/utils/format'
 import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
 import { LoggerService } from '@/modules/logger/logger.service'
@@ -143,7 +142,7 @@ export class CommentService {
       await this.commentModel.updateOne(
         { _id: commentId },
         type === 'add'
-          ? { $push: { likes: { user: userId, time: formatToDateTime(new Date()) } } }
+          ? { $push: { likes: { user: userId, time: Date.now() } } }
           : { $pull: { likes: { user: userId } } }
       )
       this.logger.info('/comment/addLikes', `${userId}评论${commentId} 点赞数 +1`)

@@ -42,7 +42,7 @@ export class BlogEntity extends Document {
   @ApiProperty({
     description: '发布时间，无需传递，以服务器端时间为准'
   })
-  uploadTime: string
+  uploadTime: number
 
   @Prop()
   @ApiProperty({

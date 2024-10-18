@@ -1,6 +1,5 @@
 import { Controller, Post, Get, Req, Body, Query, Param } from '@nestjs/common'
 import { ApiOperation, ApiTags, ApiBody } from '@nestjs/swagger'
-import { formatToDateTime } from '@/utils/time'
 import { BlogService } from './blog.service'
 import { BlogEntity, CreateBlogDto } from './dto/blog.dto'
 
@@ -26,7 +25,7 @@ export class BlogController {
       blog.views = 0
       blog.likes = []
       blog.uploader = userId
-      blog.uploadTime = formatToDateTime(new Date())
+      blog.uploadTime = Date.now()
       return blog
     })
     return await this.blogService.createBlogs(blogs)

@@ -2,7 +2,6 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
 import { toObjectId } from '@/utils/is'
-import { formatToDateTime } from '@/utils/time'
 import { getSuccessResponse } from '@/utils/service/response'
 import { CreateMessageInput, MessageEntity } from './dto/message.dto'
 
@@ -43,7 +42,7 @@ export class MessageService {
         content: message.content,
         type: message.type,
         isRead: false,
-        createdAt: formatToDateTime(Date.now())
+        createdAt: Date.now()
       }
       const res = await this.messageModel.create(localMessage)
       await res.save()

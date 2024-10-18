@@ -75,13 +75,13 @@ export class TaskEntity extends Document {
   @ApiProperty({
     description: '任务创建时间'
   })
-  createTime: string
+  createTime: number
 
   @Prop()
   @ApiProperty({
     description: '上次更新时间'
   })
-  lastUpdateTime: string
+  lastUpdateTime: number
 
   @Prop({ type: [{ type: Types.ObjectId, ref: UserEntity.name }] })
   @ApiProperty({

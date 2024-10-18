@@ -1,5 +1,4 @@
 import { Controller, Post, Get, Req, Body, UnauthorizedException, Query } from '@nestjs/common'
-import { formatToDateTime } from '@/utils/time'
 import { ApiTags } from '@nestjs/swagger'
 import { CommentService } from './comment.service'
 import { CommentEntity } from './dto/comment.dto'
@@ -14,7 +13,7 @@ export class CommentController {
     const user = req['user']
     if (!user.userId) return new UnauthorizedException()
     comment.publisher = user.userId
-    comment.publishTime = formatToDateTime(new Date())
+    comment.publishTime = Date.now()
     return this.commentService.createComment(comment)
   }
 

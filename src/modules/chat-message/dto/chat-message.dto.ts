@@ -60,7 +60,7 @@ export class ChatMessageEntity extends Document {
   @ApiProperty({
     description: '消息发布时间'
   })
-  createTime: string
+  createTime: number
 
   @Prop()
   @ApiProperty({

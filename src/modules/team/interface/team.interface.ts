@@ -1,6 +1,6 @@
 export interface MemberType {
   userId: string
-  joinTime: string
+  joinTime: number | string
   /**
    * 0 创建人 拥有移交、注销团队或更新团队信息等权限
    * 1 管理员 拥有创建、编辑、删除团队项目等权限
@@ -11,5 +11,5 @@ export interface MemberType {
 
 export interface TaskType {
   taskId: string
-  createTime: string
+  createTime: string | number
 }

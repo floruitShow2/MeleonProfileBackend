@@ -27,6 +27,7 @@ import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
 import { genStoragePath, translateUrlToDiskPath } from '@/utils/format'
 import { LoggerService } from '@/modules/logger/logger.service'
 import { UserTokenEntity } from '@/modules/user/dto/user.dto'
+import { getBase64FileSize, getMimeTypeFromBase64 } from '@/utils/file'
 import type { ApiResponse } from '@/interface/response.interface'
 import {
   ChunkOptions,
@@ -37,8 +38,6 @@ import {
   VerifyOptions
 } from './dto/file.dto'
 import { OssService } from '../oss/oss.service'
-import { formatToDateTime } from '@/utils/time'
-import { getBase64FileSize, getMimeTypeFromBase64 } from '@/utils/file'
 
 @Injectable()
 export class FileService {
@@ -329,7 +328,7 @@ export class FileService {
         fileSize: file.size,
         fileSrc: storagePath,
         fileType: file.mimetype,
-        createTime: formatToDateTime(),
+        createTime: Date.now(),
         createdBy: user.userId
       }
 
@@ -368,7 +367,7 @@ export class FileService {
           fileSize: getBase64FileSize(dataUrl),
           fileSrc: storagePath,
           fileType: getMimeTypeFromBase64(dataUrl),
-          createTime: formatToDateTime(),
+          createTime: Date.now(),
           createdBy: user.userId
         }
         const res = await this.fileModel.create(newFile)

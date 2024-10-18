@@ -11,7 +11,6 @@ import mongoose, { Model } from 'mongoose'
 import { UserService } from '@/modules/user/user.service'
 import { UserTokenEntity } from '@/modules/user/dto/user.dto'
 import { ApiResponse } from '@/interface/response.interface'
-import { formatToDateTime } from '@/utils/time'
 import { isString, toObjectId } from '@/utils/is'
 import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
 import { encryptPrivateInfo, decryptPrivateInfo } from '@/utils/encrypt'
@@ -31,7 +30,7 @@ export class ChatRoomService {
 
   async createRoom(user: UserTokenEntity, chatRoomInput: CreateRoomInput) {
     const { userId } = user
-    const createTime = formatToDateTime(new Date())
+    const createTime = Date.now()
 
     try {
       const res = await this.chatRoomModel.create({

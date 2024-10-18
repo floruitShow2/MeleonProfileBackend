@@ -13,7 +13,6 @@ import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express
 import { ApiTags } from '@nestjs/swagger'
 import { join } from 'path'
 import { diskStorage } from 'multer'
-import { formatToDateTime } from '@/utils/time'
 import { genStoragePath } from '@/utils/format'
 import { TaskService } from './task.service'
 import { TaskEntity } from './dto/task.dto'
@@ -58,7 +57,7 @@ export class TaskController {
   ) {
     const user = req['user']
     const creator = user.username
-    const createTime = formatToDateTime(new Date())
+    const createTime = Date.now()
     const storagePath = `${creator}/task/`
     const task: TaskEntity = JSON.parse(data)
 

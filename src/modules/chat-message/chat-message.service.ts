@@ -5,13 +5,13 @@ import {
   InternalServerErrorException,
   forwardRef
 } from '@nestjs/common'
-import mongoose, { Model, Mongoose } from 'mongoose'
+import mongoose, { Model } from 'mongoose'
 import { InjectModel } from '@nestjs/mongoose'
-import { formatToDateTime } from '@/utils/time'
-import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
+import { MessageTypeEnum } from '@/constants'
+import { genFileType } from '@/utils/file'
 import { genStoragePath } from '@/utils/format'
 import { isObjectId, isUndefined, toObjectId } from '@/utils/is'
-import { genFileType } from '@/utils/file'
+import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
 import { UserService } from '@/modules/user/user.service'
 import { ChatRoomService } from '@/modules/chat-room/chat-room.service'
 import {
@@ -22,7 +22,6 @@ import {
   ChatMessageResponseEntity,
   UpdateChatMessageInput
 } from './dto/chat-message.dto'
-import { MessageTypeEnum } from '@/constants'
 import { ChatMessageGateway } from './chat-message.gateway'
 
 @Injectable()
@@ -262,8 +261,8 @@ export class ChatMessageService {
         visibleUsers: await this.chatRoomService.getMemberIds(String(roomId)),
         readUsers: [toObjectId(profileId)],
         createTime: isUndefined(createTime)
-          ? formatToDateTime(new Date())
-          : formatToDateTime(createTime),
+          ? Date.now()
+          : new Date(createTime).getTime(),
         type,
         content,
         url

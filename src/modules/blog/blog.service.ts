@@ -3,7 +3,6 @@ import { InjectModel } from '@nestjs/mongoose'
 import mongoose, { Model } from 'mongoose'
 import { LoggerService } from '@/modules/logger/logger.service'
 import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
-import { formatToDateTime } from '@/utils/time'
 import { UserEntity } from '@/modules/user/dto/user.dto'
 import { BlogEntity } from './dto/blog.dto'
 import type { ApiResponse } from '@/interface/response.interface'
@@ -315,7 +314,7 @@ export class BlogService {
         { _id: blogId },
         isLiked
           ? { $pull: { likes: { userId } } }
-          : { $push: { likes: { userId, timeStamp: formatToDateTime(new Date()) } } }
+          : { $push: { likes: { userId, timeStamp: Date.now() } } }
       )
 
       this.response = getSuccessResponse(isLiked ? '取消点赞成功' : '评论点赞数 +1', 'BlogService')

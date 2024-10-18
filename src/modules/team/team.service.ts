@@ -3,7 +3,6 @@ import { InjectModel } from '@nestjs/mongoose'
 import mongoose, { Model } from 'mongoose'
 import { LoggerService } from '@/modules/logger/logger.service'
 import { getFailResponse, getSuccessResponse } from '@/utils/service/response'
-import { formatToDateTime } from '@/utils/time'
 import { TeamEntity } from './dto/team.dto'
 import type { ApiResponse } from '@/interface/response.interface'
 import type { UserTokenEntity } from '@/modules/user/dto/user.dto'
@@ -69,7 +68,7 @@ export class TeamService {
     }
 
     // 创建时仅会传递 teamEntity 的部分参数，需要补全
-    const current = formatToDateTime(new Date())
+    const current = Date.now()
     team.creator = userId
     team.createTime = current
     team.members = [{ userId: userId, joinTime: current, role: 0 }]
@@ -177,7 +176,7 @@ export class TeamService {
     try {
       const newRecord: TaskType = {
         taskId,
-        createTime: formatToDateTime(new Date())
+        createTime: Date.now()
       }
       const res = await this.teamModel.updateOne(
         { _id: teamId },
@@ -249,7 +248,7 @@ export class TeamService {
         ...team.members,
         {
           ...member,
-          joinTime: formatToDateTime(new Date())
+          joinTime: Date.now()
         }
       ]
 
